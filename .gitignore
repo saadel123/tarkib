@@ -1,0 +1,15 @@
+# Written by Anki: contains your API keys. NEVER commit.
+meta.json
+.env
+.env.*
+
+# runtime / caches / build output
+__pycache__/
+*.pyc
+user_files/
+out/
+*.ankiaddon
+.DS_Store
+
+# local Claude Code overrides
+.claude/settings.local.json

@@ -1,0 +1,43 @@
+{
+  "providers": [
+    {
+      "id": "groq",
+      "type": "openai_compatible",
+      "name": "Groq",
+      "base_url": "https://api.groq.com/openai/v1",
+      "model": "openai/gpt-oss-120b",
+      "api_key": ""
+    }
+  ],
+  "image": {
+    "pexels_key": "",
+    "serper_key": "",
+    "pixabay_key": ""
+  },
+  "voices": {
+    "target": "de-DE-KatjaNeural",
+    "translation": "en-US-AriaNeural",
+    "secondary": ""
+  },
+  "defaults": {
+    "translation_language": "English",
+    "secondary_translation_language": "",
+    "generate_cloze": true,
+    "image_source": "auto",
+    "default_deck": "Tarkib",
+    "last_deck": "",
+    "level": "B1"
+  },
+  "deck_levels": {},
+  "timeouts": {
+    "ai_seconds": 60,
+    "image_seconds": 15,
+    "tts_seconds": 30
+  },
+  "stats": {
+    "cards_added": 0,
+    "hide_support_thanks": false
+  },
+  "shortcut": "Ctrl+Shift+G",
+  "user_agent": ""
+}

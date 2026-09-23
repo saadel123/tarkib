@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <!-- The Tarkib mark (تركيب, assembly): a card with its corner missing and the piece that
+       completes it arriving. Colours come from the card itself: the purple of the grammar patterns box and
+       the colour of its label. Original work. -->
+  <path d="M4 4.9 H14.4 V11.9 H21.4 V17.7 a2.6 2.6 0 0 1 -2.6 2.6 H4
+           a2.6 2.6 0 0 1 -2.6 -2.6 V7.5 a2.6 2.6 0 0 1 2.6 -2.6 Z" fill="#5866c4"/>
+  <path d="M15.6 3.7 H20 a2.6 2.6 0 0 1 2.6 2.6 V10.7 H15.6 Z" fill="#a8b4ff"/>
+</svg>
