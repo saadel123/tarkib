@@ -6,7 +6,7 @@
 
 [![AnkiWeb: 83323714](https://img.shields.io/badge/AnkiWeb-83323714-3f4d99)](https://ankiweb.net/shared/info/83323714)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Anki](https://img.shields.io/badge/Anki-%E2%89%A523.10%20%28PyQt6%29-brightgreen)](https://apps.ankiweb.net/)
+[![Anki](https://img.shields.io/badge/Anki-%E2%89%A523.10%20%28PyQt6%29-5866c4)](https://apps.ankiweb.net/)
 [![Support me on Ko-fi](https://img.shields.io/badge/%E2%99%A5-Support%20me%20on%20Ko--fi-ff5e5b)](https://ko-fi.com/tarkib)
 [![Free A1 German deck](https://img.shields.io/badge/German%20decks-Free%20A1-3f4d99)](https://ko-fi.com/s/ab96fd15d8)
 
@@ -28,7 +28,7 @@ Type one word, get a full card:
 
 - **Meaning and a natural translation**, in your helper language.
 - **A casual and a formal example sentence**, each translated, so you learn when to use the word, not just what it means.
-- **The grammar learners actually trip on:** article, plural, and genitive for nouns, correct strong-verb past forms (so `fahren` gives `fuhr`, not a made-up `fahrte`), and for verbs the preposition with its case, like `warten auf` with Akkusativ.
+- **The grammar learners actually trip on:** article, plural, and (from B1) genitive for nouns, correct strong-verb past forms (so `fahren` gives `fuhr`, not a made-up `fahrte`), and for verbs the preposition with its case, like `warten auf` with Akkusativ.
 - **A real image and a couple of memory emojis** tied to the word, so it has something to hook onto.
 - **Audio** for the German and the translation, so you hear how the sentences sound.
 - **An optional fill-in-the-blank (cloze) companion card**, to practice producing the word, not just recognizing it.
@@ -133,7 +133,7 @@ This add-on is free and stays free. If it saves you time, you can support its de
 
 Buying one of the [ready-made decks](https://ko-fi.com/tarkib/shop) helps too.
 
-There is also a tiny, dismissible thank-you after every 50 cards (with a permanent "don't show again").
+Inside the add-on there is a small "♥ Support this add-on" link and a quiet "Free A1 deck" link in the window footer (the second one hides once you have the decks). A short thank-you appears three times, at 50, 200 and 500 cards, with a permanent "Don't show this again". After your fifth card, a short note about the ready-made decks appears inside the window on up to three openings, and its x hides it for good. While no AI key is set, the setup message also says that the free A1 deck needs no key.
 
 ## License
 

@@ -4,7 +4,9 @@
 Zips the CONTENTS of this folder (NOT the top-level folder, per AnkiWeb's rule). Only an ALLOWLIST
 of runtime files ships: the add-on's Python packages, its manifest, config and icon, and the
 license. In a git checkout, files git does not track are left out too, so a stray local file can
-never reach users. It refuses to run if a secret file would be included. Output: out/tarkib.ankiaddon.
+never reach users, and an untracked .py file stops the build (it is new code that other modules
+import, so leaving it out would break loading). It refuses to run if a secret file would be
+included. Output: out/tarkib.ankiaddon.
 
 Usage:  python3 build.py
 Then:   upload the file at https://ankiweb.net/shared/addons  (Upload button), or double-click it to
@@ -64,6 +66,11 @@ def main():
     if tracked is not None:
         skipped = sorted(f for f in files if os.path.normpath(f) not in tracked)
         files = [f for f in files if os.path.normpath(f) in tracked]
+        # An untracked .py file is almost always new code that was not committed yet (other modules
+        # import it), so leaving it out would ship an add-on that fails to load. Stop instead.
+        if any(f.endswith(".py") for f in skipped):
+            sys.exit("ABORT: untracked runtime files: %s  (git add and commit them, then build again)"
+                     % skipped)
         if skipped:
             print("   left out (not tracked by git): %s" % ", ".join(skipped))
 

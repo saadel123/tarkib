@@ -47,7 +47,8 @@ tarkib/                 (the repository root)
   ui/
     dialog.py           the Add-card dialog
     settings.py         tabbed Settings (Provider, Images, Languages, Cards)
-    support.py          the Support link and the every-50-cards thank-you
+    support.py          the Support and Free A1 deck links, the milestone thank-you, the decks text
+    promo_rules.py      when those may show (pure functions, tested offline)
   pipeline/             pure, Anki-free, stdlib-only: the brains
     prompts.py          ALL prompts, CEFR levels, translation languages   <- most contributions land here
     generate.py         builds a card: LLM calls, guards, HTML, image and audio

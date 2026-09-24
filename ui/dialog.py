@@ -1,6 +1,6 @@
 """The Add-Card dialog: form -> QueryOp(pipeline) -> CollectionOp(write) -> done.
 
-A hardcoded test word ("die Probe") is prefilled for the first-run end-to-end test.
+The word field shows "e.g. die Probe" as a placeholder only.
 Network/audio run off the UI thread (QueryOp); the collection write runs in a CollectionOp.
 """
 import traceback
@@ -8,14 +8,16 @@ import traceback
 from aqt import mw
 from aqt.qt import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QLineEdit, QComboBox,
-    QCheckBox, QPushButton, QLabel, Qt,
+    QCheckBox, QPushButton, QLabel, Qt, QWidget, QToolButton,
 )
 from aqt.utils import qconnect, tooltip, showText, getText, askUser
 from aqt.operations import QueryOp, CollectionOp
 
 from .. import anki_io
 from ..pipeline import generate, audio, providers, prompts
-from .support import support_link, note_card_added_and_maybe_thank
+from .support import (support_link, decks_footer_link, note_card_added_and_maybe_thank,
+                      decks_imported, DECKS_URL)
+from .promo_rules import hint_should_show
 
 FIELD_MIN_W = 340            # text inputs grow to at least this wide
 
@@ -42,6 +44,8 @@ class AddCardDialog(QDialog):
         self.banner = QLabel()
         self.banner.setWordWrap(True)
         self.banner.setStyleSheet("background:#7f1d1d;color:#fff;padding:8px;border-radius:6px;")
+        self.banner.setTextFormat(Qt.TextFormat.RichText)
+        self.banner.setOpenExternalLinks(True)
         layout.addWidget(self.banner)
         # Informational notes (e.g. keyless image fallback) get a neutral look, so red stays
         # reserved for the one state that actually blocks adding (no AI key).
@@ -49,6 +53,32 @@ class AddCardDialog(QDialog):
         self.info_banner.setWordWrap(True)
         self.info_banner.setStyleSheet("background:rgba(100,116,139,0.18);padding:8px;border-radius:6px;font-size:12px;")
         layout.addWidget(self.info_banner)
+        # Short pointer to the ready-made decks (rules in ui/promo_rules.py). Inside the dialog,
+        # never a pop-up, shown on at most a few openings, and closed for good with x.
+        self.decks_hint = QWidget()
+        self.decks_hint.setObjectName("tarkibDecksHint")
+        hint_row = QHBoxLayout(self.decks_hint)
+        hint_row.setContentsMargins(8, 6, 4, 6)
+        hint_text = QLabel(
+            'Tarkib also has ready-made decks in this card format, A1 to C1. The whole A1 level is '
+            'free, the other levels are paid. <a href="%s">Get the free A1 deck</a>.' % DECKS_URL)
+        hint_text.setWordWrap(True)
+        hint_text.setTextFormat(Qt.TextFormat.RichText)
+        hint_text.setOpenExternalLinks(True)
+        hint_text.setStyleSheet("font-size:12px;")
+        hint_row.addWidget(hint_text, 1)
+        hint_close = QToolButton()
+        hint_close.setText("×")
+        hint_close.setToolTip("Hide this for good")
+        hint_close.setAutoRaise(True)
+        qconnect(hint_close.clicked, self._dismiss_decks_hint)
+        hint_row.addWidget(hint_close)
+        # Scoped to the container: a selector-less rule would also paint the label and the x
+        # button, giving a box inside a box.
+        self.decks_hint.setStyleSheet(
+            "#tarkibDecksHint{background:rgba(100,116,139,0.18);border-radius:6px;}")
+        self.decks_hint.hide()
+        layout.addWidget(self.decks_hint)
 
         form = QFormLayout()
         form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
@@ -143,6 +173,10 @@ class AddCardDialog(QDialog):
         btn_row.addWidget(self.settings_btn)
         btn_row.addSpacing(10)
         btn_row.addWidget(support_link(self))
+        decks_lbl = decks_footer_link(self)
+        if decks_lbl is not None:
+            btn_row.addSpacing(10)
+            btn_row.addWidget(decks_lbl)
         btn_row.addStretch()
         self.close_btn = QPushButton("Close")
         qconnect(self.close_btn.clicked, self.reject)
@@ -154,17 +188,63 @@ class AddCardDialog(QDialog):
         layout.addLayout(btn_row)
 
         self._refresh_state()
+        self._maybe_show_decks_hint()
+
+    # ── the short decks hint (rules: ui/promo_rules.py) ──
+    def _maybe_show_decks_hint(self):
+        """Show the hint when the rules allow it, and count this as one of its showings.
+
+        Called once, when the dialog opens. It runs before the dialog is shown, so it checks state
+        (isHidden, the provider list) rather than isVisible(), which is False for every child of a
+        dialog that is not on screen yet."""
+        try:
+            if not self.decks_hint.isHidden() or not DECKS_URL:
+                return
+            cfg = _cfg()
+            stats = cfg.setdefault("stats", {})
+            # blocked = the red no-key banner is up (it shows exactly when there is no provider).
+            if not hint_should_show(stats, decks_imported(), not self._providers):
+                return
+            stats["decks_hint_shows"] = int(stats.get("decks_hint_shows", 0) or 0) + 1
+            mw.addonManager.writeConfig(__name__, cfg)
+            self.decks_hint.show()
+        except Exception:
+            pass  # a pointer must never get in the way of adding cards
+
+    def _dismiss_decks_hint(self):
+        self.decks_hint.hide()
+        try:
+            # Give the freed height back instead of spreading it as gaps; keep the user's width.
+            self.resize(self.width(), self.sizeHint().height())
+        except Exception:
+            pass
+        try:
+            cfg = _cfg()
+            cfg.setdefault("stats", {})["decks_hint_done"] = True
+            mw.addonManager.writeConfig(__name__, cfg)
+        except Exception:
+            pass
 
     # ── state / validation ──
     def _refresh_state(self):
         if not self._providers:
-            self.banner.setText("⚠ No AI provider with an API key yet. Click Settings, pick a provider, and paste your key (a free Groq key works).")
+            text = ("⚠ No AI provider with an API key yet. Click Settings, pick a provider, and paste "
+                    "your key (a free Groq key works).")
+            if DECKS_URL:
+                text += ('<br>Prefer finished cards with no setup? <a style="color:#fff" href="%s">The '
+                         'free A1 deck</a> needs no key.' % DECKS_URL)
+            self.banner.setText(text)
             self.banner.show()
+            # The decks hint never sits under the red banner (for example after a key is removed
+            # in Settings while this window is open).
+            hint = getattr(self, "decks_hint", None)
+            if hint is not None:
+                hint.hide()
         else:
             self.banner.hide()
         img = self.cfg.get("image", {}) or {}
         if not any((img.get(k) or "").strip() for k in ("pexels_key", "pixabay_key", "serper_key")):
-            self.info_banner.setText("ℹ No image key yet, so many cards will have no photo. Add a free Pexels or Pixabay key in Settings for a photo on every card.")
+            self.info_banner.setText("ℹ No image key yet, so many cards will have no photo. Add a free Pexels or Pixabay key in Settings to get photos.")
             self.info_banner.show()
         else:
             self.info_banner.hide()
@@ -402,7 +482,9 @@ class AddCardDialog(QDialog):
                 mw.addonManager.writeConfig(__name__, cfg)
             except Exception:
                 pass
-            # Count the card; every 50, a gentle (dismissible) thank-you. Never blocks the add.
+            # Count the card; at 50, 200 and 500 cards a dismissible thank-you. Never blocks the add.
+            # The decks hint is NOT shown here: focus is back in the word field, and pushing the
+            # form down mid-typing is the loudest possible moment. The check at open handles it.
             note_card_added_and_maybe_thank(self)
 
         CollectionOp(parent=mw, op=wop).success(done).failure(self._fail).run_in_background()

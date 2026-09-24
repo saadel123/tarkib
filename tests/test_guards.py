@@ -463,5 +463,36 @@ class ReleaseSecurity(unittest.TestCase):
         self.assertNotIn("x<img>", g._CLOZE_CASES)
 
 
+class PromoRules(unittest.TestCase):
+    """The quiet pointers: three thank-yous in an install, and a decks hint that stays polite."""
+
+    def setUp(self):
+        from ui import promo_rules
+        self.r = promo_rules
+
+    def test_thank_you_only_at_the_milestones(self):
+        shown = [n for n in range(1, 1001) if self.r.should_thank(n, {})]
+        self.assertEqual(shown, [50, 200, 500])
+
+    def test_thank_you_respects_the_opt_out(self):
+        self.assertFalse(self.r.should_thank(50, {"hide_support_thanks": True}))
+
+    def test_hint_waits_for_the_fifth_card(self):
+        self.assertFalse(self.r.hint_should_show({"cards_added": 4}, False, False))
+        self.assertTrue(self.r.hint_should_show({"cards_added": 5}, False, False))
+
+    def test_hint_stops_after_three_showings_or_x(self):
+        self.assertFalse(self.r.hint_should_show({"cards_added": 9, "decks_hint_shows": 3}, False, False))
+        self.assertFalse(self.r.hint_should_show({"cards_added": 9, "decks_hint_done": True}, False, False))
+
+    def test_hint_never_when_decks_imported_or_blocked(self):
+        self.assertFalse(self.r.hint_should_show({"cards_added": 9}, True, False))
+        self.assertFalse(self.r.hint_should_show({"cards_added": 9}, False, True))
+
+    def test_hint_survives_missing_or_odd_stats(self):
+        self.assertFalse(self.r.hint_should_show(None, False, False))
+        self.assertTrue(self.r.hint_should_show({"cards_added": "7", "decks_hint_shows": None}, False, False))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

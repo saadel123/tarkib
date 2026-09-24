@@ -19,7 +19,7 @@ All values stay on your computer (Anki's add-on config, `meta.json`). They are n
 - **defaults.level**: default CEFR level for new cards: `A1`, `A2`, `B1`, `B2`, `C1`, or `Native`.
 - **deck_levels**: optional map of deck name to level, so a deck can pin its own level, for example `{"Deutsch::A1": "A1"}`.
 - **timeouts**: HTTP timeouts in seconds (`ai_seconds` 60, `image_seconds` 15, `tts_seconds` 30).
-- **stats**: internal counters (`cards_added`, `hide_support_thanks`). Safe to leave alone.
+- **stats**: internal counters and switches: `cards_added`, `hide_support_thanks` (true turns off the thank-you shown at 50, 200 and 500 cards), `decks_hint_shows` and `decks_hint_done` (the short note about the ready-made decks, shown at most three times. `decks_hint_done: true` hides it for good). Safe to leave alone.
 - **shortcut**: keyboard shortcut that opens the dialog (default `Ctrl+Shift+G`).
 - **user_agent**: HTTP User-Agent sent to AI providers. Leave blank to use the built-in browser-like default (needed because Groq sits behind Cloudflare, which blocks the bare Python agent). It is a fixed header, the same for everyone, not a secret.
 

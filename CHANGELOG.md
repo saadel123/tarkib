@@ -3,6 +3,19 @@
 All notable changes to **Tarkib** are listed here, newest first.
 Versions follow [SemVer](https://semver.org/).
 
+## [1.0.1]
+
+- **Free A1 deck pointers, quiet by design.** A "Free A1 deck" link sits next to "Support this
+  add-on" in the window footer and hides once the ready-made decks are imported. After your fifth
+  card, a short note inside the window mentions the decks. It shows on at most three openings of
+  the window, and x hides it for good. While no AI key is set, the setup banner mentions that the
+  free A1 deck needs no key.
+- **The thank-you now appears three times in total** (at 50, 200 and 500 cards) instead of every
+  50 cards, without emoji, and offers a link to rate Tarkib on AnkiWeb. "Don't show this again"
+  still turns it off for good.
+- Settings, Cards: the decks line now says the other levels are paid and links to all of them.
+- Wording: the no-image-key note no longer promises a photo on every card.
+
 ## [1.0.0], first public release
 
 One typed German word or phrase becomes a complete Anki card.
@@ -33,4 +46,5 @@ On AnkiWeb: [83323714](https://ankiweb.net/shared/info/83323714) (Tools, Add-ons
   top toolbar.
 - Works with Anki 23.10 and newer. Pure Python, nothing to install.
 
+[1.0.1]: https://github.com/saadel123/tarkib/releases/tag/v1.0.1
 [1.0.0]: https://github.com/saadel123/tarkib/releases/tag/v1.0.0
