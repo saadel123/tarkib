@@ -52,9 +52,9 @@ Create on the desktop, study anywhere: the cards are normal Anki notes and media
 
 ![Tarkib German decks, A1 to C1: word cards and typing cards](assets/decks.gif)
 
-Rather not make the cards yourself? I made German decks, A1 to C1, in the same card format. Every word has a picture, German audio, casual and formal sentences, the article and plural for nouns, the grammar pattern with its case, like `fahren mit (+Dat)`, and a typing card checked letter by letter. Meanings in English or Arabic. The cards were made with Claude, Anthropic's AI, then reviewed and fixed by a person, card by card, over several rounds. The audio comes from a licensed voice service, and the pictures are licensed too.
+Rather not make the cards yourself? I made German decks, A1 to C1, in the same card format. Every word has a picture, German audio, casual and formal sentences, and the grammar pattern with its case when the sentence has one, like `fahren mit (+Dat)`. Nouns come with their article, and the plural when there is one. Nearly every word also has a typing card checked letter by letter. Meanings in English or Arabic. The cards were made with Claude, Anthropic's AI, then reviewed and fixed by a person, card by card, over several rounds. The audio comes from a licensed voice service, and the pictures are licensed too.
 
-**[Get the whole A1 level for free](https://ko-fi.com/s/ab96fd15d8)** (305 word cards plus 304 typing cards). Other levels are in [my Ko-fi shop](https://ko-fi.com/tarkib/shop).
+**[Get the whole A1 level for free](https://ko-fi.com/s/ab96fd15d8)** (305 word cards plus 304 typing cards). Other levels are in [my Ko-fi shop](https://ko-fi.com/tarkib/shop). You could build them yourself with Tarkib, but A2 to C1 is 1,814 word cards: on the free Groq plan, which allows a few dozen cards a day, that takes well over a month, and every card still needs checking. The paid levels are those cards already made and reviewed.
 
 ## Install
 
@@ -133,7 +133,7 @@ This add-on is free and stays free. If it saves you time, you can support its de
 
 Buying one of the [ready-made decks](https://ko-fi.com/tarkib/shop) helps too.
 
-Inside the add-on there is a small "♥ Support this add-on" link and a quiet "Free A1 deck" link in the window footer (the second one hides once you have the decks). A short thank-you appears three times, at 50, 200 and 500 cards, with a permanent "Don't show this again". After your fifth card, a short note about the ready-made decks appears inside the window on up to three openings, and its x hides it for good. While no AI key is set, the setup message also says that the free A1 deck needs no key.
+Inside the add-on there is a small "♥ Support this add-on" link and a quiet "Free A1 deck" link in the window footer (the second one hides once you have the decks). A short thank-you appears three times, at 50, 200 and 500 cards, with a permanent "Don't show this again". After your fifth card, a short note about the ready-made decks appears inside the window on up to three openings, and its x hides it for good. At the bottom of the Settings "Cards" tab, one line points to the ready-made decks. While no AI key is set, the setup message also says that the free A1 deck needs no key.
 
 ## License
 
