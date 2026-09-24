@@ -4,6 +4,7 @@
 
 > A free, open-source Anki add-on that turns one typed word into a full language card: meaning and a natural translation, a related image, memory emojis, audio, a casual and a formal example sentence, and the grammar that actually matters.
 
+[![AnkiWeb: 83323714](https://img.shields.io/badge/AnkiWeb-83323714-3f4d99)](https://ankiweb.net/shared/info/83323714)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Anki](https://img.shields.io/badge/Anki-%E2%89%A523.10%20%28PyQt6%29-brightgreen)](https://apps.ankiweb.net/)
 [![Support me on Ko-fi](https://img.shields.io/badge/%E2%99%A5-Support%20me%20on%20Ko--fi-ff5e5b)](https://ko-fi.com/tarkib)
@@ -41,7 +42,7 @@ Every language gets a natural Microsoft voice, chosen in **Settings, Languages**
 
 ## How it works
 
-1. Open the add-on: **Tools → "Add a card with Tarkib"**, or `Ctrl+Shift+G`, or the Tarkib button in the editor, the Decks screen, or the top toolbar.
+1. Install it from [AnkiWeb](https://ankiweb.net/shared/info/83323714) with the code `83323714`, then open it: **Tools → "Add a card with Tarkib"**, or `Ctrl+Shift+G`, or the Tarkib button in the editor, the Decks screen, or the top toolbar.
 2. Type one German word or phrase, pick a deck and a level.
 3. Click **Add**. About 15 to 20 seconds later the card (and the optional cloze companion) is in your collection, with image and audio.
 
@@ -57,7 +58,7 @@ Rather not make the cards yourself? I made German decks, A1 to C1, in the same c
 
 ## Install
 
-**From AnkiWeb (recommended).** In Anki: **Tools → Add-ons → Get Add-ons**, paste the code shown on the Tarkib page on [AnkiWeb](https://ankiweb.net/shared/addons), and restart Anki.
+**From AnkiWeb (recommended).** In Anki: **Tools → Add-ons → Get Add-ons**, paste the code **`83323714`**, and restart Anki. The add-on page is [Tarkib on AnkiWeb](https://ankiweb.net/shared/info/83323714).
 
 **Manually (latest build).** Clone this repository and run `python3 build.py`, then double-click `out/tarkib.ankiaddon` to install it into Anki. Or download the ZIP from GitHub, unzip it, rename the folder to `tarkib`, and move it into your Anki add-ons folder, then restart Anki:
 

@@ -7,6 +7,8 @@ Versions follow [SemVer](https://semver.org/).
 
 One typed German word or phrase becomes a complete Anki card.
 
+On AnkiWeb: [83323714](https://ankiweb.net/shared/info/83323714) (Tools, Add-ons, Get Add-ons, paste the code).
+
 - **The card:** meaning and a natural translation, a casual and a formal example sentence (each
   translated), a short explanation, a related image, memory emojis, and audio for the German and
   the translation.
