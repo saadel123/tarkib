@@ -9,7 +9,10 @@ The rules, in one place:
   - the decks hint appears once the user has made HINT_AFTER cards, only when the Add dialog
     opens (never mid-session, while the user is typing), on at most HINT_MAX_SHOWS openings, and
     never after it was closed with x, never when the decks are already imported, and never while
-    the red no-key banner is showing.
+    the red no-key banner is showing;
+  - the footer decks link always shows: "Free A1 deck" until a ready-made deck is in the
+    collection, then "A1 to C1 decks", which opens the shop (someone who has a deck gains nothing
+    from the free A1 link, but may want the other levels).
 Nothing here is ever tied to a reward, and nothing asks for a rating in exchange for anything.
 """
 
@@ -21,6 +24,15 @@ HINT_MAX_SHOWS = 3
 def should_thank(cards_added, stats):
     """True when this card count is one of the thank-you milestones and the user has not opted out."""
     return cards_added in THANK_AT and not (stats or {}).get("hide_support_thanks")
+
+
+def footer_decks_link(decks_imported, decks_url, shop_url):
+    """Which decks link the Add-window footer shows: "shop" (A1 to C1, the shop) once a ready-made
+    deck is in the collection, "free" (the free A1 deck) before that, None when the link it needs
+    has no URL. With the decks imported but no shop URL, the free A1 link is the fallback."""
+    if decks_imported and shop_url:
+        return "shop"
+    return "free" if decks_url else None
 
 
 def hint_should_show(stats, decks_imported, blocked):

@@ -56,7 +56,14 @@ def _open_settings() -> None:
     """Anki's Add-ons > Config button. Without this it opens the raw JSON editor, which shows the
     API keys in clear and lets edits race the Settings dialog; route it to the real Settings UI."""
     from .ui.settings import SettingsDialog
-    SettingsDialog(mw).exec()
+    dlg = SettingsDialog(mw)
+    accepted = dlg.exec()
+    # A Tarkib window left open shows what was just saved without being reopened.
+    if (accepted or getattr(dlg, "saved", False)) and _dialog is not None and _dialog.isVisible():
+        try:
+            _dialog._sync_from_config()
+        except Exception:
+            pass
 
 
 def _shortcut() -> str:

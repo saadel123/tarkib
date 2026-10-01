@@ -9,7 +9,7 @@ from aqt import mw
 from aqt.qt import QLabel, QMessageBox, QCheckBox
 from aqt.utils import openLink
 
-from .promo_rules import should_thank
+from .promo_rules import should_thank, footer_decks_link
 
 # Mirror any change in README.md, ANKIWEB_LISTING.md and SOURCE_OF_TRUTH.md.
 SUPPORT_URL = "https://ko-fi.com/tarkib"
@@ -40,13 +40,19 @@ def support_link(parent=None):
 
 
 def decks_footer_link(parent=None):
-    """A quiet 'Free A1 deck' link for the Add dialog footer, or None when it would be noise: no
-    decks URL, or the ready-made decks are already in the collection."""
-    if not DECKS_URL or decks_imported():
+    """The quiet decks link in the Add dialog footer. 'Free A1 deck' until a ready-made deck is in the
+    collection, then 'A1 to C1 decks' to the shop (rule: promo_rules.footer_decks_link). Earlier
+    versions hid it once a deck was imported, which read as a missing link."""
+    kind = footer_decks_link(decks_imported(), DECKS_URL, SHOP_URL)
+    if kind is None:
         return None
-    lbl = QLabel('<a href="%s">Free A1 deck</a>' % DECKS_URL, parent)
+    if kind == "shop":
+        lbl = QLabel('<a href="%s">A1 to C1 decks</a>' % SHOP_URL, parent)
+        lbl.setToolTip("Ready-made decks in this format for every level from A1 to C1, one at a time or all five together.")
+    else:
+        lbl = QLabel('<a href="%s">Free A1 deck</a>' % DECKS_URL, parent)
+        lbl.setToolTip("Ready-made cards in this format. The whole A1 level is free, the other levels are paid.")
     lbl.setOpenExternalLinks(True)
-    lbl.setToolTip("Ready-made cards in this format. The whole A1 level is free, the other levels are paid.")
     lbl.setStyleSheet("font-size: 12px;")
     return lbl
 

@@ -13,3 +13,7 @@ out/
 
 # local Claude Code overrides
 .claude/settings.local.json
+
+# Raw screenshots for the guide images: full-screen captures that can show keys, the browser and
+# the desktop. Never tracked; the finished images live in the outer repo (brand/guide/).
+screenshots/

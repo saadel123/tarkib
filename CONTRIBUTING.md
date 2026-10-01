@@ -47,7 +47,7 @@ tarkib/                 (the repository root)
   ui/
     dialog.py           the Add-card dialog
     settings.py         tabbed Settings (Provider, Images, Languages, Cards)
-    support.py          the Support and Free A1 deck links, the milestone thank-you, the decks text
+    support.py          the Support link, the footer decks link (Free A1, then A1 to C1), the thank-you, the decks text
     promo_rules.py      when those may show (pure functions, tested offline)
   pipeline/             pure, Anki-free, stdlib-only: the brains
     prompts.py          ALL prompts, CEFR levels, translation languages   <- most contributions land here
@@ -56,7 +56,7 @@ tarkib/                 (the repository root)
     images.py           Pexels, Serper, Pixabay and keyless Openverse, as a fallback chain
     audio.py            pure-Python Edge read-aloud client
   tests/test_guards.py  offline unit tests (no Anki, no network, no key)
-  assets/               README images (cover, decks preview), never packaged
+  assets/               README images (demo GIF, Tarkib window, decks preview, cover), never packaged
   ROADMAP.md            what is planned, and the principles a new feature must keep
 ```
 The `pipeline/` package never imports Anki, so you can test it standalone.

@@ -889,8 +889,10 @@ def build_card(cfg, provider, deck, word, options):
 
     voices = cfg.get("voices", {}) or {}
     # Role-named keys (target / translation / secondary); 'de' / 'en' are the pre-1.0 names.
+    # Only the German is read aloud by default: the translation gets audio only when the user picks
+    # a translation voice in Settings ("" = text only, the default since 1.0.2).
     voice_de = voices["target"] if "target" in voices else voices.get("de", "de-DE-KatjaNeural")
-    voice_en = voices["translation"] if "translation" in voices else voices.get("en", "en-US-AriaNeural")
+    voice_en = voices["translation"] if "translation" in voices else voices.get("en", "")
     voice_sec = (voices.get("secondary") or "").strip()
     img_cfg = cfg.get("image", {}) or {}
     to = cfg.get("timeouts", {}) or {}
@@ -1105,8 +1107,8 @@ def build_card(cfg, provider, deck, word, options):
     de_bytes = _try_audio(lambda: audio.synthesize(de_text, voice_de, timeout=tts_to))
     if de_bytes is not None:
         media["TTS_DE"] = ("tts_de_%s_%s.mp3" % (_safe(front), _audio_tag(de_text)), de_bytes)
-    # Translation audio — only when a translation voice is set. "— none —" (voice_en == "") means the
-    # user wants the translation as TEXT only, so we skip the clip entirely (no wasted call, no
+    # Translation audio — only when a translation voice is set. "(none)" (voice_en == ""), the
+    # default, keeps the translation as TEXT only, so we skip the clip entirely (no wasted call, no
     # "audio failed" noise in the toast).
     if voice_en:
         en_text = _clean_tts(" ... ".join([(card.get("translation_en", "") or "") + ".", card.get("example_casual_en", ""), card.get("example_formal_en", "")]))

@@ -9,8 +9,8 @@ All values stay on your computer (Anki's add-on config, `meta.json`). They are n
 - **image.pixabay_key**: optional. Another free photo source (pixabay.com/api/docs).
 - **image.serper_key**: optional. Google image results, better for IT and technical terms (serper.dev).
 - **voices.target**: the German voice (Microsoft Edge read-aloud voice id, no key needed), default `de-DE-KatjaNeural`.
-- **voices.translation**: the voice for the translation language, default `en-US-AriaNeural`. Empty means the translation is text only, no audio.
-- **voices.secondary**: the voice for the optional second translation. Empty means no audio.
+- **voices.translation**: the voice that reads the translation aloud. Default empty: the translation is text only, and only the German is read aloud. To hear it, pick a voice in Settings, Languages, Translation voice, or set a voice id here, for example `en-US-AriaNeural`.
+- **voices.secondary**: the voice for the optional second translation. Empty, the default, means no audio: picking a second language keeps it silent until you choose its voice under Settings, Languages.
 - **defaults.translation_language**: the helper language shown under the German. Default `English`. It must be one of the 24 languages offered in Settings, for example `Arabic` or `French`. Any other value falls back to English with a warning.
 - **defaults.secondary_translation_language**: optional second translation per card, from the same list of 24 languages. Empty means none and the extra call is skipped.
 - **defaults.generate_cloze**: default state of the "Generate cloze companion" toggle.

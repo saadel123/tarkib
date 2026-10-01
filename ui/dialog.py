@@ -166,6 +166,11 @@ class AddCardDialog(QDialog):
         layout.addWidget(self.secondary_check)
         self._refresh_secondary()
 
+        # Height the content does not need (the user dragged the window taller) collects here,
+        # above the buttons, like in Anki's own dialogs. Without it, it went to the title label,
+        # the one widget allowed to grow, which then floated in an empty band.
+        layout.addStretch(1)
+
         # Buttons
         btn_row = QHBoxLayout()
         self.settings_btn = QPushButton("Settings…")
@@ -189,6 +194,9 @@ class AddCardDialog(QDialog):
 
         self._refresh_state()
         self._maybe_show_decks_hint()
+        # Start in the word field. When the decks note shows, its x button comes first in the tab
+        # order, and on Windows and Linux typing "die Probe" would press it with the space.
+        self.word_edit.setFocus()
 
     # ── the short decks hint (rules: ui/promo_rules.py) ──
     def _maybe_show_decks_hint(self):
@@ -213,17 +221,33 @@ class AddCardDialog(QDialog):
 
     def _dismiss_decks_hint(self):
         self.decks_hint.hide()
-        try:
-            # Give the freed height back instead of spreading it as gaps; keep the user's width.
-            self.resize(self.width(), self.sizeHint().height())
-        except Exception:
-            pass
+        self._fit_height()
         try:
             cfg = _cfg()
             cfg.setdefault("stats", {})["decks_hint_done"] = True
             mw.addonManager.writeConfig(__name__, cfg)
         except Exception:
             pass
+
+    def _fit_height(self):
+        """Resize the open window to the height its content needs now, keeping the user's width.
+
+        Qt grows a window whose content no longer fits, but never shrinks one: when Settings hides
+        a banner (the first keys were added) or a row (Engine, the secondary translation), the freed
+        height stayed behind as an empty band until the window was reopened."""
+        try:
+            if self.isMaximized() or self.isFullScreen():
+                return          # any resize would drop that state; the stretch keeps the title in place
+            lay = self.layout()
+            lay.invalidate()
+            lay.activate()      # measure the layout as it is now, with the hidden widgets gone
+            w = self.width()
+            h = self.heightForWidth(w) if self.hasHeightForWidth() else self.sizeHint().height()
+            h = max(h, self.minimumSizeHint().height())
+            if h > 0 and h != self.height():
+                self.resize(w, h)
+        except Exception:
+            pass  # window polish must never get in the way of adding cards
 
     # ── state / validation ──
     def _refresh_state(self):
@@ -329,17 +353,36 @@ class AddCardDialog(QDialog):
 
     def _open_settings(self, initial_tab=None):
         from .settings import SettingsDialog
-        if SettingsDialog(self, initial_tab=initial_tab).exec():
-            # reload config + rebuild engine list
-            self.cfg = _cfg()
-            self._providers = [p for p in (self.cfg.get("providers") or []) if (p.get("api_key") or "").strip()]
-            self.engine_combo.clear()
-            for p in self._providers:
-                self.engine_combo.addItem(p.get("name") or p.get("id") or p.get("type"))
-            self._set_engine_visible(len(self._providers) >= 2)
-            self._reload_decks()   # Settings can create starter decks; show them without reopening
-            self._refresh_secondary()
-            self._refresh_state()
+        dlg = SettingsDialog(self, initial_tab=initial_tab)
+        accepted = dlg.exec()
+        # The first Save on a fresh install writes the keys but keeps Settings open while models
+        # load, so a Cancel or x after it must refresh this window too, not only an accepted Save.
+        if accepted or getattr(dlg, "saved", False):
+            self._sync_from_config()
+
+    def _sync_from_config(self):
+        """Re-read the saved config and refresh everything this window shows from it.
+
+        Called after Settings saved (from this window, or from Anki's Add-ons > Config while this
+        window is open), so nothing here keeps offering a stale value until the window is reopened."""
+        deck = self.deck_combo.currentText().strip()
+        level_before = self._resolve_level(deck)   # from the config this window last read
+        self.cfg = _cfg()
+        self._providers = [p for p in (self.cfg.get("providers") or []) if (p.get("api_key") or "").strip()]
+        self.engine_combo.clear()
+        for p in self._providers:
+            self.engine_combo.addItem(p.get("name") or p.get("id") or p.get("type"))
+        self._set_engine_visible(len(self._providers) >= 2)
+        self._reload_decks()   # Settings can create starter decks; show them without reopening
+        self._refresh_secondary()
+        self._refresh_state()
+        # A new default level ("Change default") applies to the next card at once. A level picked
+        # by hand for this session stays when the default did not change.
+        level_now = self._resolve_level(self.deck_combo.currentText().strip())
+        if level_now != level_before:
+            self._set_level(level_now)
+        self._fit_height()     # banners and rows may have gone: give the freed height back
+        self.word_edit.setFocus()
 
     def _refresh_secondary(self):
         """Sync the 'Add <language> translation' checkbox with the saved config. Hidden (and

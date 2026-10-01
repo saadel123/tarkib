@@ -10,7 +10,7 @@
 [![Support me on Ko-fi](https://img.shields.io/badge/%E2%99%A5-Support%20me%20on%20Ko--fi-ff5e5b)](https://ko-fi.com/tarkib)
 [![Free A1 German deck](https://img.shields.io/badge/German%20decks-Free%20A1-3f4d99)](https://ko-fi.com/s/ab96fd15d8)
 
-![Front and back of a German flashcard made with Tarkib](assets/cover.png)
+![Tarkib demo: type the German word Schloss with optional hints, click Add, then study the finished card and its typing card in Anki](assets/demo.gif)
 
 ## The story
 
@@ -30,7 +30,7 @@ Type one word, get a full card:
 - **A casual and a formal example sentence**, each translated, so you learn when to use the word, not just what it means.
 - **The grammar learners actually trip on:** article, plural, and (from B1) genitive for nouns, correct strong-verb past forms (so `fahren` gives `fuhr`, not a made-up `fahrte`), and for verbs the preposition with its case, like `warten auf` with Akkusativ.
 - **A real image and a couple of memory emojis** tied to the word, so it has something to hook onto.
-- **Audio** for the German and the translation, so you hear how the sentences sound.
+- **German audio**, so you hear how the word and the sentences sound. The translations are read aloud only if you turn on their voices in **Settings, Languages**.
 - **An optional fill-in-the-blank (cloze) companion card**, to practice producing the word, not just recognizing it.
 - **Sentences that match your level:** A1 to C1, plus a "Native" style for real spoken German.
 
@@ -38,9 +38,11 @@ Type one word, get a full card:
 
 The helper text under the German can be any of **24 languages** (English by default). Optionally add a **second language** on every card, for example English plus Arabic for a bilingual learner.
 
-Every language gets a natural Microsoft voice, chosen in **Settings, Languages**. Press **▶** next to a voice to hear a sample sentence before you decide.
+Every language has a natural Microsoft voice. The translations stay silent until you pick their voices in **Settings, Languages**. Press **▶** next to a voice to hear a sample sentence before you decide.
 
 ## How it works
+
+![The Tarkib window: type one German word, pick a deck and a level, and click Add](assets/tarkib-window.gif)
 
 1. Install it from [AnkiWeb](https://ankiweb.net/shared/info/83323714) with the code `83323714`, then open it: **Tools → "Add a card with Tarkib"**, or `Ctrl+Shift+G`, or the Tarkib button in the editor, the Decks screen, or the top toolbar.
 2. Type one German word or phrase, pick a deck and a level.
@@ -78,7 +80,7 @@ Tarkib uses two free keys:
 ### Groq: the AI that writes your cards
 
 1. Go to <https://console.groq.com> and sign in with Google, GitHub or your email (Groq emails you a login link).
-2. In the left menu click **API Keys**, or open <https://console.groq.com/keys>.
+2. Click **API Keys** at the top of the page, or open <https://console.groq.com/keys>.
 3. Click **Create API Key**, type any name (for example `Anki`), complete the "verify you are human" check if it appears, and click **Submit**.
 4. Click **Copy**. The key starts with `gsk_` and is shown only once, so paste it into Anki right away. If you lose it, just create a new one.
 5. In Anki open the add-on (**Tools → Add a card with Tarkib**), click **Settings…**, keep the preset **Groq (OpenAI-compatible)**, paste the key into **API key**, and click **Save**.
@@ -109,7 +111,7 @@ Your keys are **stored only on your computer**, in the add-on's local settings f
 
 - **Never synced by Anki.** AnkiWeb sync only syncs your collection (cards, media, scheduling), not add-on settings, so your keys never leave your machine through sync.
 - **Never sent to the developer.** The add-on has no server. Each key is sent only to the service you chose it for: your AI provider for text and your image provider for photos.
-- **Audio needs no key.** Voices come from Microsoft's free Edge read-aloud service, which is unofficial (the same protocol the open-source [edge-tts](https://github.com/rany2/edge-tts) project documents). If Microsoft ever changes it, cards still generate, just without audio, until an update. Only the German/translation text of the card is sent there.
+- **Audio needs no key.** Voices come from Microsoft's free Edge read-aloud service, which is unofficial (the same protocol the open-source [edge-tts](https://github.com/rany2/edge-tts) project documents). If Microsoft ever changes it, cards still generate, just without audio, until an update. Only the text that is read aloud is sent there: the German, and a translation only when its voice is on.
 
 The generated cards live in your collection and sync normally, so you can study them on any device, even where the add-on is not installed.
 
@@ -133,7 +135,7 @@ This add-on is free and stays free. If it saves you time, you can support its de
 
 Buying one of the [ready-made decks](https://ko-fi.com/tarkib/shop) helps too.
 
-Inside the add-on there is a small "♥ Support this add-on" link and a quiet "Free A1 deck" link in the window footer (the second one hides once you have the decks). A short thank-you appears three times, at 50, 200 and 500 cards, with a permanent "Don't show this again". After your fifth card, a short note about the ready-made decks appears inside the window on up to three openings, and its x hides it for good. At the bottom of the Settings "Cards" tab, one line points to the ready-made decks. While no AI key is set, the setup message also says that the free A1 deck needs no key.
+Inside the add-on there is a small "♥ Support this add-on" link and a quiet "Free A1 deck" link in the window footer, which becomes "A1 to C1 decks" once you have one of the decks. A short thank-you appears three times, at 50, 200 and 500 cards, with a permanent "Don't show this again". After your fifth card, a short note about the ready-made decks appears inside the window on up to three openings, and its x hides it for good. At the bottom of the Settings "Cards" tab, one line points to the ready-made decks. While no AI key is set, the setup message also says that the free A1 deck needs no key.
 
 ## License
 

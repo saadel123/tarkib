@@ -6,7 +6,7 @@
 
 The aqt/anki modules are stubbed so the pipeline imports outside Anki. Anything that talks to a provider is out of scope here; see docs/testing.md.
 """
-import os, sys, types, unittest
+import json, os, sys, types, unittest
 for _n in ("aqt", "aqt.qt", "aqt.utils", "aqt.operations", "anki", "anki.collection", "anki.notes", "anki.hooks"):
     sys.modules.setdefault(_n, types.ModuleType(_n))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -489,9 +489,29 @@ class PromoRules(unittest.TestCase):
         self.assertFalse(self.r.hint_should_show({"cards_added": 9}, True, False))
         self.assertFalse(self.r.hint_should_show({"cards_added": 9}, False, True))
 
+    def test_footer_link_free_a1_then_all_levels(self):
+        free, shop = "https://ko-fi.com/s/a1", "https://ko-fi.com/tarkib/shop"
+        self.assertEqual(self.r.footer_decks_link(False, free, shop), "free")
+        self.assertEqual(self.r.footer_decks_link(True, free, shop), "shop")      # never hidden once a deck is in
+        self.assertEqual(self.r.footer_decks_link(True, free, ""), "free")       # no shop URL: the free A1 link
+        self.assertIsNone(self.r.footer_decks_link(False, "", shop))            # no URL for the link it needs
+        self.assertIsNone(self.r.footer_decks_link(True, "", ""))
+
     def test_hint_survives_missing_or_odd_stats(self):
         self.assertFalse(self.r.hint_should_show(None, False, False))
         self.assertTrue(self.r.hint_should_show({"cards_added": "7", "decks_hint_shows": None}, False, False))
+
+
+class TranslationVoiceDefault(unittest.TestCase):
+    """Learners want to hear the German. The translation is read aloud only once the user picks its voice."""
+
+    def test_default_config_reads_only_the_german_aloud(self):
+        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.json"),
+                  encoding="utf-8") as f:
+            voices = json.load(f)["voices"]
+        self.assertTrue(voices["target"].startswith("de-"))
+        self.assertEqual(voices["translation"], "")
+        self.assertEqual(voices["secondary"], "")
 
 
 if __name__ == "__main__":

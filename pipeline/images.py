@@ -4,8 +4,8 @@ Providers (all return downloadable bytes we embed into the card — so they must
   - Pexels   (key)     — general photos, no attribution required.
   - Serper   (key)     — Google Images, good for IT/brand terms.
   - Pixabay  (key)     — general photos, no attribution required, generous free tier.
-  - Openverse (NO key) — CC0/public-domain only (license-safe to embed); universal last-resort
-                         fallback so even a user with zero keys still gets an image.
+  - Openverse (NO key) — CC0/public-domain only (license-safe to embed); last-resort fallback
+                         for a user with no keys. It often finds nothing, so many such cards get no photo.
 
 fetch_image() tries the routed provider first, then the other configured providers, then keyless
 Openverse. Each fetcher returns (filename, raw_bytes) for col.media.write_data, or None on any

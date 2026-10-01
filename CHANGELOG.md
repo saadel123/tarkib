@@ -3,6 +3,29 @@
 All notable changes to **Tarkib** are listed here, newest first.
 Versions follow [SemVer](https://semver.org/).
 
+## [1.0.2]
+
+- **Only the German is read aloud by default.** The translation and the optional second language
+  start without a voice. Turn either on under Settings, Languages. If you already use Tarkib, your
+  current setting is kept. A voice set to (none) now stays off when you change the language or
+  refresh the voice list.
+- Once a ready-made deck is in your collection, the "Free A1 deck" link next to "Support this
+  add-on" becomes "A1 to C1 decks" and opens the shop with every level. It used to disappear.
+- **The Tarkib window fits its content at once.** After you add your keys in Settings, set the
+  second language to (none), or close the note about the ready-made decks with x, the window no
+  longer keeps an empty band, so you do not have to close and reopen it. If you drag it taller,
+  the extra space sits above the buttons, and a maximized window stays maximized.
+- **Saved settings show up right away,** even when you close Settings with Cancel or x after the
+  first Save (on a fresh install it stays open while models load), and when you save from Anki's
+  Add-ons screen (Config) while the Tarkib window is open.
+- **A new default level applies to the next card** right after "Change default", instead of after
+  reopening the window. If the default stays the same, a level you picked by hand for the session
+  is kept.
+- The window opens with the cursor in the word field, also when the note about the ready-made
+  decks is showing.
+- Settings, Images: the note now says a free Pexels key gives photos on most cards. It no longer
+  promises a photo on every card.
+
 ## [1.0.1]
 
 - **Free A1 deck pointers, quiet by design.** A "Free A1 deck" link sits next to "Support this
@@ -46,5 +69,6 @@ On AnkiWeb: [83323714](https://ankiweb.net/shared/info/83323714) (Tools, Add-ons
   top toolbar.
 - Works with Anki 23.10 and newer. Pure Python, nothing to install.
 
+[1.0.2]: https://github.com/saadel123/tarkib/releases/tag/v1.0.2
 [1.0.1]: https://github.com/saadel123/tarkib/releases/tag/v1.0.1
 [1.0.0]: https://github.com/saadel123/tarkib/releases/tag/v1.0.0

@@ -64,7 +64,7 @@ KEY_SOURCES = {
     "Groq (OpenAI-compatible)": ("console.groq.com", "https://console.groq.com/keys",
                                  "Free, no card needed: sign up, open API Keys, click Create API Key, copy it here."),
     "OpenAI": ("platform.openai.com", "https://platform.openai.com/api-keys", "Paid account required."),
-    "OpenRouter": ("openrouter.ai", "https://openrouter.ai/keys", "One key for many models; some are free."),
+    "OpenRouter": ("openrouter.ai", "https://openrouter.ai/keys", "One key for many models. Some are free."),
     "Gemini (OpenAI-compatible)": ("aistudio.google.com", "https://aistudio.google.com/apikey",
                                    "Free tier available with a Google account."),
     "Mistral": ("console.mistral.ai", "https://console.mistral.ai/api-keys", "Free tier available."),
@@ -192,6 +192,10 @@ class SettingsDialog(QDialog):
         self.setWindowTitle("Tarkib Settings (v%s)" % _addon_version())
         self.setMinimumWidth(540)
         self.cfg = _cfg()
+        # True once _save has written the config. The first Save on a fresh install keeps this
+        # dialog open while models and voices load, so a later Cancel or x still means "saved",
+        # and whoever opened it refreshes on this rather than on exec() alone.
+        self.saved = False
 
         provs = self.cfg.get("providers") or []
         self.prov = provs[0] if provs else {
@@ -323,9 +327,9 @@ class SettingsDialog(QDialog):
 
         # ── Images tab ──
         form = _new_tab("Images")
-        img_intro = QLabel("Optional, to put a picture on each card. Any one key is enough, and the add-on "
+        img_intro = QLabel("Optional, to put pictures on your cards. Any one key is enough, and the add-on "
                            "falls back across them. With no key at all it tries free Openverse, which often "
-                           "finds nothing, so add a free Pexels key for a photo on every card.")
+                           "finds nothing, so add a free Pexels key for photos on most cards.")
         img_intro.setWordWrap(True)
         img_intro.setStyleSheet("font-size: 11px;")
         form.addRow("", img_intro)
@@ -358,8 +362,8 @@ class SettingsDialog(QDialog):
         prim_is_en = prompts.is_english_language(prim_lang)
         prim_locales = VOICE_LOCALES["en"] if prim_is_en else audio.secondary_locale_prefixes(prim_lang)
         form.addRow("Translation voice", self._make_voice_row("translation", prim_locales,
-                                                              _voice_cfg(voices, "translation", "en", "en-US-AriaNeural"),
-                                                              allow_none=True))  # "(none)" = text, no audio
+                                                              _voice_cfg(voices, "translation", "en", ""),
+                                                              allow_none=True))  # "(none)" (the default) = text, no audio
         # Refilter the translation-voice list live when the language changes (dropdown or typed).
         qconnect(self.translation_lang.currentIndexChanged, lambda _=None: self._on_translation_lang_changed())
         # Optional SECOND helper language. Editable combo: "(none)" (off) + common languages + custom.
@@ -370,7 +374,7 @@ class SettingsDialog(QDialog):
         self.secondary.setCurrentText(sec_lang0 or NONE_LABEL)
         self._last_secondary_lang = sec_lang0
         form.addRow("Secondary translation", self.secondary)
-        sec_hint = QLabel("Optional second translation on every card. Leave “(none)” to skip it; its voice is then off as well.")
+        sec_hint = QLabel("Optional second translation on every card. Leave “(none)” to skip it. Its voice stays off until you pick one below.")
         sec_hint.setWordWrap(True)
         sec_hint.setStyleSheet("font-size: 11px;")
         form.addRow("", sec_hint)
@@ -740,7 +744,10 @@ class SettingsDialog(QDialog):
     def _voice_populate(self, slot, prefer=None):
         info = self._voice_slots[slot]
         combo = info["combo"]
-        want = (prefer or self._voice_selected(slot) or info["stored"] or "").strip()
+        # _voice_selected already falls back to the stored voice when nothing is selected. An explicit
+        # "(none)" ("") must not fall back to it, or a catalog refresh (↻, or the auto-fetch on the
+        # first Save) would switch the voice the user turned off back on.
+        want = (prefer or self._voice_selected(slot) or "").strip()
         # No locales = no language chosen (secondary set to "(none)"): offer nothing but "(none)"
         # and grey the row out. filter_voices([]) would otherwise return the WHOLE catalog.
         active = bool(info["locales"])
@@ -765,8 +772,9 @@ class SettingsDialog(QDialog):
             combo.insertItem(0, want, want)  # keep a stored/unknown voice that the filter excluded
         idx = combo.findData(want)
         if not want and info.pop("pick_first", False) and voices:
-            # Language just changed: a user who switches their helper language to Arabic wants
-            # Arabic audio, so pick the first real voice; '(none)' stays an explicit choice only.
+            # Language just changed on a slot that had a voice (see _refilter_voice): keep the audio
+            # on with the new language's first voice. A slot that showed '(none)' never gets here,
+            # so a language change never turns audio on by itself.
             idx = 1 if info["allow_none"] else 0
         combo.setCurrentIndex(idx if idx >= 0 else (0 if combo.count() else -1))
         combo.blockSignals(False)
@@ -779,10 +787,20 @@ class SettingsDialog(QDialog):
     def _refilter_voice(self, slot, lang, english_default=False):
         """Repoint a voice slot to a language's locales and repopulate live (cached catalog; fetches
         only if cold). english_default=True → empty/English maps to English voices (primary slot);
-        otherwise an empty value means 'no language' (optional secondary slot → only '(none)')."""
+        otherwise an empty value means 'no language' (optional secondary slot → only '(none)').
+        A language change never turns audio on by itself: a slot showing '(none)' while it has a
+        language keeps it."""
         info = self._voice_slots.get(slot)
         if not info:
             return
+        # Decide before repointing. A slot that had a voice gets the new language's first voice (the
+        # user wants audio). A slot showing '(none)' stays '(none)': the translation and the second
+        # language are both silent until the user picks a voice, including when the second language
+        # is first switched on (product rule: learners want the German read aloud, not their own
+        # language). Index -1 = an earlier change is still waiting for the catalog: keep
+        # the decision it made.
+        if info["combo"].currentIndex() >= 0:
+            info["pick_first"] = bool(self._voice_selected(slot))
         lang = (lang or "").strip()
         if english_default and prompts.is_english_language(lang):
             info["locales"], info["allow_none"] = list(VOICE_LOCALES["en"]), True  # allow "(none)" (no audio)
@@ -791,7 +809,6 @@ class SettingsDialog(QDialog):
         else:
             info["locales"], info["allow_none"] = [], True
         info["stored"] = ""                     # don't carry the previous language's voice as the pick
-        info["pick_first"] = True               # ...but default to a real voice, not '(none)' (silent cards)
         info["combo"].setCurrentIndex(-1)
         if getattr(self, "_voices", None):
             self._voice_populate(slot)
@@ -1075,7 +1092,7 @@ class SettingsDialog(QDialog):
 
         def ok(bad):
             if bad:
-                tooltip("⚠ Saved, but: %s. Fix in Settings; everything else still works."
+                tooltip("⚠ Saved, but: %s. Fix it in Settings. Everything else still works."
                         % "; ".join(bad), period=8000)
 
         QueryOp(parent=mw, op=op, success=ok).without_collection() \
@@ -1122,6 +1139,7 @@ class SettingsDialog(QDialog):
         cfg["defaults"]["level"] = self.level_combo.currentData() or prompts.DEFAULT_LEVEL
         mw.addonManager.writeConfig(__name__, cfg)
         self.cfg = cfg
+        self.saved = True
 
         # Detect which keys changed (so we only re-check what's new).
         pexels = cfg["image"]["pexels_key"]
@@ -1147,7 +1165,7 @@ class SettingsDialog(QDialog):
                                 pixabay=(pixabay if pixabay_changed else ""))
         if not self._fetched_session and (need_models or need_voices):
             self._fetched_session = True
-            self._toast("Saved. Loading models/voices; pick them, then Save again to finish.")
+            self._toast("Saved. Loading models and voices. Pick them, then Save again to finish.")
             if need_models:
                 self._refresh_models()
             if need_voices:

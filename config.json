@@ -16,7 +16,7 @@
   },
   "voices": {
     "target": "de-DE-KatjaNeural",
-    "translation": "en-US-AriaNeural",
+    "translation": "",
     "secondary": ""
   },
   "defaults": {
