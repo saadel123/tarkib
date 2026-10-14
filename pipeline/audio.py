@@ -1,12 +1,13 @@
 """Pure-Python Edge-TTS client + cloze pause-drill audio.
 
-NO third-party dependencies: stdlib only (socket, ssl, hashlib, struct, base64, json, uuid,
-datetime, time, re, html). No aiohttp, no pydub, no ffmpeg. This is the audio backbone for
-the add-on — it must run inside Anki's bundled Python with nothing vendored.
+NO third-party dependencies: stdlib only (socket, ssl, struct, base64, json, uuid, datetime,
+email.utils, time, re, html). No aiohttp, no pydub, no ffmpeg. This is the audio backbone for the
+add-on — it must run inside Anki's bundled Python with nothing vendored. The other voice services
+(Azure, ElevenLabs, OpenAI, Google Cloud, Gemini) and the fallback order live in pipeline/tts.py.
 
 What it does:
   - synthesize(text, voice) -> MP3 bytes   (talks the Edge "read-aloud" WebSocket protocol,
-    incl. the Sec-MS-GEC security token Microsoft requires)
+    incl. the Sec-MS-GEC security token Microsoft requires, see edge_drm.py)
   - cloze_clips(sentence, answer, voice) -> (front_mp3, back_mp3)
       front = the sentence with the answer slot turned into a SENTENCE BOUNDARY (period),
               which the TTS renders as a ~0.9s pause (SSML <break> is
@@ -14,9 +15,9 @@ What it does:
       back  = the full sentence with the answer spoken.
 """
 import base64
-import hashlib
 import html
 import json
+import logging
 import os
 import re
 import socket
@@ -30,38 +31,80 @@ import urllib.request
 import uuid
 from datetime import datetime, timezone
 
+from . import edge_drm   # LGPL-3.0 third-party code, see licenses/README.md
+
+log = logging.getLogger("addon." + __name__.split(".")[0])   # Anki's per-add-on log file (see tts.py)
+
 # --- Edge read-aloud protocol constants -------------------------------------------------
-# These are Microsoft's own service values (endpoint, client token, anti-abuse hash scheme), as
-# documented publicly by the rany2/edge-tts project (GPL-3.0). Only the protocol FACTS are shared;
-# the WebSocket client below is an original, stdlib-only implementation (no edge-tts code is used).
-# This is Edge's unofficial read-aloud endpoint, not a public API: if Microsoft changes it, audio
-# fails gracefully (cards still generate silently, see classify_tts_error).
+# These are Microsoft's own service values (endpoint, client token, anti-abuse token scheme), as
+# documented publicly by the rany2/edge-tts project (LGPL-3.0). Only the protocol FACTS are shared;
+# the WebSocket client below is an original, stdlib-only implementation. The one exception is the
+# v2 token (edge_drm.py), ported from edge-tts 7.3.1 and kept under its LGPL-3.0 license.
+# This is Edge's unofficial read-aloud endpoint, not a public API: if Microsoft changes it (as on
+# 13 Oct 2026, when the v1 token started getting HTTP 403), the card still lands, the user is told
+# why it has no audio, and tts.py falls back to another voice service when one is set up.
 TRUSTED_CLIENT_TOKEN = "6A5AA1D4EAFF4E9FB37E23D68491D6F4"
 WSS_HOST = "speech.platform.bing.com"
 WSS_PATH = "/consumer/speech/synthesize/readaloud/edge/v1"
-SEC_MS_GEC_VERSION = "1-143.0.3650.75"
+SEC_MS_GEC_VERSION = "2-143.0.3650.75"     # "1-..." (the v1 token) is refused with 403 since 2026-10-13
 USER_AGENT = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
               "(KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0")
 ORIGIN = "chrome-extension://jdiccldimpdaibmpdkjnbmckianbfold"
 OUTPUT_FORMAT = "audio-24khz-48kbitrate-mono-mp3"
+REQUEST_TIMEOUT = 10          # seconds for ONE whole request (connect, handshake, all audio); a clip takes ~1 s
 
-WIN_EPOCH = 11644473600       # seconds between 1601-01-01 and 1970-01-01
-TICKS_PER_SECOND = 10000000   # 100-ns intervals per second
+# Seconds to add to this computer's clock so the token matches Microsoft's. The token depends on
+# the time (rounded to 5 minutes), so a wrong clock gives a wrong token and a 403. When that
+# happens, synthesize() sets this from the server's Date header and tries once more, the way
+# edge-tts does it. Module-level on purpose: one correction serves every later request.
+_clock_skew = 0.0
 
 
 class EdgeTTSError(Exception):
-    pass
+    """A failed read-aloud request. The message is a full sentence a user can read.
+
+    status: the HTTP status of a refused handshake (403, 429, ...), else None.
+    code: the WebSocket close code when the server closed the connection (1007, 1008), else None.
+    kind: auth | rate_limit | network | timeout | server | no_audio | bad_request (see tts.py).
+    server_date: the Date header of a refused handshake, used to correct the clock."""
+
+    def __init__(self, message, status=None, kind=None, code=None, server_date=None):
+        super().__init__(message)
+        self.status = status
+        self.code = code
+        self.kind = kind or _kind_for(status, code)
+        self.server_date = server_date
+
+
+def _kind_for(status, code):
+    if status == 429 or code == 1008:
+        return "rate_limit"
+    if code == 1007:
+        # Microsoft closes with 1007 for a voice or text it will not read ("Unsupported voice X.",
+        # checked live 2026-10-14). A bad token never gets this far: it is refused with 403 at the
+        # handshake. So this is about the request, and the other voices still work.
+        return "bad_request"
+    if status in (401, 403):
+        return "auth"
+    if status and status >= 500:
+        return "server"
+    if status:
+        return "bad_request"
+    return "network"
 
 
 def _sec_ms_gec():
-    """Microsoft's required anti-abuse token: SHA256 of (file-time rounded to 5 min) + token.
+    """Microsoft's required anti-abuse token, v2 (edge_drm.py), on the clock-corrected time."""
+    return edge_drm.generate_sec_ms_gec_v2(time.time() + _clock_skew)
 
-    Computed in pure integers. The Windows file-time here is ~1.3e17 — far beyond float64's
-    exact-integer range (2**53 ≈ 9e15), so doing this in float (the old `time.time()` math)
-    was a latent precision trap that happened to round correctly today. Integers are exact.
-    """
-    ticks = (int(time.time()) + WIN_EPOCH) // 300 * 300 * TICKS_PER_SECOND
-    return hashlib.sha256(("%d%s" % (ticks, TRUSTED_CLIENT_TOKEN)).encode("ascii")).hexdigest().upper()
+
+def _skew_from_date(server_date):
+    """Seconds between the server's Date header and this computer's clock, or None if unreadable."""
+    try:
+        server = edge_drm.parse_rfc2616_date(server_date)
+    except (IndexError, AttributeError):
+        server = None
+    return None if server is None else server - time.time()
 
 
 def _timestamp():
@@ -79,11 +122,55 @@ def _mkssml(text, voice):
 
 # --- Minimal WebSocket client over stdlib socket+ssl (client frames are masked) ---------
 class _WS:
-    def __init__(self, host, path_qs, timeout):
-        raw = socket.create_connection((host, 443), timeout=timeout)
-        self.sock = ssl.create_default_context().wrap_socket(raw, server_hostname=host)
-        self.sock.settimeout(timeout)
+    """One read-aloud connection. `deadline` (time.monotonic()) bounds the WHOLE request: every
+    socket wait gets only the time that is left, so a server that trickles bytes or goes quiet
+    cannot hold a card past it (a plain socket timeout restarts on every byte)."""
+
+    def __init__(self, host, path_qs, deadline, port=443):
+        self.deadline = deadline
         self.buf = b""
+        self.sock = None
+        raw = self._connect(host, port)
+        try:
+            raw.settimeout(self._left())       # the TLS handshake gets only what is left, too
+            try:
+                self.sock = ssl.create_default_context().wrap_socket(raw, server_hostname=host)
+            except socket.timeout:
+                raise EdgeTTSError("Microsoft Edge did not answer in time", kind="timeout")
+            self._handshake(host, path_qs)
+        except BaseException:
+            # A refused handshake (403) raises here, before the caller holds the object to close.
+            try:
+                (self.sock or raw).close()
+            except Exception:
+                pass
+            raise
+
+    def _connect(self, host, port):
+        """TCP connect within the deadline. socket.create_connection would give EVERY address of the
+        host the full timeout (the host has two), so a silent firewall would cost double."""
+        err = None
+        addrs = socket.getaddrinfo(host, port, 0, socket.SOCK_STREAM)
+        for n, (family, kind, proto, _, addr) in enumerate(addrs):
+            sock = socket.socket(family, kind, proto)
+            try:
+                # Each address gets its share of the time left, so one silent address cannot use it
+                # all up before the next one is tried.
+                sock.settimeout(self._left() / (len(addrs) - n))
+                sock.connect(addr)
+                return sock
+            except EdgeTTSError:
+                sock.close()
+                raise
+            except socket.timeout as e:
+                sock.close()
+                err = EdgeTTSError("Microsoft Edge did not answer in time", kind="timeout")
+            except OSError as e:
+                sock.close()
+                err = e
+        raise err or OSError("no address for %s" % host)
+
+    def _handshake(self, host, path_qs):
         key = base64.b64encode(os.urandom(16)).decode()
         req = (
             "GET %s HTTP/1.1\r\nHost: %s\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n"
@@ -91,17 +178,50 @@ class _WS:
             "User-Agent: %s\r\nPragma: no-cache\r\nCache-Control: no-cache\r\n\r\n"
             % (path_qs, host, key, ORIGIN, USER_AGENT)
         )
-        self.sock.sendall(req.encode())
-        resp = self._read_until(b"\r\n\r\n")
-        status = resp.split(b"\r\n", 1)[0]
-        if b" 101 " not in status:
-            raise EdgeTTSError("WebSocket handshake failed: %s" % status.decode("latin1", "replace"))
+        self._sendall(req.encode())
+        head = self._read_until(b"\r\n\r\n")
+        status_line, _, header_block = head.partition(b"\r\n")
+        parts = status_line.decode("latin1", "replace").split(None, 2)
+        status = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 0
+        if status != 101:
+            headers = {}
+            for line in header_block.decode("latin1", "replace").split("\r\n"):
+                name, sep, value = line.partition(":")
+                if sep:
+                    headers[name.strip().lower()] = value.strip()
+            reason = parts[2].strip() if len(parts) > 2 else ""
+            raise EdgeTTSError(
+                ("Microsoft Edge refused the connection: HTTP %d %s" % (status, reason)).strip()
+                if status else "Microsoft Edge sent an unreadable answer to the connection request",
+                status=status or None, server_date=headers.get("date"))
+
+    def _left(self):
+        left = self.deadline - time.monotonic()
+        if left <= 0:
+            raise EdgeTTSError("Microsoft Edge did not answer in time", kind="timeout")
+        return left
+
+    def _sendall(self, data):
+        self.sock.settimeout(self._left())
+        try:
+            self.sock.sendall(data)
+        except socket.timeout:
+            raise EdgeTTSError("Microsoft Edge did not answer in time", kind="timeout")
+
+    def _recv(self, n):
+        self.sock.settimeout(self._left())
+        try:
+            return self.sock.recv(n)
+        except socket.timeout:
+            raise EdgeTTSError("Microsoft Edge did not answer in time", kind="timeout")
 
     def _read_until(self, marker):
         while marker not in self.buf:
-            chunk = self.sock.recv(8192)
+            chunk = self._recv(8192)
             if not chunk:
-                raise EdgeTTSError("connection closed during handshake")
+                raise EdgeTTSError("Microsoft Edge closed the connection during the handshake")
+            if len(self.buf) > 65536:
+                raise EdgeTTSError("Microsoft Edge sent an unreadable answer to the connection request")
             self.buf += chunk
         head, _, rest = self.buf.partition(marker)
         self.buf = rest
@@ -109,9 +229,9 @@ class _WS:
 
     def _readn(self, n):
         while len(self.buf) < n:
-            chunk = self.sock.recv(65536)
+            chunk = self._recv(65536)
             if not chunk:
-                raise EdgeTTSError("connection closed")
+                raise EdgeTTSError("Microsoft Edge closed the connection before the audio was complete")
             self.buf += chunk
         out, self.buf = self.buf[:n], self.buf[n:]
         return out
@@ -130,7 +250,7 @@ class _WS:
         mask = os.urandom(4)
         frame += mask
         frame += bytes(b ^ mask[i & 3] for i, b in enumerate(data))
-        self.sock.sendall(bytes(frame))
+        self._sendall(bytes(frame))
 
     def recv_message(self):
         """Return (opcode, payload) for one full (possibly fragmented) message."""
@@ -175,10 +295,10 @@ class _WS:
             pass
 
 
-def _synthesize_once(text, voice, timeout):
+def _synthesize_once(text, voice, deadline):
     qs = "%s?TrustedClientToken=%s&Sec-MS-GEC=%s&Sec-MS-GEC-Version=%s&ConnectionId=%s" % (
         WSS_PATH, TRUSTED_CLIENT_TOKEN, _sec_ms_gec(), SEC_MS_GEC_VERSION, uuid.uuid4().hex)
-    ws = _WS(WSS_HOST, qs, timeout)
+    ws = _WS(WSS_HOST, qs, deadline)
     try:
         ts = _timestamp()
         cfg = ('{"context":{"synthesis":{"audio":{"metadataoptions":'
@@ -193,50 +313,72 @@ def _synthesize_once(text, voice, timeout):
         while True:
             opcode, payload = ws.recv_message()
             if opcode == 0x2:                         # binary audio frame
+                if len(payload) < 2:
+                    raise EdgeTTSError("Microsoft Edge sent an unreadable audio frame", kind="no_audio")
                 hlen = struct.unpack(">H", payload[:2])[0]
                 audio += payload[2 + hlen:]
                 if len(audio) > _MAX_FRAME:
-                    raise ConnectionError("TTS audio too large")
+                    raise EdgeTTSError("Microsoft Edge sent more audio than any clip needs", kind="no_audio")
             elif opcode == 0x1:                       # text control frame
                 if b"Path:turn.end" in payload:
                     break
             elif opcode == 0x8:
                 code = struct.unpack(">H", payload[:2])[0] if len(payload) >= 2 else 0
                 if code and code != 1000:
-                    # Surface the close code so the caller can tell rate-limit (1008) from a
-                    # token/auth rejection (1007) — see classify_tts_error.
-                    raise EdgeTTSError("websocket closed: code=%d" % code)
+                    # The close code tells a rate limit (1008) from a voice or text it will not read
+                    # (1007); the reason text after the code says which, e.g. "Unsupported voice X."
+                    reason = " ".join(payload[2:300].decode("utf-8", "replace").split())
+                    if code == 1007:
+                        msg = "Microsoft Edge refused this voice or text (code 1007%s)" % (": " + reason if reason else "")
+                    elif code == 1008:
+                        msg = "Microsoft Edge closed the connection: too many requests (code 1008)"
+                    else:
+                        msg = "Microsoft Edge closed the connection (code %d%s)" % (code, ": " + reason if reason else "")
+                    raise EdgeTTSError(msg, code=code)
                 break
         if not audio:
-            raise EdgeTTSError("no audio received")
+            raise EdgeTTSError("Microsoft Edge sent no audio", kind="no_audio")
         return bytes(audio)
     finally:
         ws.close()
 
 
-def synthesize(text, voice, timeout=30, retries=4):
-    """Return MP3 bytes for `text` in `voice`. Retries transient failures (the free endpoint
-    rate-limits); re-raises clearly-terminal ones (token/auth rejection) immediately so the
-    user isn't made to wait ~15s for a guaranteed failure."""
+def synthesize(text, voice, timeout=REQUEST_TIMEOUT, retries=2):
+    """Return MP3 bytes for `text` in `voice`, or raise EdgeTTSError with a readable reason.
+
+    `timeout` bounds each attempt as a WHOLE (connect, handshake and all audio, see _WS), so a
+    server that goes quiet costs at most that long. `retries` is the number of attempts for an
+    ordinary failure: a network error, a timeout, a 5xx, no audio, or a rate limit (after a short
+    pause) gets one more try on a fresh connection by default. A 403 is different: a wrong clock
+    gives a wrong token, so the clock is first corrected from the server's Date header and the
+    request tried once more, the way edge-tts does it (that extra try does not count against
+    `retries`). Any other refusal (401, another 4xx) is final at once, since retrying cannot help."""
+    global _clock_skew
     text = " ".join((text or "").split())
     if not text:
-        raise EdgeTTSError("empty text")
-    last = None
-    for attempt in range(retries):
+        raise EdgeTTSError("There was no text to read aloud", kind="bad_request")
+    timeout = float(timeout or REQUEST_TIMEOUT)
+    attempts, clock_fixed = 0, False
+    while True:
+        attempts += 1
         try:
-            return _synthesize_once(text, voice, timeout)
+            return _synthesize_once(text, voice, time.monotonic() + timeout)
         except EdgeTTSError as e:
-            # Terminal — retrying won't help (token/auth rejected). Everything else (network,
-            # 1008 rate-limit, no-audio, a 5xx handshake) still retries exactly as before.
-            s = str(e).lower()
-            if "code=1007" in s or "invalid token" in s or " 403" in s or " 401" in s:
-                raise
-            last = e
-            time.sleep(1.5 * (attempt + 1))
-        except Exception as e:
-            last = e
-            time.sleep(1.5 * (attempt + 1))
-    raise EdgeTTSError("synthesis failed after %d attempts: %s" % (retries, last))
+            err = e
+        except (OSError, ValueError, struct.error) as e:      # DNS, refused, reset, TLS, bad frame
+            err = EdgeTTSError("Microsoft Edge could not be reached (%s)" % (str(e) or e.__class__.__name__),
+                               kind="network")
+        if err.status == 403 and not clock_fixed:
+            skew = _skew_from_date(err.server_date)
+            if skew is not None:
+                clock_fixed = True
+                log.info("audio: Edge answered 403, clock corrected by %.0f s from its Date header", skew - _clock_skew)
+                _clock_skew = skew
+                attempts -= 1                  # the clock retry is extra, it does not use up `retries`
+                continue
+        if err.kind in ("auth", "bad_request") or attempts >= max(1, retries):
+            raise err
+        time.sleep(1.5 if err.kind == "rate_limit" else 0.3)
 
 
 # --- Cloze pause-drill via sentence-boundary split --------------------------------------
@@ -267,7 +409,7 @@ def split_for_cloze(sentence, answer):
     return out
 
 
-def cloze_clips(sentence, answer, voice, timeout=30):
+def cloze_clips(sentence, answer, voice, timeout=REQUEST_TIMEOUT):
     """Return (front_mp3_bytes, back_mp3_bytes) for the cloze card."""
     front = synthesize(split_for_cloze(sentence, answer), voice, timeout=timeout)
     back = synthesize(sentence, voice, timeout=timeout)
@@ -367,33 +509,3 @@ VOICE_SAMPLES = {
 def sample_text_for_voice(short_name):
     code = (short_name or "").split("-")[0].strip().lower()
     return VOICE_SAMPLES.get(code, VOICE_SAMPLES["en"])
-
-
-# --- TTS failure classification (so failures are triagable, not generic) ----------------
-TTS_ERROR_MESSAGES = {
-    "network": "Microsoft TTS unreachable, check your network",
-    "rate_limit": "TTS rate-limited, try again in a minute",
-    "auth": "Microsoft TTS auth changed, update the add-on",
-}
-_TTS_CAT_PRIORITY = {"auth": 3, "rate_limit": 2, "network": 1, None: 0}
-
-
-def classify_tts_error(exc):
-    """Map a TTS exception to (category, human_message). Categories: network | rate_limit | auth.
-    `synthesize()` wraps the underlying error's text, so we match on the message string."""
-    s = (str(exc) or "").lower()
-    if "429" in s or "1008" in s or "too many requests" in s:
-        return ("rate_limit", TTS_ERROR_MESSAGES["rate_limit"])
-    if "403" in s or "401" in s or "invalid token" in s or "1007" in s or "forbidden" in s:
-        return ("auth", TTS_ERROR_MESSAGES["auth"])
-    # Anything else that stopped synthesis is treated as a connectivity/endpoint problem.
-    return ("network", TTS_ERROR_MESSAGES["network"])
-
-
-def tts_error_message(category):
-    return TTS_ERROR_MESSAGES.get(category, TTS_ERROR_MESSAGES["network"])
-
-
-def worse_category(a, b):
-    """The more actionable of two categories (auth > rate_limit > network); auth is the canary."""
-    return a if _TTS_CAT_PRIORITY.get(a, 0) >= _TTS_CAT_PRIORITY.get(b, 0) else b

@@ -1,4 +1,4 @@
-"""Settings dialog: BYOK keys, provider, model dropdown, image keys, voices, secondary language.
+"""Settings dialog: BYOK keys, provider, model dropdown, image keys, voices, voice service, secondary language.
 
 v1 edits the FIRST provider (the active one — Groq by default) plus the image keys, voices,
 and the optional secondary translation language. The Model field is a dropdown synced from the
@@ -19,13 +19,13 @@ from aqt import mw
 from aqt.qt import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QLineEdit, QComboBox,
     QPushButton, QLabel, QCheckBox, QToolButton, QWidget, QScrollArea, QFrame,
-    QTabWidget, Qt, QTimer,
+    QTabWidget, Qt, QTimer, QListWidget, QListWidgetItem, QSizePolicy,
 )
 from aqt.utils import askUser, qconnect, tooltip, showText
 from aqt.sound import av_player
 from aqt.operations import QueryOp, CollectionOp
 
-from ..pipeline import providers, prompts, audio, images
+from ..pipeline import providers, prompts, audio, images, tts
 from .support import support_link, decks_link
 
 CUSTOM_LABEL = "Custom…"
@@ -71,6 +71,88 @@ KEY_SOURCES = {
     "Anthropic": ("console.anthropic.com", "https://console.anthropic.com/settings/keys", "Paid account required."),
     "Ollama (local)": ("", "", "Ollama runs on your own computer and needs no real key: type anything, e.g. ollama."),
 }
+
+
+# ── Settings, Voice: who reads the cards aloud (the work is in pipeline/tts.py) ──────────────
+TTS_ITEMS = {"edge": "Microsoft Edge (free, no key)", "azure": "Azure AI Speech", "elevenlabs": "ElevenLabs",
+             "openai": "OpenAI", "google": "Google Cloud", "gemini": "Gemini"}
+# One short paragraph per service: what it is, what it costs, where the key comes from. Facts
+# checked against each provider's own pages on 2026-10-14.
+TTS_HELP = {
+    "edge": "Free and needs no key. It reads with the voices you pick on the Languages tab. It is not an "
+            "official service, so it can stop working without notice. Set up a backup below to be safe.",
+    "azure": "Official Microsoft voices with the same names as on the Languages tab. Free tier: 0.5 million "
+             "characters a month. You need an Azure account (it asks for a card to check who you are) and a "
+             "Speech resource: its key and region are under Keys and Endpoint in the "
+             '<a href="https://portal.azure.com/">Azure portal</a>.',
+    "elevenlabs": "Very natural voices. The voice you pick here reads every language. The free plan has "
+                  "10,000 credits a month, for personal use, and can use your own voices and the default ones, "
+                  "not voices saved from the Voice Library. Press ↻ to list your account's voices. When you "
+                  "create the key, allow Text to Speech and Voices (read). Key: "
+                  '<a href="https://elevenlabs.io/app/settings/api-keys">elevenlabs.io</a>.',
+    "openai": "Paid, there is no free tier. The voice you pick here reads every language, marin and cedar "
+              "sound best. OpenAI plans to retire these speech models on 6 January 2027. Key: "
+              '<a href="https://platform.openai.com/api-keys">platform.openai.com</a>.',
+    "google": "Google Cloud Text-to-Speech, free up to 1 million characters a month with Chirp 3 HD voices "
+              "(4 million with Standard and WaveNet). It needs a Google Cloud project with billing turned on "
+              "and the Text-to-Speech API enabled. The voice you set here reads the German, and the same "
+              "speaker reads the other languages when it is a Chirp 3 HD voice. Key: "
+              '<a href="https://console.cloud.google.com/apis/credentials">console.cloud.google.com</a>.',
+    "gemini": "Gemini speech, with a free tier and the same kind of key as Gemini for cards (no card needed): "
+              '<a href="https://aistudio.google.com/apikey">aistudio.google.com</a>. The voice reads every '
+              "language. The free tier allows only a few clips a minute, and the audio is saved as WAV, which "
+              "takes more space (about 50 KB per second).",
+}
+TTS_KEY_HINTS = {"azure": "paste your Speech resource key", "elevenlabs": "paste your ElevenLabs API key",
+                 "openai": "paste your OpenAI API key, sk-…", "google": "paste your Google Cloud API key",
+                 "gemini": "paste your Gemini API key"}
+
+
+def _tts_reason(e):
+    """What a failed voice request may show: the service's own readable reason, never the text of an
+    unexpected error (it could quote a request header, and with it a key)."""
+    if isinstance(e, tts.TTSError):
+        return str(e)
+    return "Something unexpected went wrong (%s). Check the key and try again." % e.__class__.__name__
+
+
+def _combo_value(combo):
+    """The value of an editable dropdown: the selected item's data when the text is still that item
+    (a voice NAME shown, its id stored), else the item with that text, else the typed text itself.
+    The selected item comes first: two voices can share a name, and findText finds only the first."""
+    text = (combo.currentText() or "").strip()
+    i = combo.currentIndex()
+    if i >= 0 and (combo.itemText(i) or "").strip() == text and combo.itemData(i):
+        return str(combo.itemData(i)).strip()
+    i = combo.findText(text)
+    if i >= 0:
+        data = combo.itemData(i)
+        if data:
+            return str(data).strip()
+    return text
+
+
+def _fill_combo(combo, items, value, value_label=""):
+    """items: plain strings or (label, data) pairs. Selects `value` (data or text), adding it as an
+    item when the list does not hold it, so a stored or typed id is never lost."""
+    combo.blockSignals(True)
+    combo.clear()
+    for it in items:
+        if isinstance(it, (tuple, list)):
+            combo.addItem(it[0], it[1])
+        else:
+            combo.addItem(it, it)
+    value = (value or "").strip()
+    if value:
+        i = combo.findData(value)
+        if i < 0:
+            combo.insertItem(0, value_label or value, value)
+            i = 0
+        combo.setCurrentIndex(i)
+    elif combo.isEditable():
+        combo.setCurrentIndex(-1)
+        combo.setEditText("")
+    combo.blockSignals(False)
 
 
 def _cfg():
@@ -383,6 +465,10 @@ class SettingsDialog(QDialog):
         form.addRow("Secondary voice", self._make_voice_row("secondary", sec_locales,
                                                             voices.get("secondary", ""), allow_none=True))
         qconnect(self.secondary.currentIndexChanged, lambda _=None: self._on_secondary_lang_changed())
+
+        # ── Voice tab ── who reads the cards aloud: free Edge, or a service with the user's own key,
+        # plus the order of the backups.
+        self._build_voice_tab(_new_tab("Voice"))
 
         # ── Cards tab ── the CEFR level new cards use unless changed per card in the Add dialog.
         form = _new_tab("Cards")
@@ -710,12 +796,17 @@ class SettingsDialog(QDialog):
         btn.setEnabled(False)
         btn.setText("…")
         tts_to = int((self.cfg.get("timeouts", {}) or {}).get("tts_seconds", 30))
-        path = os.path.join(os.path.dirname(_models_cache_path()), "voice_preview_%s.mp3" % slot)
+        # These are Edge voice names. Azure has the same voices, so it previews them when it is the
+        # chosen service and set up; every other service has voices of its own (its Test button).
+        values = self._tts_values() if getattr(self, "tts_service", None) is not None else {}
+        service = "azure" if (values.get("service") == "azure" and tts.configured("azure", values)) else "edge"
+        folder = os.path.dirname(_models_cache_path())
 
         def op(col):
-            data = audio.synthesize(text, voice, timeout=tts_to, retries=1)
+            clip = tts.synthesize(service, text, voice, values, timeout=tts_to)
+            path = os.path.join(folder, "voice_preview_%s.%s" % (slot, clip.ext))
             with open(path, "wb") as f:
-                f.write(data)
+                f.write(clip.data)
             return path
 
         def done():
@@ -728,7 +819,7 @@ class SettingsDialog(QDialog):
 
         def fail(e):
             done()
-            self._toast("Couldn't play a sample: %s" % audio.classify_tts_error(e)[1])
+            self._toast("Couldn't play a sample: %s" % _tts_reason(e), period=6000)
 
         QueryOp(parent=self, op=op, success=ok).without_collection().failure(fail).run_in_background()
 
@@ -879,6 +970,299 @@ class SettingsDialog(QDialog):
 
         QueryOp(parent=self, op=op, success=ok).without_collection() \
             .failure(fail).run_in_background()
+
+    # ── voice service (Voice tab) ──
+    def _build_voice_tab(self, form):
+        """Voice tab: the service that reads the cards, one collapsible section per paid service
+        (key, voice, model, its own Test), and the backup order. tts.chain() turns these values into
+        the order a clip tries the services in: the chosen one, the backups that are set up, Edge."""
+        tts_cfg = self.cfg.get("tts") or {}
+        self._tts = {}               # service -> {"toggle", "box", "fields", "test", "refresh"}
+        intro = QLabel("Who reads your cards aloud. Microsoft Edge is free. The other services are "
+                       "official and use your own key. If the service you pick fails, Tarkib tries your "
+                       "backups, then Microsoft Edge, and tells you which one read the card.")
+        intro.setWordWrap(True)
+        intro.setStyleSheet("font-size: 11px;")
+        form.addRow("", intro)
+
+        self.tts_service = _make_combo()
+        for s in tts.SERVICES:
+            self.tts_service.addItem(TTS_ITEMS[s], s)
+        i = self.tts_service.findData(tts.chosen(tts_cfg))
+        self.tts_service.setCurrentIndex(i if i >= 0 else 0)
+        self.tts_test = QPushButton("▶ Test")
+        self.tts_test.setToolTip("Read a short German sample with this service and the settings on this tab")
+        qconnect(self.tts_test.clicked, lambda: self._test_tts(self._tts_selected(), self.tts_test))
+        row = QHBoxLayout()
+        row.addWidget(self.tts_service, 1)
+        row.addWidget(self.tts_test, 0)
+        form.addRow("Voice service", row)
+        self.tts_help = QLabel()
+        self.tts_help.setWordWrap(True)
+        self.tts_help.setOpenExternalLinks(True)
+        self.tts_help.setTextFormat(Qt.TextFormat.RichText)
+        self.tts_help.setStyleSheet("font-size: 11px;")
+        form.addRow("", self.tts_help)
+
+        for s in tts.DEFAULT_ORDER:
+            self._add_tts_section(form, s, tts.service_cfg(tts_cfg, s))
+
+        self.tts_order = QListWidget()
+        self.tts_order.setFixedHeight(5 * self.tts_order.fontMetrics().height() + 14)   # the five services
+        for s in tts.backup_order(tts_cfg):
+            item = QListWidgetItem(TTS_ITEMS[s])
+            item.setData(Qt.ItemDataRole.UserRole, s)
+            self.tts_order.addItem(item)
+        self.tts_order.setCurrentRow(0)
+        up, down = QPushButton("▲"), QPushButton("▼")
+        for b, step, tip in ((up, -1, "Try this backup earlier"), (down, 1, "Try this backup later")):
+            b.setFixedWidth(36)
+            b.setToolTip(tip)
+            qconnect(b.clicked, lambda _=False, step=step: self._move_tts_backup(step))
+        buttons = QVBoxLayout()
+        buttons.setAlignment(Qt.AlignmentFlag.AlignTop)
+        buttons.addWidget(up)
+        buttons.addWidget(down)
+        order_row = QHBoxLayout()
+        order_row.addWidget(self.tts_order, 1, Qt.AlignmentFlag.AlignTop)
+        order_row.addLayout(buttons)
+        form.addRow("Backup order", order_row)
+        order_hint = QLabel("If your voice service fails, Tarkib tries the services in this list that are "
+                            "set up, top to bottom, then Microsoft Edge.")
+        order_hint.setWordWrap(True)
+        order_hint.setStyleSheet("font-size: 11px;")
+        form.addRow("", order_hint)
+        privacy = QLabel("🔒 Voice keys are stored like your other keys, in Anki's add-on config on this "
+                         "computer (meta.json in this add-on's folder). Anki never syncs them, and each key "
+                         "goes only to its own service. The text read aloud (the German, and a translation "
+                         "when its voice is on) goes to the service that reads it.")
+        privacy.setWordWrap(True)
+        privacy.setStyleSheet("font-size: 11px;")
+        form.addRow("", privacy)
+        # Spare height in a tall window collects here, under the last row, instead of between rows.
+        filler = QWidget()
+        filler.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+        form.addRow(filler)
+
+        qconnect(self.tts_service.currentIndexChanged, lambda _=None: self._on_tts_service_changed())
+        self._on_tts_service_changed()
+
+    def _add_tts_section(self, form, service, sc):
+        toggle = QToolButton()
+        toggle.setCheckable(True)
+        toggle.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        toggle.setArrowType(Qt.ArrowType.RightArrow)
+        toggle.setCursor(Qt.CursorShape.PointingHandCursor)
+        # Bold through the font, not the style sheet: Qt sizes the button from its font, so a style
+        # sheet weight made the longer titles come out cut in the middle.
+        bold = toggle.font()
+        bold.setBold(True)
+        toggle.setFont(bold)
+        toggle.setStyleSheet("QToolButton { border: none; margin-top: 6px; }")
+        form.addRow(toggle)
+        box = QWidget()
+        f = QFormLayout(box)
+        f.setContentsMargins(18, 0, 0, 6)
+        f.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        f.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+        fields, refresh = {}, None
+        key = QLineEdit(sc.get("key", ""))
+        self._apply_key_echo(key, TTS_KEY_HINTS[service])
+        qconnect(key.textChanged, lambda _=None: self._refresh_tts_status())
+        f.addRow("API key", key)
+        fields["key"] = key
+
+        def combo_row(name, label, items, value, value_label="", tip="", with_refresh=False):
+            c = _make_combo(editable=True)
+            _fill_combo(c, items, value, value_label)
+            if tip:
+                c.setToolTip(tip)
+            qconnect(c.currentTextChanged, lambda _=None: self._refresh_tts_status())
+            fields[name] = c
+            if not with_refresh:
+                f.addRow(label, c)
+                return None
+            r = QPushButton("↻")
+            r.setFixedWidth(36)
+            qconnect(r.clicked, lambda: self._load_tts_voices(service))
+            line = QHBoxLayout()
+            line.addWidget(c, 1)
+            line.addWidget(r, 0)
+            f.addRow(label, line)
+            return r
+
+        if service == "azure":
+            combo_row("region", "Region", tts.AZURE_REGIONS, sc.get("region"),
+                      tip="The region of your Speech resource, as the Azure portal shows it under Keys and "
+                          "Endpoint (for example westeurope). The key works only there.")
+        elif service == "elevenlabs":
+            refresh = combo_row("voice", "Voice", [], sc.get("voice"), sc.get("voice_name"),
+                                tip="Press ↻ to list the voices of your account, or paste a voice ID.",
+                                with_refresh=True)
+            refresh.setToolTip("List the voices of your ElevenLabs account")
+            combo_row("model", "Model", tts.ELEVENLABS_MODELS, sc.get("model"),
+                      tip="eleven_multilingual_v2 is the safe default. eleven_flash_v2_5 costs half as "
+                          "much. Press Test after a change.")
+        elif service == "openai":
+            combo_row("voice", "Voice", tts.OPENAI_VOICES, sc.get("voice"))
+            combo_row("model", "Model", tts.OPENAI_MODELS, sc.get("model"),
+                      tip="gpt-4o-mini-tts sounds best and knows every voice. tts-1 and tts-1-hd know nine.")
+        elif service == "google":
+            refresh = combo_row("voice", "German voice", tts.GOOGLE_GERMAN_VOICES, sc.get("voice"),
+                                tip="Press ↻ to list Google's current German voices, or type a voice name.",
+                                with_refresh=True)
+            refresh.setToolTip("List Google's German voices")
+        elif service == "gemini":
+            combo_row("voice", "Voice", tts.GEMINI_VOICES, sc.get("voice"))
+            combo_row("model", "Model", tts.GEMINI_MODELS, sc.get("model"),
+                      tip="gemini-3.8-flash-lite-tts is fast and cheap, gemini-3.8-flash-tts sounds richer.")
+        help_label = QLabel(TTS_HELP[service])
+        help_label.setWordWrap(True)
+        help_label.setOpenExternalLinks(True)
+        help_label.setTextFormat(Qt.TextFormat.RichText)
+        help_label.setStyleSheet("font-size: 11px;")
+        f.addRow("", help_label)
+        test = QPushButton("▶ Test %s" % tts.LABELS[service])
+        test.setToolTip("Read a short German sample with %s and the settings above" % tts.LABELS[service])
+        qconnect(test.clicked, lambda: self._test_tts(service, test))
+        test_row = QHBoxLayout()
+        test_row.addStretch()
+        test_row.addWidget(test)
+        f.addRow("", test_row)
+        box.setVisible(False)
+        form.addRow(box)
+        qconnect(toggle.toggled, lambda on: self._toggle_tts_section(service, on))
+        self._tts[service] = {"toggle": toggle, "box": box, "fields": fields, "test": test, "refresh": refresh}
+
+    def _toggle_tts_section(self, service, expanded):
+        info = self._tts[service]
+        info["box"].setVisible(expanded)
+        info["toggle"].setArrowType(Qt.ArrowType.DownArrow if expanded else Qt.ArrowType.RightArrow)
+
+    def _tts_selected(self):
+        return self.tts_service.currentData() or "edge"
+
+    def _on_tts_service_changed(self):
+        service = self._tts_selected()
+        if service == "edge":
+            text = TTS_HELP["edge"]
+        else:
+            text = "Set up %s below, then press Test." % tts.LABELS[service]
+            self._tts[service]["toggle"].setChecked(True)    # open its section; never close one
+        self.tts_help.setText(text + " Microsoft Edge and Azure read with the voices on the Languages tab. "
+                              "Those voices also decide which languages are read aloud, whichever "
+                              "service you pick.")
+        self._refresh_tts_status()
+
+    def _refresh_tts_status(self):
+        """Section titles and backup rows say which services are set up, so the order list shows
+        what will really be tried."""
+        if getattr(self, "tts_order", None) is None:
+            return                     # still building the tab
+        values = self._tts_values()
+        for service, info in self._tts.items():
+            state = "set up" if tts.configured(service, values) else "not set up"
+            info["toggle"].setText("%s: %s" % (tts.LABELS[service], state))
+        for i in range(self.tts_order.count()):
+            item = self.tts_order.item(i)
+            service = item.data(Qt.ItemDataRole.UserRole)
+            ok = tts.configured(service, values)
+            item.setText("%s%s" % (TTS_ITEMS[service], "" if ok else " (not set up, skipped)"))
+
+    def _move_tts_backup(self, step):
+        row = self.tts_order.currentRow()
+        new = row + step
+        if row < 0 or not (0 <= new < self.tts_order.count()):
+            return
+        item = self.tts_order.takeItem(row)
+        self.tts_order.insertItem(new, item)
+        self.tts_order.setCurrentRow(new)
+
+    def _tts_values(self):
+        """The Voice tab as a config["tts"] dict (pipeline/tts.py reads exactly this shape)."""
+        out = {"service": self._tts_selected(),
+               "order": [self.tts_order.item(i).data(Qt.ItemDataRole.UserRole)
+                         for i in range(self.tts_order.count())]
+               if getattr(self, "tts_order", None) is not None else list(tts.DEFAULT_ORDER)}
+        for service, info in self._tts.items():
+            d = {}
+            for name, w in info["fields"].items():
+                d[name] = w.text().strip() if isinstance(w, QLineEdit) else _combo_value(w)
+            d["key"] = "".join((d.get("key") or "").split())     # keys never contain spaces or line breaks
+            if service == "azure":
+                d["region"] = tts.azure_region(d.get("region"))
+            if service == "elevenlabs":
+                shown = info["fields"]["voice"].currentText().strip()
+                d["voice_name"] = shown if shown != d.get("voice") else ""   # the name, for display only
+            out[service] = d
+        return out
+
+    def _test_tts(self, service, btn):
+        """Read the German sample with ONE service (no backups) and the values on this tab, saved
+        or not, and play it with Anki's player. A failure shows the service's own reason."""
+        values = self._tts_values()
+        voice = self._voice_selected("target") or tts.DEFAULT_GERMAN_VOICE
+        text = audio.sample_text_for_voice(voice)
+        tts_to = int((self.cfg.get("timeouts", {}) or {}).get("tts_seconds", 30))
+        folder = os.path.dirname(_models_cache_path())
+        label = btn.text()
+        btn.setEnabled(False)
+        btn.setText("Testing…")
+
+        def op(col):
+            clip = tts.synthesize(service, text, voice, values, timeout=tts_to)
+            path = os.path.join(folder, "voice_test_%s.%s" % (service, clip.ext))
+            with open(path, "wb") as fh:
+                fh.write(clip.data)
+            return path
+
+        def done():
+            btn.setEnabled(True)
+            btn.setText(label)
+
+        def ok(path):
+            done()
+            av_player.play_file(path)
+            self._toast("✓ %s works. Playing the sample." % tts.LABELS[service], period=4000)
+
+        def fail(e):
+            done()
+            showText("%s test failed.\n\n%s" % (tts.LABELS[service], _tts_reason(e)), parent=self, copyBtn=False)
+
+        QueryOp(parent=self, op=op, success=ok).without_collection().failure(fail).run_in_background()
+
+    def _load_tts_voices(self, service):
+        """↻ next to a voice: list the voices this key can use (ElevenLabs) or Google's German ones."""
+        info = self._tts[service]
+        key = self._tts_values()[service].get("key") or ""      # cleaned exactly like Test and Save
+        if not key:
+            self._toast("Enter the %s API key first." % tts.LABELS[service])
+            return
+        btn = info["refresh"]
+        btn.setEnabled(False)
+
+        def op(col):
+            if service == "elevenlabs":
+                return tts.elevenlabs_voices(key)
+            return tts.google_voices(key, "de-DE")
+
+        def ok(items):
+            btn.setEnabled(True)
+            combo = info["fields"]["voice"]
+            if not items:
+                self._toast("No voices found for this key.")
+                return
+            current = _combo_value(combo)
+            first = items[0][1] if isinstance(items[0], (tuple, list)) else items[0]
+            _fill_combo(combo, items, current or first)
+            self._refresh_tts_status()
+            self._toast("✓ %d voices loaded." % len(items))
+
+        def fail(e):
+            btn.setEnabled(True)
+            showText("Couldn't list the voices.\n\n%s" % _tts_reason(e), parent=self, copyBtn=False)
+
+        QueryOp(parent=self, op=op, success=ok).without_collection().failure(fail).run_in_background()
 
     # ── provider helpers ──
     def _current_provider(self):
@@ -1125,6 +1509,7 @@ class SettingsDialog(QDialog):
         cfg["voices"].pop("en", None)
         if "secondary" in self._voice_slots:
             cfg["voices"]["secondary"] = self._voice_selected("secondary")
+        cfg["tts"] = self._tts_values()
         cfg.setdefault("defaults", {})
         prim_lang = self.translation_lang.currentText().strip() or prompts.DEFAULT_TRANSLATION_LANG
         sec_lang = self._secondary_value()

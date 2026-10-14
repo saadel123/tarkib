@@ -31,7 +31,8 @@ class ProviderError(Exception):
     pass
 
 
-_AUTH_HEADERS = ("authorization", "x-api-key", "x-goog-api-key")
+_AUTH_HEADERS = ("authorization", "x-api-key", "x-goog-api-key",
+                 "xi-api-key", "ocp-apim-subscription-key")      # the last two: voice services (tts.py)
 
 
 class _KeepKeyHome(urllib.request.HTTPRedirectHandler):

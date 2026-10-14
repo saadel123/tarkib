@@ -14,7 +14,7 @@ from aqt.utils import qconnect, tooltip, showText, getText, askUser
 from aqt.operations import QueryOp, CollectionOp
 
 from .. import anki_io
-from ..pipeline import generate, audio, providers, prompts
+from ..pipeline import generate, providers, prompts, tts
 from .support import (support_link, decks_footer_link, note_card_added_and_maybe_thank,
                       decks_imported, DECKS_URL)
 from .promo_rules import hint_should_show
@@ -24,6 +24,11 @@ FIELD_MIN_W = 340            # text inputs grow to at least this wide
 
 def _cfg():
     return mw.addonManager.getConfig(__name__) or {}
+
+
+def _esc(text):
+    """Plain text for a rich-text label (provider messages can contain < or &)."""
+    return (text or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
 class AddCardDialog(QDialog):
@@ -79,6 +84,17 @@ class AddCardDialog(QDialog):
             "#tarkibDecksHint{background:rgba(100,116,139,0.18);border-radius:6px;}")
         self.decks_hint.hide()
         layout.addWidget(self.decks_hint)
+        # Why the last card has no audio (or which service read it instead), until a card gets all
+        # of its audio again. The toast says it too, but a toast is gone while the user looks at the
+        # card, and a card must never end up silent without the reason staying readable.
+        self.audio_banner = QLabel()
+        self.audio_banner.setWordWrap(True)
+        self.audio_banner.setTextFormat(Qt.TextFormat.RichText)
+        self.audio_banner.setStyleSheet(
+            "background:rgba(217,119,6,0.22);padding:8px;border-radius:6px;font-size:12px;")
+        qconnect(self.audio_banner.linkActivated, lambda _link: self._open_settings(initial_tab="Voice"))
+        self.audio_banner.hide()
+        layout.addWidget(self.audio_banner)
 
         form = QFormLayout()
         form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
@@ -229,7 +245,7 @@ class AddCardDialog(QDialog):
         except Exception:
             pass
 
-    def _fit_height(self):
+    def _fit_height(self, grow_only=False):
         """Resize the open window to the height its content needs now, keeping the user's width.
 
         Qt grows a window whose content no longer fits, but never shrinks one: when Settings hides
@@ -244,6 +260,8 @@ class AddCardDialog(QDialog):
             w = self.width()
             h = self.heightForWidth(w) if self.hasHeightForWidth() else self.sizeHint().height()
             h = max(h, self.minimumSizeHint().height())
+            if grow_only and h <= self.height():
+                return
             if h > 0 and h != self.height():
                 self.resize(w, h)
         except Exception:
@@ -488,19 +506,16 @@ class AddCardDialog(QDialog):
             if out.get("cloze_id"):
                 parts.append("cloze")
             warn = bundle.get("meta", {}).get("cloze_warning")
-            extra = " (cloze skipped: %s)" % warn if warn and not out.get("cloze_id") else ""
+            extra = " (cloze skipped: %s)" % _esc(warn) if warn and not out.get("cloze_id") else ""
             msg = "✓ Added " + " + ".join(parts) + extra
             period = 4000
-            # Audio is nice-to-have: the card already landed. Report partial/total audio loss.
-            a = bundle.get("meta", {}).get("audio") or {}
-            ok_n, total_n, cat = a.get("ok", 0), a.get("total", 0), a.get("category")
-            if total_n and ok_n == 0:
-                msg += ". Audio unavailable (%s). Re-add later for audio." % audio.tts_error_message(cat)
-                period = 7000
-            elif total_n and ok_n < total_n:
-                msg += ". Note: %d of %d audio clips failed (%s). Re-add later to fill." % (
-                    total_n - ok_n, total_n, audio.tts_error_message(cat))
-                period = 7000
+            # Audio is nice-to-have: the card already landed. But a card never goes silent without
+            # the reason: the toast says it, and the banner keeps saying it until audio works again.
+            note, banner = self._audio_note(bundle.get("meta", {}).get("audio") or {})
+            if note:
+                msg += ". " + _esc(note)          # tooltip renders rich text; a provider's text is not HTML
+                period = 8000
+            self._show_audio_note(banner)
             # Best-effort enrichment steps that were skipped (recorded in meta by build_card).
             meta = bundle.get("meta", {})
             skipped = [name for key, name in (("grammar_warning", "grammar notes"),
@@ -510,7 +525,7 @@ class AddCardDialog(QDialog):
                 period = max(period, 6000)
             lw = meta.get("language_warning")
             if lw:
-                msg += ". Note: %s. Fix it in Settings, Languages." % lw
+                msg += ". Note: %s. Fix it in Settings, Languages." % _esc(lw)
                 period = max(period, 7000)
             tooltip(msg, period=period)
             # Stay open for rapid multi-card entry (like Anki's own Add window): clear the
@@ -531,6 +546,33 @@ class AddCardDialog(QDialog):
             note_card_added_and_maybe_thank(self)
 
         CollectionOp(parent=mw, op=wop).success(done).failure(self._fail).run_in_background()
+
+    @staticmethod
+    def _audio_note(a):
+        """(toast part, banner html) about the card's audio, or ("", "") when the chosen voice service
+        read every clip. The wording is tts.audio_note (Qt-free, tested); this adds icon, escaping
+        and the Settings link."""
+        note, banner, fix = tts.audio_note(a)
+        if not note:
+            return "", ""
+        if fix:
+            return note, ('🔇 %s Re-add the word later, or set up another voice service in '
+                          '<a href="voice">Settings, Voice</a>.' % _esc(banner))
+        return note, '🔈 %s <a href="voice">Open Settings, Voice</a>.' % _esc(banner)
+
+    def _show_audio_note(self, banner):
+        try:
+            was_hidden = self.audio_banner.isHidden()
+            if banner:
+                self.audio_banner.setText(banner)
+                self.audio_banner.show()
+                # Grow if the text needs it, never shrink: a window the user made taller stays tall.
+                self._fit_height(grow_only=True)
+            elif not was_hidden:
+                self.audio_banner.hide()
+                self._fit_height()
+        except Exception:
+            pass   # a status line must never get in the way of adding cards
 
     def _fail(self, exc):
         self.add_btn.setEnabled(True)

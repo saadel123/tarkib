@@ -1,9 +1,9 @@
-import hashlib
 import difflib
 """The card-generation pipeline (network only — NO Anki access).
 
-Built on the provider layer, the pure-Python edge-tts client (no edge-tts, pydub or ffmpeg), and
-the period-split cloze audio. Produces a "bundle" dict that anki_io writes into the collection.
+Built on the provider layer, the voice services (tts.py: the pure-Python Edge read-aloud client,
+no edge-tts, pydub or ffmpeg, or a paid service with the user's key), and the period-split cloze
+audio. Produces a "bundle" dict that anki_io writes into the collection.
 
 Media is returned as {token: (filename, bytes)}; field strings contain the tokens, so anki_io
 can write each blob, learn its real (possibly-renamed) filename, and substitute.
@@ -12,7 +12,7 @@ import html
 import json
 import re
 
-from . import prompts, providers, images, audio
+from . import prompts, providers, images, audio, tts
 
 # Media placeholder tokens (resolved to real filenames by anki_io after media.write_data).
 IMG = "@@IMG@@"
@@ -819,15 +819,18 @@ def build_back_html(card):
     return "\n".join(p for p in parts if p)
 
 
-def _audio_tag(text):
-    """Short hash of the SPOKEN TEXT, appended to every audio filename.
+def _audio_name(prefix, label, text, clip):
+    """Audio filename: prefix, a readable label, then a hash of the SPOKEN TEXT, the voice service
+    and the voice (tts.audio_tag), with the service's own extension (Gemini gives WAV).
 
     _safe() truncates, so a name derived from the sentence is not unique: "Das Wetter ist heute
     schlecht." and "Das Wetter ist heute schön." both became cloze_back_Das_Wetter_ist_heute_sch,
     and one card played the other's audio — with the opposite meaning. Hashing the text means the
-    filename always follows the audio: different speech gets a different file, and genuinely
-    identical speech still shares one."""
-    return hashlib.sha1((text or "").encode("utf-8")).hexdigest()[:6]
+    filename always follows the audio: different speech gets a different file, and the same text in
+    the same voice still shares one. The service and voice are in the hash too (1.0.3), so a clip
+    read by a backup service, or after a voice change, never takes the name of an existing clip;
+    and media.write_data renames rather than overwrites if the bytes ever differ."""
+    return "%s_%s_%s.%s" % (prefix, _safe(label), tts.audio_tag(text, clip), clip.ext)
 
 
 def _clean_tts(t):
@@ -880,7 +883,8 @@ def build_card(cfg, provider, deck, word, options):
     """Run the full pipeline. Returns a bundle dict (see anki_io.write_bundle).
 
     options: meaning, scenario, image_keyword, image_source, secondary_language, generate_cloze, level.
-    cfg: voices{target,translation,secondary}, image{pexels_key,serper_key,pixabay_key}, timeouts{ai_seconds,image_seconds,tts_seconds}.
+    cfg: voices{target,translation,secondary}, tts{service,order,<service>{...}} (see pipeline/tts.py),
+    image{pexels_key,serper_key,pixabay_key}, timeouts{ai_seconds,image_seconds,tts_seconds}.
     """
     # Optional User-Agent override (default lives in providers; not per-user, not a secret).
     # Threaded explicitly into each provider call — no global mutation (avoids a cross-call race).
@@ -1066,24 +1070,25 @@ def build_card(cfg, provider, deck, word, options):
 
     media = {}
     # Per-clip audio resilience: each clip is attempted independently and failures are recorded
-    # (never raised), so the card still lands with whatever audio succeeded. category is the
-    # worst (most actionable) failure seen across clips — see audio.classify_tts_error.
+    # (never raised), so the card still lands with whatever audio succeeded. One Speaker per card
+    # walks the voice-service chain (the chosen service, the backups that are set up, then Edge)
+    # and skips a service for the remaining clips once it failed hard, so a broken service costs
+    # one wait, not one per clip. Its summary goes into meta so the dialog can say exactly why a
+    # clip is missing, or which service read it instead (tts.Speaker.summary).
     audio_status = {"ok": 0, "total": 0, "category": None}
+    try:
+        speaker = tts.Speaker(cfg.get("tts") or {}, timeout=tts_to)
+    except Exception:
+        speaker = tts.Speaker({}, timeout=tts_to)   # a broken tts config falls back to free Edge
 
-    def _try_audio(make):
+    def _try_audio(text, voice):
         audio_status["total"] += 1
-        # All clips hit the same endpoint: once one fails at the connection/auth level, the rest
-        # would fail identically after their own full timeout+retry cycle (minutes of frozen UI).
-        if audio_status["category"] in ("network", "auth"):
-            return None
         try:
-            blob = make()
-            audio_status["ok"] += 1
-            return blob
-        except Exception as e:
-            audio_status["category"] = audio.worse_category(audio_status["category"],
-                                                            audio.classify_tts_error(e)[0])
-            return None
+            clip = speaker.speak(text, voice)
+        except Exception:
+            return None                      # recorded in speaker.failures, reported via summary
+        audio_status["ok"] += 1
+        return clip
 
     # Image
     progress("fetching image")
@@ -1104,25 +1109,25 @@ def build_card(cfg, provider, deck, word, options):
     # Main audio (DE + EN) — each clip independent; a failure just leaves that clip out.
     progress("generating audio")
     de_text = _clean_tts(". ... ".join([card.get("word", ""), card.get("example_casual", ""), card.get("example_formal", "")]))
-    de_bytes = _try_audio(lambda: audio.synthesize(de_text, voice_de, timeout=tts_to))
-    if de_bytes is not None:
-        media["TTS_DE"] = ("tts_de_%s_%s.mp3" % (_safe(front), _audio_tag(de_text)), de_bytes)
+    de_clip = _try_audio(de_text, voice_de)
+    if de_clip is not None:
+        media["TTS_DE"] = (_audio_name("tts_de", front, de_text, de_clip), de_clip.data)
     # Translation audio — only when a translation voice is set. "(none)" (voice_en == ""), the
     # default, keeps the translation as TEXT only, so we skip the clip entirely (no wasted call, no
     # "audio failed" noise in the toast).
     if voice_en:
         en_text = _clean_tts(" ... ".join([(card.get("translation_en", "") or "") + ".", card.get("example_casual_en", ""), card.get("example_formal_en", "")]))
-        en_bytes = _try_audio(lambda: audio.synthesize(en_text, voice_en, timeout=tts_to))
-        if en_bytes is not None:
-            media["TTS_EN"] = ("tts_en_%s.mp3" % _safe(front), en_bytes)
+        en_clip = _try_audio(en_text, voice_en)
+        if en_clip is not None:
+            media["TTS_EN"] = (_audio_name("tts_en", front, en_text, en_clip), en_clip.data)
     # Secondary-language audio (5th clip) — only when a secondary voice is configured AND the
     # secondary translation was produced. Reads the translation aloud in the secondary language.
     if voice_sec and (card.get("secondary_casual") or card.get("secondary_formal") or card.get("secondary_word")):
         sec_text = _clean_tts(" ... ".join([card.get("secondary_word", ""),
                                             card.get("secondary_casual", ""), card.get("secondary_formal", "")]))
-        sec_bytes = _try_audio(lambda: audio.synthesize(sec_text, voice_sec, timeout=tts_to))
-        if sec_bytes is not None:
-            media["TTS_SEC"] = ("tts_sec_%s.mp3" % _safe(front), sec_bytes)
+        sec_clip = _try_audio(sec_text, voice_sec)
+        if sec_clip is not None:
+            media["TTS_SEC"] = (_audio_name("tts_sec", front, sec_text, sec_clip), sec_clip.data)
     audio_tags = ""
     if "TTS_DE" in media:
         audio_tags += "[sound:%s]" % TTS_DE
@@ -1197,7 +1202,7 @@ def build_card(cfg, provider, deck, word, options):
                     split_text = audio.split_for_cloze(sentence, tts_answer)
                     # Whole-sentence blanks leave no words to speak ("Herzlich willkommen!" -> "!"):
                     # skip the pause-drill clip instead of burning 4 doomed TTS attempts.
-                    fb = (_try_audio(lambda: audio.synthesize(split_text, voice_de, timeout=tts_to))
+                    fb = (_try_audio(split_text, voice_de)
                           if re.search(r"[A-Za-zÄÖÜäöüß]", split_text) else None)
                     if fb is not None:
                         # The pause-drill clip depends on WHICH span is deleted, not just on the
@@ -1205,11 +1210,11 @@ def build_card(cfg, provider, deck, word, options):
                         # produce different audio. Naming it after the sentence alone made them
                         # collide, and one card then played the other's drill (19 cases across
                         # the catalogue). Hash the spoken text so the name follows the audio.
-                        media["CLOZE_FRONT"] = ("cloze_front_%s_%s.mp3" % (_safe(sentence), _audio_tag(split_text)), fb)
+                        media["CLOZE_FRONT"] = (_audio_name("cloze_front", sentence, split_text, fb), fb.data)
                         front_audio = "[sound:%s]" % CLOZE_FRONT
-                    bb = _try_audio(lambda: audio.synthesize(sentence, voice_de, timeout=tts_to))
+                    bb = _try_audio(sentence, voice_de)
                     if bb is not None:
-                        media["CLOZE_BACK"] = ("cloze_back_%s_%s.mp3" % (_safe(sentence), _audio_tag(sentence)), bb)
+                        media["CLOZE_BACK"] = (_audio_name("cloze_back", sentence, sentence, bb), bb.data)
                         back_audio = "[sound:%s]" % CLOZE_BACK
                     image_html = '<img src="%s">' % IMG if "IMG" in media else ""
                     bundle["cloze"] = {
@@ -1230,6 +1235,8 @@ def build_card(cfg, provider, deck, word, options):
         except Exception as e:
             bundle["meta"]["cloze_warning"] = str(e)
 
+    # Last, so it covers the cloze clips too: why clips are missing, who read them (ui/dialog.py).
+    audio_status.update(speaker.summary())
     return bundle
 
 

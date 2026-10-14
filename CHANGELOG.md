@@ -3,6 +3,25 @@
 All notable changes to **Tarkib** are listed here, newest first.
 Versions follow [SemVer](https://semver.org/).
 
+## [1.1.0]
+
+- **Audio works again.** Since 13 October 2026, Microsoft refuses the old way the free Edge voices
+  were asked for audio, so cards came out without sound. Tarkib now uses the new token. If your
+  computer's clock is off, it corrects itself from Microsoft's answer and tries again.
+- **A card never goes silent without telling you.** Each voice request has a time limit and one
+  retry. When audio fails, the Add window says why, for example "Microsoft Edge refused the
+  connection: HTTP 403 Forbidden", and keeps the reason on screen until a card gets all its audio
+  again. The add-on log in Anki's logs folder has the details.
+- **Choose who reads your cards aloud,** in the new Settings tab Voice: Microsoft Edge (free, no
+  key, the default), Azure AI Speech (official Microsoft voices, same names, free tier), ElevenLabs,
+  OpenAI, Google Cloud or Gemini, each with your own key. Every service has a Test button that plays
+  a short sample. If your service fails, Tarkib tries the other services you set up, in your order,
+  then Microsoft Edge, and tells you which one read the card.
+- Audio file names now come from the spoken text, the voice service and the voice, so a re-added
+  card reuses its file and a clip never takes another clip's name. Gemini audio is saved as WAV.
+- The token code comes from edge-tts and keeps its LGPL-3.0 license, see `licenses/README.md`.
+  Everything else stays MIT.
+
 ## [1.0.2]
 
 - **Only the German is read aloud by default.** The translation and the optional second language
@@ -69,6 +88,7 @@ On AnkiWeb: [83323714](https://ankiweb.net/shared/info/83323714) (Tools, Add-ons
   top toolbar.
 - Works with Anki 23.10 and newer. Pure Python, nothing to install.
 
+[1.1.0]: https://github.com/saadel123/tarkib/releases/tag/v1.1.0
 [1.0.2]: https://github.com/saadel123/tarkib/releases/tag/v1.0.2
 [1.0.1]: https://github.com/saadel123/tarkib/releases/tag/v1.0.1
 [1.0.0]: https://github.com/saadel123/tarkib/releases/tag/v1.0.0

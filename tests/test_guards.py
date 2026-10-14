@@ -377,23 +377,22 @@ class ReviewProposedTests(unittest.TestCase):
             self.assertEqual(providers._parse_wait(body), 5.0, repr(body))
         self.assertEqual(providers._parse_wait("nothing here", default=12.5), 12.5)
 
-    def test_classify_tts_error_and_worst_category(self):
-        from pipeline import audio
-        self.assertEqual(audio.classify_tts_error(Exception("WS handshake failed: 429"))[0], "rate_limit")
-        self.assertEqual(audio.classify_tts_error(Exception("server closed 1008"))[0], "rate_limit")
-        self.assertEqual(audio.classify_tts_error(Exception("HTTP Error 403: Forbidden"))[0], "auth")
-        self.assertEqual(audio.classify_tts_error(Exception("1007 invalid token"))[0], "auth")
-        self.assertEqual(audio.classify_tts_error(Exception("connection reset by peer"))[0], "network")
-        self.assertEqual(audio.classify_tts_error(Exception(""))[0], "network")
-        for cat, msg in (audio.classify_tts_error(Exception("429")),
-                         audio.classify_tts_error(Exception("403")),
-                         audio.classify_tts_error(Exception("boom"))):
-            self.assertEqual(msg, audio.TTS_ERROR_MESSAGES[cat])
-        self.assertEqual(audio.worse_category("network", "auth"), "auth")
-        self.assertEqual(audio.worse_category("auth", "network"), "auth")
-        self.assertEqual(audio.worse_category("network", "rate_limit"), "rate_limit")
-        self.assertEqual(audio.worse_category(None, "network"), "network")
-        self.assertEqual(audio.worse_category("network", None), "network")
+    def test_tts_failure_kinds_and_the_worst_one(self):
+        # The dialog names the most useful cause first: something to fix in Settings beats a
+        # problem that clears up by itself (the full matrix is in tests/test_tts.py).
+        from pipeline import audio, tts
+        self.assertEqual(audio.EdgeTTSError("x", status=403).kind, "auth")
+        self.assertEqual(audio.EdgeTTSError("x", status=429).kind, "rate_limit")
+        self.assertEqual(audio.EdgeTTSError("x", code=1007).kind, "bad_request")   # unsupported voice or text
+        self.assertEqual(audio.EdgeTTSError("x", code=1008).kind, "rate_limit")
+        self.assertEqual(audio.EdgeTTSError("x", status=503).kind, "server")
+        self.assertEqual(audio.EdgeTTSError("x").kind, "network")
+        self.assertEqual(tts.worse_kind("network", "auth"), "auth")
+        self.assertEqual(tts.worse_kind("auth", "network"), "auth")
+        self.assertEqual(tts.worse_kind("network", "rate_limit"), "rate_limit")
+        self.assertEqual(tts.worse_kind("quota", "config"), "config")
+        self.assertEqual(tts.worse_kind(None, "network"), "network")
+        self.assertEqual(tts.worse_kind("network", None), "network")
 
     def test_image_magic_byte_guard(self):
         from pipeline import images
@@ -512,6 +511,17 @@ class TranslationVoiceDefault(unittest.TestCase):
         self.assertTrue(voices["target"].startswith("de-"))
         self.assertEqual(voices["translation"], "")
         self.assertEqual(voices["secondary"], "")
+
+    def test_default_voice_service_is_free_edge_and_matches_the_code(self):
+        from pipeline import tts
+        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.json"),
+                  encoding="utf-8") as f:
+            cfg = json.load(f)["tts"]
+        self.assertEqual(cfg["service"], "edge")
+        self.assertEqual(tts.chain(cfg), ["edge"])
+        for service, defaults in tts.DEFAULTS.items():
+            self.assertEqual(cfg[service], defaults, service)
+            self.assertEqual(cfg[service].get("key"), "")       # never ship a key
 
 
 if __name__ == "__main__":

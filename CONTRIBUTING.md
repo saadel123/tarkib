@@ -146,4 +146,4 @@ Nobody can eyeball every language, so concrete samples are how quality gets judg
 - Explain *what* and *why*, and include example output for prompt or language changes.
 - Match the surrounding style: 4-space indent, stdlib only, Qt touched only on the main thread.
 
-By contributing, you agree your contributions are licensed under the project's [MIT License](LICENSE).
+By contributing, you agree your contributions are licensed under the project's [MIT License](LICENSE), except changes to `pipeline/edge_drm.py`, which stay under the LGPL-3.0 (see [licenses/README.md](licenses/README.md)).

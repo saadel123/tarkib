@@ -25,7 +25,8 @@ OUT = os.path.join(OUT_DIR, "tarkib.ankiaddon")
 # What an installed add-on needs, nothing else. Tests, docs, repo files and this script stay home.
 SHIP_FILES = {"__init__.py", "anki_io.py", "notetypes.py", "manifest.json", "config.json", "config.md",
               "LICENSE"}
-SHIP_DIRS = {"pipeline": {".py"}, "ui": {".py"}, "icons": {".svg"}}
+# licenses/: the LGPL-3.0 texts that must travel with pipeline/edge_drm.py (see licenses/README.md).
+SHIP_DIRS = {"pipeline": {".py"}, "ui": {".py"}, "icons": {".svg"}, "licenses": {".txt", ".md"}}
 
 
 def _tracked():
@@ -73,6 +74,13 @@ def main():
                      % skipped)
         if skipped:
             print("   left out (not tracked by git): %s" % ", ".join(skipped))
+
+    # LGPL-3.0: pipeline/edge_drm.py may only ship together with its license texts (licenses/README.md).
+    lgpl = {"licenses/LGPL-3.0.txt", "licenses/GPL-3.0.txt", "licenses/README.md"}
+    normalized = {os.path.normpath(f).replace(os.sep, "/") for f in files}
+    if "pipeline/edge_drm.py" in normalized and not lgpl <= normalized:
+        sys.exit("ABORT: pipeline/edge_drm.py would ship without %s  (git add licenses/, then build again)"
+                 % sorted(lgpl - normalized))
 
     # SAFETY: never ship a key/secret or runtime state, even if the rules above ever drift.
     leaked = [f for f in files

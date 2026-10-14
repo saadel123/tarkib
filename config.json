@@ -19,6 +19,40 @@
     "translation": "",
     "secondary": ""
   },
+  "tts": {
+    "service": "edge",
+    "order": [
+      "azure",
+      "elevenlabs",
+      "openai",
+      "google",
+      "gemini"
+    ],
+    "azure": {
+      "key": "",
+      "region": ""
+    },
+    "elevenlabs": {
+      "key": "",
+      "voice": "",
+      "voice_name": "",
+      "model": "eleven_multilingual_v2"
+    },
+    "openai": {
+      "key": "",
+      "voice": "marin",
+      "model": "gpt-4o-mini-tts"
+    },
+    "google": {
+      "key": "",
+      "voice": "de-DE-Chirp3-HD-Kore"
+    },
+    "gemini": {
+      "key": "",
+      "voice": "Kore",
+      "model": "gemini-3.8-flash-lite-tts"
+    }
+  },
   "defaults": {
     "translation_language": "English",
     "secondary_translation_language": "",

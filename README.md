@@ -14,7 +14,7 @@
 
 ## The story
 
-I've been using Anki for a few years to learn languages, especially German. I found a card format that works for me. **Front:** the word. **Back:** the meaning, a related image, a couple of emojis that help me remember it, audio, and two example sentences, one casual and one formal. Verbs always come with their preposition and case, like "warten auf" with the Akkusativ, because that is what you need when you speak.
+I've been using Anki for a few years to learn languages. I found a card format that works for me. **Front:** the word. **Back:** the meaning, a related image, a couple of emojis that help me remember it, audio, and two example sentences, one casual and one formal. Verbs always come with their preposition and case, like "warten auf" with the Akkusativ, because that is what you need when you speak.
 
 The problem was making those cards. I typed everything in by hand, made the audio with a separate TTS tool, searched for an image and uploaded it, then asked an AI if my example sentence was even correct. One card took me ten to fifteen minutes.
 
@@ -52,6 +52,8 @@ The helper text under the German can be any of **24 languages** (English by defa
 
 Every language has a natural Microsoft voice. The translations stay silent until you pick their voices in **Settings, Languages**. Press **▶** next to a voice to hear a sample sentence before you decide.
 
+The Microsoft Edge voices are free and need no key. If you prefer, **Settings, Voice** lets Azure AI Speech, ElevenLabs, OpenAI, Google Cloud or Gemini read your cards instead, with your own key, and each has a Test button. If your voice service fails, Tarkib tries your other services, then the free Edge voices, and tells you which one read the card.
+
 ## Ready-made German decks (A1 is free)
 
 ![Tarkib German decks, A1 to C1: word cards and typing cards](assets/decks.gif)
@@ -64,7 +66,7 @@ Rather not make the cards yourself? I made German decks, A1 to C1, in the same c
 
 Tarkib is free and open source, with no account and no server of mine in between. It runs on your own key. The default is a free model on Groq, enough for a few dozen cards a day, and OpenAI, Google Gemini, Anthropic, Mistral, OpenRouter or a local Ollama model work too.
 
-Your keys stay on your computer, are never synced, and each one goes only to its own service. The German, and a translation only when its voice is on, goes to Microsoft's Edge read-aloud service for the audio. Nothing is sent to me. The read-aloud service is not an official API, so if it changes, cards are still made, only without sound.
+Your keys stay on your computer, are never synced, and each one goes only to its own service. The German, and a translation only when its voice is on, goes to the voice service that reads it: Microsoft's Edge read-aloud service by default, or the one you set up in **Settings, Voice**. Nothing is sent to me. The Edge read-aloud service is not an official API, so it can change without notice. If it does, the card is still made, Tarkib tells you why it has no sound, and a voice service with your own key can take over.
 
 ## A note on quality
 
@@ -86,4 +88,4 @@ Inside the add-on there is a small "♥ Support this add-on" link and a quiet "F
 
 ## License
 
-[MIT](LICENSE) © 2026 saadel123. Free to use, modify, and share.
+[MIT](LICENSE) © 2026 saadel123. Free to use, modify, and share. One file is not MIT: `pipeline/edge_drm.py`, the token for the free Edge voices, comes from [edge-tts](https://github.com/rany2/edge-tts) and stays under the LGPL-3.0 (see [licenses](licenses/README.md)).
