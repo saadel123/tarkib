@@ -1,0 +1,31 @@
+name: Mistake on a deck card
+description: Report a wrong word, sentence, translation, picture or audio on a deck card.
+title: "[Deck] "
+labels: ["deck"]
+body:
+  - type: input
+    id: word
+    attributes:
+      label: Word on the card
+      placeholder: "Example: der Tisch"
+    validations:
+      required: true
+  - type: dropdown
+    id: level
+    attributes:
+      label: Level
+      options:
+        - A1
+        - A2
+        - B1
+        - B2
+        - C1
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong?
+      description: Copy the wrong part of the card, then write what it should be.
+    validations:
+      required: true
