@@ -1,0 +1,42 @@
+[
+ {
+  "name": "Deutsch::Alltagsdeutsch",
+  "description": "everyday spoken German, casual vs formal contrast",
+  "default_checked": true
+ },
+ {
+  "name": "Deutsch::Verben",
+  "description": "verbs (separable, reflexive, Perfekt rules)",
+  "default_checked": true
+ },
+ {
+  "name": "Deutsch::Redewendungen",
+  "description": "idioms with native meaning anchoring (no false friends)",
+  "default_checked": true
+ },
+ {
+  "name": "Deutsch::Nomen-Verb-Verbindungen",
+  "description": "NVV / professional collocations (educated register)",
+  "default_checked": true
+ },
+ {
+  "name": "Deutsch::Supermarkt",
+  "description": "grocery, cooking, Pfand, REWE / Edeka / Aldi realism",
+  "default_checked": true
+ },
+ {
+  "name": "Deutsch::Behörden",
+  "description": "bureaucracy: Anmeldung, Ummeldung, Bürgeramt, Krankenkasse",
+  "default_checked": true
+ },
+ {
+  "name": "Deutsch::Wichtig",
+  "description": "important words for daily life in Germany (general)",
+  "default_checked": true
+ },
+ {
+  "name": "Deutsch::IT Wortschatz",
+  "description": "tech German with Denglisch, dev scenarios",
+  "default_checked": true
+ }
+]

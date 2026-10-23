@@ -1,0 +1,12 @@
+Input: give up
+Deck: Tarkib English
+Meaning in French: abandonner
+
+
+Classify and generate a NATURAL English cloze sentence. Restructure if needed.
+
+LEVEL B1: use case "single_word", "verb_prep" or "phrasal_verb"; a medium everyday sentence with common words.
+
+Write "translation" as the FULL sentence translated naturally into French.
+
+Use British English spelling and words.

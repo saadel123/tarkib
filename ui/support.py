@@ -20,6 +20,9 @@ ANKIWEB_URL = "https://ankiweb.net/shared/info/83323714"   # where a rating help
 DECKS_URL = "https://ko-fi.com/s/ab96fd15d8"
 SHOP_URL = "https://ko-fi.com/tarkib/shop"
 DECKS_NOTETYPE = "Tarkib German"   # present once a ready-made deck is imported (notetypes.MAIN_NOTETYPE)
+# The learning language the ready-made decks teach (pipeline/languages.py): their pointers show only
+# while the Add window or Settings is on this language.
+DECKS_LANGUAGE = "de"
 
 
 def decks_imported():

@@ -16,6 +16,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+from . import languages
+
 DEFAULT_TIMEOUT = 60
 
 # Groq (and other APIs) sit behind Cloudflare, which returns 403 to the default
@@ -473,16 +475,29 @@ def friendly_error(exc, model=None):
         return ("No API key set",
                 "This provider has no API key.\n\nOpen Settings and paste your key (a free Groq key works).",
                 "settings")
-    if "not german:" in low:
-        # exc text is: not german: "<input>"; suggestion "<german word or empty>"
+    names = {e["name"].lower(): e["name"] for e in languages.LANGUAGES}
+    refused = re.search(r"\bnot (%s): " % "|".join(re.escape(n) for n in names), low)
+    if refused:
+        # exc text is: not <language>: "<input>"; suggestion "<word in that language or empty>"
+        name = names[refused.group(1)]
+        article = "an" if name[:1].lower() in "aeiou" else "a"
         quoted = re.findall(r'"([^"]*)"', text)
         w = quoted[0] if quoted else ""
         sug = quoted[1] if len(quoted) > 1 else ""
         hint = ('\n\nDid you mean "%s"?' % sug) if sug else ""
-        return ("That does not look like German",
-                'The model could not recognise "%s" as a German word or phrase, so no card was made.%s\n\n'
-                "Check the spelling, or type the German word you want to learn. Names and loanwords that\n"
-                "are used in German are fine." % (w, hint), "retry")
+        return ("That does not look like %s" % name,
+                'The model could not recognise "%s" as %s %s word or phrase, so no card was made.%s\n\n'
+                "Check the spelling, or type the %s word you want to learn. Names and loanwords that\n"
+                "are used in %s are fine." % (w, article, name, hint, name, name), "retry")
+    if "no translation language" in low:
+        # exc text is: no translation language: cards that teach "<language>" need another translation
+        # language than "<the one in Settings>"
+        quoted = re.findall(r'"([^"]*)"', text)
+        lang = quoted[0] if quoted else "this language"
+        return ("Pick a translation language",
+                "Cards that teach %s show their meanings in another language, and the translation language in "
+                "Settings is %s.\n\nOpen Settings, Languages and pick the language the meanings should be in."
+                % (lang, quoted[1] if len(quoted) > 1 else lang), "settings")
     if "word mismatch" in low:
         # exc text is: word mismatch: expected "<your word>", got "<what the model returned>"
         quoted = re.findall(r'"([^"]*)"', text)

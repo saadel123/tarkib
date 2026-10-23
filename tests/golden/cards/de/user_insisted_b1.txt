@@ -1,0 +1,97 @@
+# Golden card "user_insisted_b1" (tests/card_scenarios.py)
+# The user insisted twice: on the spelling (the prompt says so) and on adding a word the AI called not German (no second call, no refusal).
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: Schrippe
+deck: Tarkib | level: B1 | cloze: on
+options: {"exact_word": true, "force_input": true}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: de/main_B1
+user:
+WORD OR PHRASE TO TEACH: "Schrippe". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause. The user confirmed this spelling. Do NOT correct it, even if it looks misspelled: teach "Schrippe" exactly as written.
+
+== AI call 2: cloze (temperature 0.3, max_tokens 1600)
+system: de/cloze
+user:
+Input: Schrippe
+Deck: Tarkib
+English meaning: bread roll
+
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+LEVEL B1: use case "single_word", "noun_prep" or "verb_prep_article"; a medium everyday sentence with common words.
+
+== picture search
+keyword: fresh bread rolls in a bakery | deck: Tarkib | source: auto -> pexels_fresh_bread_rolls_in_a_bakery.jpg
+
+== read aloud
+1. edge de-DE-KatjaNeural: die Schrippe. ... Holst du mir zwei Schrippen vom Bäcker?. ... Ich hätte gern vier Schrippen, bitte.
+2. edge de-DE-KatjaNeural: Ich kaufe zwei. .
+3. edge de-DE-KatjaNeural: Ich kaufe zwei Schrippen.
+
+== main note in deck "Tarkib"
+tags: Essen Level::B1
+-- Front
+🥖 die Schrippe.
+-- Back
+<div class="card-translation"><span class="level-chip lvl-b1">B1</span> 🥖 bread roll</div>
+<div class="morph"><span class="g-die">die</span> · Pl. die Schrippen · Gen. der Schrippe</div>
+<div class="card-image"><img src="pexels_fresh_bread_rolls_in_a_bakery.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇩🇪 Deutsch</div>
+  <div class="sentence casual"><span class="emoji">🥐</span>Holst du mir zwei Schrippen vom Bäcker?</div>
+  <div class="sentence formal"><span class="emoji">🧺</span>Ich hätte gern vier Schrippen, bitte.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">jemandem etwas holen (+Dat, +Akk)</span></div>
+<div class="explanation">👉 „In Berlin sagt man Schrippe für ein Brötchen."</div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">🥐</span>Can you get me two bread rolls from the bakery?</div>
+  <div class="sentence formal"><span class="emoji">🧺</span>I would like four bread rolls, please.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 English patterns</div><span class="pattern-badge">to get something for someone</span></div><br>[sound:tts_de_die_Schrippe_9ea6b0678f.mp3]
+
+== cloze note in deck "Tarkib::Cloze"
+tags: cloze tarkib case_single_word Level::B1
+-- Text
+Ich kaufe zwei {{c1::Schrippen::Sch...}}.
+-- Translation
+I'm buying two bread rolls.
+-- Image
+<img src="pexels_fresh_bread_rolls_in_a_bakery.jpg">
+-- FrontAudio
+[sound:cloze_front_Ich_kaufe_zwei_Schrippen_2f6b987dac.mp3]
+-- BackAudio
+[sound:cloze_back_Ich_kaufe_zwei_Schrippen_86ff732d09.mp3]
+-- GrammarHint
+
+-- SourceWord
+die Schrippe
+-- DeckOrigin
+Tarkib
+
+== media files
+cloze_back_Ich_kaufe_zwei_Schrippen_86ff732d09.mp3 <- audio from edge
+cloze_front_Ich_kaufe_zwei_Schrippen_2f6b987dac.mp3 <- audio from edge
+pexels_fresh_bread_rolls_in_a_bakery.jpg <- picture
+tts_de_die_Schrippe_9ea6b0678f.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "bread roll",
+  "word": "die Schrippe"
+}

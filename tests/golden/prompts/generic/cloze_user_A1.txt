@@ -1,0 +1,10 @@
+Input: il tavolo
+Deck: Tarkib Italian
+Meaning in English: table
+
+
+Classify and generate a NATURAL Italian cloze sentence. Restructure if needed.
+
+LEVEL A1: use ONLY case "single_word"; a SHORT present-tense sentence (3 to 7 words) with the most common words; no idioms.
+
+Write "translation" as the FULL sentence translated naturally into English.

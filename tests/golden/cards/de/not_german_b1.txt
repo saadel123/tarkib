@@ -1,0 +1,25 @@
+# Golden card "not_german_b1" (tests/card_scenarios.py)
+# Arabic written in Latin letters: two calls agree it is not German, so the card is refused with the suggestion the AI made.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: shukran
+deck: Tarkib | level: B1 | cloze: on
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: de/main_B1
+user:
+WORD OR PHRASE TO TEACH: "shukran". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause.
+
+== AI call 2: main (temperature 0.4, max_tokens 3000)
+system: de/main_B1
+user:
+WORD OR PHRASE TO TEACH: "shukran". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause. STRICT REQUIREMENT: the "word" field MUST be exactly "shukran" (or with proper article).
+
+== picture search
+none
+
+== read aloud
+nothing
+
+== refused
+RuntimeError: not german: "shukran"; suggestion "danke"

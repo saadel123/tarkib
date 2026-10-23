@@ -1,0 +1,96 @@
+# Golden card "verb_a2" (tests/card_scenarios.py)
+# A separable verb at A2: the verb line with trennbar, patterns put in value order, and a beginner letter hint.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: anrufen
+deck: Tarkib | level: A2 | cloze: on
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: de/main_A2
+user:
+WORD OR PHRASE TO TEACH: "anrufen". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause.
+
+== AI call 2: cloze (temperature 0.3, max_tokens 1600)
+system: de/cloze
+user:
+Input: anrufen
+Deck: Tarkib
+English meaning: to call (on the phone)
+
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+LEVEL A2: prefer case "single_word"; a short sentence (present or Perfekt), common words, at most one weil/dass/wenn clause; no idioms.
+
+== picture search
+keyword: person talking on the phone | deck: Tarkib | source: auto -> pexels_person_talking_on_the_phone.jpg
+
+== read aloud
+1. edge de-DE-KatjaNeural: anrufen. ... Kannst du mich heute Abend anrufen?. ... Ich rufe Sie morgen früh an.
+2. edge de-DE-KatjaNeural: Kannst du mich später. ?
+3. edge de-DE-KatjaNeural: Kannst du mich später anrufen?
+
+== main note in deck "Tarkib"
+tags: Kommunikation Level::A2
+-- Front
+📞 anrufen.
+-- Back
+<div class="card-translation"><span class="level-chip lvl-a2">A2</span> 📞 to call (on the phone)</div>
+<div class="morph">ruft an · rief an · hat angerufen · trennbar</div>
+<div class="card-image"><img src="pexels_person_talking_on_the_phone.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇩🇪 Deutsch</div>
+  <div class="sentence casual"><span class="emoji">💬</span>Kannst du mich heute Abend anrufen?</div>
+  <div class="sentence formal"><span class="emoji">📅</span>Ich rufe Sie morgen früh an.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">jemanden anrufen (+Akk)</span> <span class="pattern-badge">rufe ... an (trennbar)</span></div>
+<div class="explanation">👉 „Man spricht mit jemandem am Telefon."</div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">💬</span>Can you call me this evening?</div>
+  <div class="sentence formal"><span class="emoji">📅</span>I will call you early tomorrow.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 English patterns</div><span class="pattern-badge">to call someone</span> <span class="pattern-badge">separable verb: the prefix goes to the end</span></div><br>[sound:tts_de_anrufen_9949bc1a01.mp3]
+
+== cloze note in deck "Tarkib::Cloze"
+tags: cloze tarkib case_single_word Level::A2
+-- Text
+Kannst du mich später {{c1::anrufen::anr...}}?
+-- Translation
+Can you call me later?
+-- Image
+<img src="pexels_person_talking_on_the_phone.jpg">
+-- FrontAudio
+[sound:cloze_front_Kannst_du_mich_später_an_dabb32b5da.mp3]
+-- BackAudio
+[sound:cloze_back_Kannst_du_mich_später_an_d1cd3ef4e0.mp3]
+-- GrammarHint
+jemanden anrufen (+Akk)
+-- SourceWord
+anrufen
+-- DeckOrigin
+Tarkib
+
+== media files
+cloze_back_Kannst_du_mich_später_an_d1cd3ef4e0.mp3 <- audio from edge
+cloze_front_Kannst_du_mich_später_an_dabb32b5da.mp3 <- audio from edge
+pexels_person_talking_on_the_phone.jpg <- picture
+tts_de_anrufen_9949bc1a01.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "to call (on the phone)",
+  "word": "anrufen"
+}

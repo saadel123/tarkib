@@ -1,0 +1,25 @@
+# Golden card "other_word_refused_b1" (tests/card_scenarios.py)
+# The AI keeps answering a different word: the card is refused with a clear message, and no cloze call is made.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: der Termin
+deck: Tarkib | level: B1 | cloze: on
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: de/main_B1
+user:
+WORD OR PHRASE TO TEACH: "der Termin". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause.
+
+== AI call 2: main (temperature 0.4, max_tokens 3000)
+system: de/main_B1
+user:
+WORD OR PHRASE TO TEACH: "der Termin". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause. STRICT REQUIREMENT: the "word" field MUST be exactly "der Termin" (or with proper article).
+
+== picture search
+none
+
+== read aloud
+nothing
+
+== refused
+RuntimeError: word mismatch: expected "der Termin", got "die Verabredung"

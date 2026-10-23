@@ -1,0 +1,15 @@
+# Golden card "en_needs_translation_language" (tests/card_scenarios.py)
+# English with the default settings, where the translation language is English: refused before any AI call, with a message that asks to pick one.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: window
+deck: Tarkib English | level: B1 | cloze: on
+
+== picture search
+none
+
+== read aloud
+nothing
+
+== refused
+RuntimeError: no translation language: cards that teach "English" need another translation language than "English"

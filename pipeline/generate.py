@@ -8,11 +8,13 @@ audio. Produces a "bundle" dict that anki_io writes into the collection.
 Media is returned as {token: (filename, bytes)}; field strings contain the tokens, so anki_io
 can write each blob, learn its real (possibly-renamed) filename, and substitute.
 """
+import functools
 import html
 import json
 import re
+import unicodedata
 
-from . import prompts, providers, images, audio, tts
+from . import prompts, providers, images, audio, tts, languages, english
 
 # Media placeholder tokens (resolved to real filenames by anki_io after media.write_data).
 IMG = "@@IMG@@"
@@ -23,26 +25,20 @@ CLOZE_FRONT = "@@CLOZE_FRONT@@"
 CLOZE_BACK = "@@CLOZE_BACK@@"
 
 _ARABIC = ("arabic", "msa", "fusha", "العربية", "ar")
+_ARABIC_MARKS = re.compile(r"[ً-ْٰ]")     # the Arabic diacritics (tashkil), U+064B to U+0652 and U+0670
+# Native's separate grammar call. A reasoning model (gpt-oss) spends hidden tokens before the JSON, and with 800
+# it used all of them first: the call failed and the card silently kept the main call's patterns (seen in the
+# first live English run, completion exactly 800). Only the tokens used are counted, like the main call's 3000.
+_GRAMMAR_MAX_TOKENS = 2000
 
 
-# ── prompt context ──────────────────────────────────────────────────────────────────────
-def _pick_context(deck, kind):
-    table = prompts.CONTEXTS_MAIN if kind == "main" else prompts.CONTEXTS_CLOZE
-    if "IT Wortschatz" in deck:
-        return table["IT"]
-    if "Redewendungen" in deck:
-        return table["Redewendungen"]
-    if "Supermarkt" in deck:
-        return table["Supermarkt"]
-    if "Nomen Verb Verbindung" in deck or "Nomen-Verb-Verbindung" in deck:
-        return table["NVV"]
-    if "Verben" in deck:
-        return table["Verben"]
-    if "Alltagsdeutsch" in deck or "statt Schuldeutsch" in deck:
-        return table["Alltagsdeutsch"]
-    if "Behörden" in deck or "Behoerden" in deck:
-        return table["Behörden"]
-    return table["Default"]
+# ── the headword ────────────────────────────────────────────────────────────────────────
+# (The deck's prompt context moved to prompts.deck_context_de with the other prompt text.)
+def _headword_stem(text, lang):
+    """The headword in lower case without the words its language puts in front of it (German: der,
+    die, das, sich), so the AI's word can be compared with the typed one."""
+    prefixes = "|".join(re.escape(p) for p in languages.get(lang)["headword_prefixes"])
+    return re.sub(r"^(%s)\s+" % prefixes, "", (text or "").strip().lower())
 
 
 # ── safety nets (ported) ─────────────────────────────────────────────────────────────────
@@ -104,6 +100,10 @@ _STR_FIELDS = ("word", "translation_en", "example_casual", "example_formal", "ex
                "example_formal_en", "explanation_de", "imageKeyword", "register", "emoji", "emoji_formal",
                "emoji_casual")
 _LIST_FIELDS = ("casual_alternatives", "casual_alternatives_en", "grammar_patterns", "grammar_patterns_en", "tags")
+# Paired by position: the n-th gloss belongs to the n-th pattern. Dropping one entry (a pattern sent as
+# an object, an empty string) shifted every later gloss onto the wrong pattern ("Erfahrung haben" next
+# to "experience with"), so these keep every position and _validate_grammar_patterns drops the pairs.
+_PAIRED_LIST_FIELDS = ("grammar_patterns", "grammar_patterns_en")
 
 
 def _unstringify(v):
@@ -151,6 +151,8 @@ def _coerce_card_types(card):
             continue
         if isinstance(v, str):
             card[k] = [v] if v.strip() else []
+        elif isinstance(v, list) and k in _PAIRED_LIST_FIELDS:
+            card[k] = ["" if x is None else _coerce_pattern(x) for x in v]
         elif isinstance(v, list):
             card[k] = [x for x in v if isinstance(x, str) and x.strip()]
         else:
@@ -383,12 +385,13 @@ def _looks_like_typo(typed, returned):
     return difflib.SequenceMatcher(None, a, b).ratio() >= 0.75
 
 
-def _refuse_if_not_german(card, call_main, word, force=False):
-    """Runs BEFORE the word-mismatch guard on purpose: for a non-German input the prompt tells the
-    model to put the German word it thinks was meant into "word", which would trip the mismatch
-    guard first (a wasted strict call and the wrong message). One verdict is not enough to throw a
-    finished card away, so a second strict call has to agree; a user who insists can force it
-    (options["force_input"]). Returns the card to continue with."""
+def _refuse_if_not_language(card, call_main, word, force=False, name="German"):
+    """Runs BEFORE the word-mismatch guard on purpose: for an input in another language the prompt tells
+    the model to put the word it thinks was meant into "word", which would trip the mismatch guard
+    first (a wasted strict call and the wrong message). One verdict is not enough to throw a finished
+    card away, so a second strict call has to agree; a user who insists can force it
+    (options["force_input"]). Returns the card to continue with. `name`: the learning language, which
+    the message names ("not german: ...", "not english: ...")."""
     if force or not _input_not_german(card):
         return card
     try:
@@ -399,10 +402,14 @@ def _refuse_if_not_german(card, call_main, word, force=False):
         return confirm                        # the first verdict was a hallucination; keep the good card
     src = confirm if confirm is not None else card
     sug = re.sub(r"\s+", " ", str(src.get("input_suggestion") or "")).strip().replace('"', "'")
-    raise RuntimeError('not german: "%s"; suggestion "%s"' % (str(word).replace('"', "'"), sug))
+    raise RuntimeError('not %s: "%s"; suggestion "%s"' % (name.lower(), str(word).replace('"', "'"), sug))
 
 
-_LANG_ALIASES = {"ar": "Arabic", "msa": "Arabic", "fusha": "Arabic", "العربية": "Arabic", "arabisch": "Arabic",
+_refuse_if_not_german = _refuse_if_not_language   # German's name for it (RULES["de"], the tests)
+
+
+_LANG_ALIASES = {"de": "German", "deutsch": "German", "allemand": "German",
+                 "ar": "Arabic", "msa": "Arabic", "fusha": "Arabic", "العربية": "Arabic", "arabisch": "Arabic",
                  "fa": "Persian", "farsi": "Persian", "zh": "Chinese (Simplified)", "chinese": "Chinese (Simplified)",
                  "fr": "French", "français": "French", "franzoesisch": "French", "französisch": "French",
                  "es": "Spanish", "español": "Spanish", "tr": "Turkish", "türkçe": "Turkish", "ru": "Russian",
@@ -411,23 +418,27 @@ _LANG_ALIASES = {"ar": "Arabic", "msa": "Arabic", "fusha": "Arabic", "العرب
                  "vi": "Vietnamese", "hi": "Hindi", "ur": "Urdu", "ja": "Japanese", "ko": "Korean"}
 
 
-def _known_language(lang, fallback):
-    """Only the closed list from Settings may reach translation_override: an unknown name is handed
-    to the model as an instruction to write in that language, and a model told to write in "Chihasa"
-    will happily invent it. Aliases the rest of the code
-    accepts (ar, farsi, français, ...) are canonicalised, not rejected. Total on any config value.
+def _known_language(lang, fallback, allowed=None):
+    """Only the closed list from Settings may reach the prompts: an unknown name is handed to the model
+    as an instruction to write in that language, and a model told to write in "Chihasa" will happily
+    invent it. Aliases the rest of the code accepts (ar, farsi, français, ...) are canonicalised, not
+    rejected. `allowed`: the learning language's translation languages (prompts.translation_languages),
+    by default the common list, which is German's. The learning language itself is known but never
+    allowed (English cards translated into English). Total on any config value.
     Returns (name, warning or None)."""
+    allowed = prompts.COMMON_TRANSLATION_LANGS if allowed is None else allowed
     key = str(lang or "").strip()
     if not key:
         return fallback, None
-    if prompts.is_english_language(key):
-        return "English", None
     low = key.lower()
-    for k in prompts.COMMON_TRANSLATION_LANGS:
-        if k.lower() == low:
-            return k, None
-    if low in _LANG_ALIASES:
-        return _LANG_ALIASES[low], None
+    if prompts.is_english_language(key):
+        name = "English"
+    else:
+        name = next((k for k in prompts.TRANSLATION_LANGS_ALL if k.lower() == low), None) or _LANG_ALIASES.get(low)
+    if name in allowed:
+        return name, None
+    if name:
+        return fallback, 'translation language "%s" is the language the cards teach' % name
     return fallback, 'translation language "%s" is not in the supported list' % key.replace('"', "'")
 
 
@@ -441,7 +452,11 @@ def _subsequence(needle, hay):
     return all(w in it for w in needle)
 
 
-def _sentence_like(pat, sentences):
+_DE_TOKEN = r"[a-zäöüß]+"
+_ANY_TOKEN = r"[^\W\d_]+"      # the letters of any language
+
+
+def _sentence_like(pat, sentences, token=_DE_TOKEN):
     """A grammar pattern is a short reusable fragment. The Native grammar call has returned the whole
     example sentence, a sentence cut off with "...", and a sentence with the headword blanked out;
     all three teach nothing and are dropped here. Word sequences are compared, never characters, so
@@ -450,9 +465,9 @@ def _sentence_like(pat, sentences):
     raw = (pat or "").strip()
     truncated = bool(re.search(r"(\.\.\.|…)\s*[.?!]?$", raw))
     p = re.sub(r"\s*(\.\.\.|…)\s*[.?!]?$", "", raw).lower()
-    words = re.findall(r"[a-zäöüß]+", p)
+    words = re.findall(token, p)
     for s in sentences:
-        sw = re.findall(r"[a-zäöüß]+", (s or "").lower())
+        sw = re.findall(token, (s or "").lower())
         if not sw:
             continue
         if len(words) >= 4 and len(words) >= 0.9 * len(sw) and _contiguous(words, sw):
@@ -647,7 +662,7 @@ def _wrap_first(text, answer, replacement):
 _CLOZE_CASES = ("single_word", "noun_prep", "verb_prep_article", "nvv", "long_phrase", "idiom")
 
 
-def build_cloze_text(sentence, answer_raw, card_case, idiom_meaning="", beginner=False):
+def build_cloze_text(sentence, answer_raw, card_case, idiom_meaning="", beginner=False, no_hint=("noun_prep", "nvv")):
     text = sentence
     if card_case == "idiom":
         # Letter hints like every other case. The old style put idiom_meaning_de into the FIRST
@@ -659,7 +674,7 @@ def build_cloze_text(sentence, answer_raw, card_case, idiom_meaning="", beginner
             hint = " ".join(_letter_hint(w, beginner) for w in ans.split() if w)
             text = re.sub(r"\b" + re.escape(ans) + r"\b", "{{c1::" + ans + "::" + hint + "}}", text, count=1)
         return text
-    if card_case in ("noun_prep", "nvv"):
+    if card_case in no_hint:    # one short word (a preposition, a particle): a letter hint would give it away
         return _wrap_first(text, answer_raw, "{{c1::" + answer_raw + "}}")
     hint = " ".join(_letter_hint(w, beginner) for w in answer_raw.split() if w)
     return _wrap_first(text, answer_raw, "{{c1::" + answer_raw + "::" + hint + "}}")
@@ -756,8 +771,227 @@ def _has_english_leak(*texts):
     return None
 
 
+# ── the generic checks: every learning language without German-style guards of its own ───────
+def _anchored_generic(pattern, text_lower):
+    """A content word of the pattern (3+ letters) appears in the sentences, as is or with its ending
+    changed (the first letters match). A pattern of short words only needs all of them."""
+    words = re.findall(_ANY_TOKEN, (pattern or "").lower())
+    content = [w for w in words if len(w) >= 3]
+    tokens = set(re.findall(_ANY_TOKEN, text_lower))
+    if not content:
+        return bool(words) and all(w in tokens for w in words)
+    for w in content:
+        stem = w[:max(3, len(w) - 3)]
+        if w in text_lower or any(t.startswith(stem) for t in tokens):
+            return True
+    return False
+
+
+def _rank_in_order(pattern):
+    return 9          # no value order of its own: the model's order ("best first") stands
+
+
+def _self_referential_generic(pat, word, prefixes):
+    """A multi-word headword restated as its own pattern, adding nothing: no placeholder, no + frame."""
+    pre = "|".join(re.escape(x) for x in prefixes)
+    strip = (lambda t: re.sub(r"^(%s)\s+" % pre, "", t)) if pre else (lambda t: t)
+    w = strip((word or "").strip().strip(".!?…").lower())
+    nw = len(w.split())
+    if nw < 2:
+        return False
+    p = (pat or "").strip().lower()
+    m = re.match(r"^(.*?)\s*\(([^)]*)\)\s*$", p)
+    core, paren = (m.group(1).strip(), m.group(2)) if m else (p, "")
+    contained = strip(core) == w
+    if not contained and nw > 2:
+        wt = [t for t in w.split() if len(t) > 2]
+        contained = w in p or bool(wt and sum(t in core.split() for t in wt) >= max(2, len(wt) - 1))
+    if not contained:
+        return False
+    extra = core.replace(w, "") + " " + paren
+    return not re.search(r"\+|someone|something|somebody|\bsb\b|\bsth\b", extra)
+
+
+def _validate_patterns_generic(card, anchored, rank, prefixes):
+    """Like German's _validate_grammar_patterns, with the language's own anchoring and value order: keep
+    the patterns anchored in the card's sentences that are neither a sentence nor the headword restated,
+    order them (rank None drops one), keep three; the translation list follows entry for entry."""
+    text = ((card.get("example_casual") or "") + " " + (card.get("example_formal") or "")).lower()
+    pats = [_coerce_pattern(p) for p in (card.get("grammar_patterns") or [])]
+    glosses = [_coerce_pattern(p) for p in (card.get("grammar_patterns_en") or [])]
+    word = card.get("word", "")
+    sentences = [card.get("example_casual"), card.get("example_formal")]
+    kept = []
+    for i, p in enumerate(pats):
+        if (not p or not anchored(p, text) or _self_referential_generic(p, word, prefixes)
+                or _sentence_like(p, sentences, token=_ANY_TOKEN)):
+            continue
+        r = rank(p)
+        if r is None:
+            continue
+        kept.append((r, i, p, glosses[i] if i < len(glosses) and glosses[i] else ""))
+    kept.sort(key=lambda t: (t[0], t[1]))
+    kept = kept[:3]
+    card["grammar_patterns"] = [t[2] for t in kept]
+    card["grammar_patterns_en"] = [t[3] for t in kept] if kept and all(t[3] for t in kept) else []
+    return card
+
+
+def _script_leak(script):
+    """The leak check of a language without its own: the first letter of another writing system in its
+    fields (an Arabic word in an English sentence)."""
+    def leak(*texts):
+        for t in texts:
+            for ch in (t or ""):
+                if ch.isalpha():
+                    try:
+                        if not unicodedata.name(ch).startswith(script):
+                            return ch
+                    except ValueError:
+                        continue
+        return None
+    return leak
+
+
+def _morphology_generic(m, level=None):
+    """The word line of a language without its own: the article and plural of a noun, the forms of a verb."""
+    if not isinstance(m, dict):
+        return ""
+    if m.get("pos") == "noun":
+        art = str(m.get("article") or "").strip()
+        pl = str(m.get("plural") or "").strip()
+        bits = [_esc(art)] if art else []
+        if pl and pl != "—":
+            bits.append("Pl. " + _esc(pl))
+    elif m.get("pos") == "verb":
+        forms = str(m.get("forms") or "").strip()
+        bits = [_esc(forms)] if forms else []
+    else:
+        return ""
+    return ('<div class="morph">%s</div>' % " · ".join(bits)) if bits else ""
+
+
+def _register_hint_generic(word_display, alternatives):
+    if not alternatives:
+        return ""
+    return ('<div class="register-hint"><span class="formal-mark">"%s" (Formal)</span> '
+            '<span class="arrow">→</span> <span class="casual-alt">Everyday:</span> '
+            '<span class="alt-list">%s</span></div>' % (_esc(word_display), " · ".join(_esc(a) for a in alternatives)))
+
+
+def _same_sentence(sentence, answer):
+    return sentence, answer
+
+
+def _same_answer(sentence, answer, card_case, user_input):
+    return answer
+
+
+_GENERIC_CLOZE_CASES = ("single_word", "long_phrase", "idiom")
+
+
+def generic_rules(code, checks=None):
+    """RULES for a language without German-style guards: the generic checks above, with the language's
+    own pieces from its CHECKS (pipeline/<language>.py) where it has them."""
+    entry, c = languages.get(code), dict(checks or {})
+    return {
+        "input_check": functools.partial(_refuse_if_not_language, name=entry["name"]),
+        "leak": c.get("leak") or _script_leak(entry["script"]),
+        "patterns": functools.partial(_validate_patterns_generic,
+                                      anchored=c.get("pattern_in_text") or _anchored_generic,
+                                      rank=c.get("pattern_rank") or _rank_in_order,
+                                      prefixes=entry["headword_prefixes"]),
+        "cloze_cases": tuple(c.get("cloze_cases") or _GENERIC_CLOZE_CASES),
+        "cloze_no_hint": tuple(c.get("cloze_no_hint") or ()),
+        "cloze_fix": c.get("cloze_fix") or _same_sentence,
+        "cloze_article": c.get("cloze_article") or _same_answer,
+        "morphology": c.get("morphology") or _morphology_generic,
+        "register_hint": c.get("register_hint") or _register_hint_generic,
+        # audio file names start with the clip's role: the learning language's code, "tts_tr" the translation
+        "audio_names": {"target": "tts_%s" % code, "translation": "tts_tr"},
+    }
+
+
+# ── what each learning language checks, and how its card shows the language ───────────────
+# German: the guards above, each one grown from a real bad card. build_card and build_back_html read
+# nothing German-only outside this table and the registry (pipeline/languages.py). A new language adds
+# its entry here, and tests/test_languages.py fails until it does.
+RULES = {
+    "de": {
+        "input_check": _refuse_if_not_german,   # the AI says it is not German: one strict call more, then refuse
+        "leak": _has_english_leak,              # A1 to C1: an English word in a German field, one strict retry
+        "patterns": _validate_grammar_patterns,   # anchored in the sentences, ranked, the best three kept
+        "cloze_cases": _CLOZE_CASES,
+        "cloze_no_hint": ("noun_prep", "nvv"),  # the preposition or the verb alone, no letter hint
+        "cloze_fix": _fix_double_determiner,    # "meine die Brille" loses the doubled determiner
+        "cloze_article": _extend_cloze_answer_with_article,   # a noun's blank takes its article
+        "morphology": _morphology_html,         # der/die/das in colour, Pl., Gen., trennbar
+        "register_hint": _register_hint_de,     # „gegebenenfalls" (Formell) → Im Alltag: ...
+        "audio_names": {"target": "tts_de", "translation": "tts_en"},   # the names in every German card so far
+    },
+    "en": generic_rules("en", english.CHECKS),   # pipeline/english.py: irregular verbs, phrasal verbs, ...
+}
+
+
+def _strip_arabic_marks(card):
+    """The card's translation fields without Arabic diacritics (when the translation language is Arabic)."""
+    for k in ("translation_en", "example_casual_en", "example_formal_en"):
+        if isinstance(card.get(k), str):
+            card[k] = _ARABIC_MARKS.sub("", card[k])
+    for k in ("casual_alternatives_en", "grammar_patterns_en"):
+        card[k] = [_ARABIC_MARKS.sub("", x) if isinstance(x, str) else x for x in (card.get(k) or [])]
+
+
+def _voice_speaks(voice, language_name):
+    """True when an Edge/Azure voice name belongs to the language ("ar-SA-ZariyahNeural" speaks Arabic)."""
+    voice = (voice or "").strip()
+    return bool(voice) and any(voice.startswith(loc) for loc in audio.secondary_locale_prefixes(language_name))
+
+
+def language_settings(cfg, lang):
+    """What Settings keeps for one learning language: "voice" (reads the language), "translation" (the
+    translation language) and "translation_voice", "secondary" (the second translation) and
+    "secondary_voice". German's live in the keys every config has had since 1.0 (voices.target, .translation,
+    .secondary, defaults.translation_language, .secondary_translation_language), so an older config and a
+    return to 1.1.0 keep working; any other language's live in cfg["languages"][code]. A language not set up
+    yet borrows German's translation language when it may use it (an Arabic speaker who learns German sees
+    Arabic on English cards at once), with its voice only when that voice speaks it; with nothing allowed
+    to borrow it has none, and the card asks for one. Shared by build_card, Settings and the Add window."""
+    cfg = cfg or {}
+    voices = cfg.get("voices") or {}
+    defaults = cfg.get("defaults") or {}
+    entry = languages.get(lang)
+    legacy = {
+        "voice": str((voices["target"] if "target" in voices else voices.get("de", "")) or "").strip(),
+        "translation": str(defaults.get("translation_language") or "").strip(),
+        "translation_voice": str((voices["translation"] if "translation" in voices else voices.get("en", "")) or "").strip(),
+        "secondary": str(defaults.get("secondary_translation_language") or "").strip(),
+        "secondary_voice": str(voices.get("secondary") or "").strip(),
+    }
+    if lang == languages.DEFAULT:
+        out = dict(legacy)
+        out["voice"] = out["voice"] or entry["default_voice"]
+        out["translation"] = out["translation"] or prompts.DEFAULT_TRANSLATION_LANG
+        return out
+    own = (cfg.get("languages") or {}).get(lang)
+    own = own if isinstance(own, dict) else {}
+    out = {k: str(own.get(k) or "").strip()
+           for k in ("voice", "translation", "translation_voice", "secondary", "secondary_voice")}
+    out["voice"] = out["voice"] or entry["default_voice"]
+    if "translation" not in own:
+        borrowed, _ = _known_language(legacy["translation"], None, allowed=prompts.translation_languages(lang))
+        if borrowed:
+            out["translation"] = borrowed
+            if "translation_voice" not in own and _voice_speaks(legacy["translation_voice"], borrowed):
+                out["translation_voice"] = legacy["translation_voice"]
+    return out
+
+
 def build_back_html(card):
     g = card.get
+    # A card dict made before there were other languages (the deck scripts) has no language: German.
+    lang = g("language") or languages.DEFAULT
+    entry, rules = languages.get(lang), RULES[lang]
     ef = g("emoji_formal") or "📝"
     ec = g("emoji_casual") or "💬"
     is_formal = (g("register") or "neutral").lower() == "formal"
@@ -774,49 +1008,62 @@ def build_back_html(card):
     # margins) instead of a bare inline direction that left the bubbles styled LTR.
     prim_cls = "section arabic" if prim_rtl else "section"
     prim_label_style = ' style="direction:rtl;text-align:right;"' if prim_rtl else ''
+
+    def has(k):
+        return bool(str(g(k) or "").strip())
+
+    def sentences(casual_key, formal_key):
+        # A sentence the AI left out gets no box: a weak model that skips a field left an empty box
+        # with only its emoji. A section without any sentence is left out whole (see below).
+        return ['  <div class="sentence %s"><span class="emoji">%s</span>%s</div>' % (kind, _esc(emoji), e(key))
+                for kind, key, emoji in (("casual", casual_key, ec), ("formal", formal_key, ef)) if has(key)]
+
     parts = [
         '<div class="card-translation"%s>%s%s %s</div>' % (trans_style, _level_chip(g("level")), e("emoji"), _esc(translation_en)),
-        _morphology_html(g("morphology"), g("level")),
+        rules["morphology"](g("morphology"), g("level")),
         '<div class="card-image">{{IMAGE}}</div>',
-        '<div class="section">',
-        '  <div class="section-label">🇩🇪 Deutsch</div>',
     ]
-    if is_formal:
-        parts.append(_register_hint_de(word_display, g("casual_alternatives", []) or []))
-    parts += [
-        '  <div class="sentence casual"><span class="emoji">%s</span>%s</div>' % (_esc(ec), e("example_casual")),
-        '  <div class="sentence formal"><span class="emoji">%s</span>%s</div>' % (_esc(ef), e("example_formal")),
-        "</div>",
-        _patterns_html(g("grammar_patterns", []), "Grammar patterns"),
-        '<div class="explanation">👉 „%s"</div>' % e("explanation_de"),
-        '<div class="%s">' % prim_cls,
-        '  <div class="section-label"%s>%s</div>' % (prim_label_style, _esc(prim_label)),
-    ]
-    if is_formal:
-        parts.append(_register_hint_en(translation_en, g("casual_alternatives_en", []) or []))
-    parts += [
-        '  <div class="sentence casual"><span class="emoji">%s</span>%s</div>' % (_esc(ec), e("example_casual_en")),
-        '  <div class="sentence formal"><span class="emoji">%s</span>%s</div>' % (_esc(ef), e("example_formal_en")),
-        "</div>",
-        _patterns_html(g("grammar_patterns_en", []), "%s patterns" % _esc(prim_name)),
-    ]
+    target = sentences("example_casual", "example_formal")
+    if target:
+        parts += ['<div class="section">', '  <div class="section-label">%s</div>' % entry["label"]]
+        if is_formal:
+            parts.append(rules["register_hint"](word_display, g("casual_alternatives", []) or []))
+        parts += target + ["</div>"]
+    parts.append(_patterns_html(g("grammar_patterns", []), "Grammar patterns"))
+    if has("explanation_de"):
+        parts.append('<div class="explanation">👉 %s%s%s</div>' % (entry["quotes"][0], e("explanation_de"), entry["quotes"][1]))
+    helper = sentences("example_casual_en", "example_formal_en")
+    if helper:
+        parts += ['<div class="%s">' % prim_cls, '  <div class="section-label"%s>%s</div>' % (prim_label_style, _esc(prim_label))]
+        if is_formal:
+            parts.append(_register_hint_en(translation_en, g("casual_alternatives_en", []) or []))
+        parts += helper + ["</div>"]
+    parts.append(_patterns_html(g("grammar_patterns_en", []), "%s patterns" % _esc(prim_name)))
     # Optional secondary-translation section (e.g. Arabic) — only if generated.
     if g("secondary_word"):
         is_ar = card.get("secondary_is_arabic")
         sec_cls = "section arabic" if is_ar else "section"
-        parts += [
-            '<div class="%s">' % sec_cls,
-            '  <div class="section-label"%s>%s</div>' % (
-                ' style="direction:ltr;text-align:left;"' if is_ar else "", e("secondary_label")),
-            '  <div class="sentence casual"><span class="emoji">%s</span>%s</div>' % (_esc(ec), e("secondary_casual")),
-            '  <div class="sentence formal"><span class="emoji">%s</span>%s</div>' % (_esc(ef), e("secondary_formal")),
-            "</div>",
-            # 'secondary-word' (was 'arabic-word'): this class is stored in every note forever, and
-            # the block is used for EVERY secondary language, so it is named for its role.
-            '<div class="secondary-word"%s>%s %s</div>' % (
-                "" if is_ar else ' style="direction:ltr;"', e("emoji"), e("secondary_word")),
-        ]
+        second = sentences("secondary_casual", "secondary_formal")
+        if second:
+            parts += ['<div class="%s">' % sec_cls,
+                      '  <div class="section-label"%s>%s</div>' % (
+                          ' style="direction:ltr;text-align:left;"' if is_ar else "", e("secondary_label"))]
+            parts += second + ["</div>"]
+        # 'secondary-word' (was 'arabic-word'): this class is stored in every note forever, and
+        # the block is used for EVERY secondary language, so it is named for its role.
+        parts.append('<div class="secondary-word"%s>%s %s</div>' % (
+            "" if is_ar else ' style="direction:ltr;"', e("emoji"), e("secondary_word")))
     return "\n".join(p for p in parts if p)
+
+
+def _front(emoji, word):
+    """The main card's front: the emoji, then the word with one full stop. A word that already ends a
+    sentence keeps its own mark ("Wie spät ist es?", "Viel Glück!", "Ich habe eine Frage."), where the
+    old front read "Wie spät ist es?.", and a card without an emoji starts with the word, not a space."""
+    w = (word or "").strip()
+    if w and w[-1] not in ".?!…":
+        w += "."
+    return " ".join(p for p in (_esc(emoji), _esc(w)) if p)
 
 
 def _audio_name(prefix, label, text, clip):
@@ -891,13 +1138,25 @@ def build_card(cfg, provider, deck, word, options):
     ua = (cfg.get("user_agent") or "").strip() or providers.DEFAULT_USER_AGENT
     meta_warnings = {}  # best-effort enrichment failures (grammar/secondary); surfaced in the toast
 
-    voices = cfg.get("voices", {}) or {}
-    # Role-named keys (target / translation / secondary); 'de' / 'en' are the pre-1.0 names.
-    # Only the German is read aloud by default: the translation gets audio only when the user picks
-    # a translation voice in Settings ("" = text only, the default since 1.0.2).
-    voice_de = voices["target"] if "target" in voices else voices.get("de", "de-DE-KatjaNeural")
-    voice_en = voices["translation"] if "translation" in voices else voices.get("en", "")
-    voice_sec = (voices.get("secondary") or "").strip()
+    def _warn_lang(text):
+        prev = meta_warnings.get("language_warning")
+        meta_warnings["language_warning"] = (prev + "; " + text) if prev else text
+
+    # The learning language: the card's own pick, else Settings, else German (every config saved
+    # before there were other languages). Its rules and texts come from RULES, the registry and
+    # prompts.PROMPTS; nothing below names German.
+    lang, _ll = languages.resolve(options.get("language") or (cfg.get("defaults", {}) or {}).get("learning_language"))
+    if _ll:
+        _warn_lang("%s, %s was used" % (_ll, languages.get(lang)["name"]))
+    entry, rules = languages.get(lang), RULES[lang]
+
+    # The learning language's own settings (language_settings). Only the learning language is read aloud
+    # by default: the translation gets audio only when the user picks a translation voice in Settings
+    # ("" = text only, the default since 1.0.2).
+    settings = language_settings(cfg, lang)
+    voice_target = settings["voice"]
+    voice_en = settings["translation_voice"]
+    voice_sec = settings["secondary_voice"]
     img_cfg = cfg.get("image", {}) or {}
     to = cfg.get("timeouts", {}) or {}
     ai_to = int(to.get("ai_seconds", 60))
@@ -914,16 +1173,19 @@ def build_card(cfg, provider, deck, word, options):
     level = options.get("level") or cfg.get("defaults", {}).get("level") or prompts.DEFAULT_LEVEL
     if level not in prompts.LEVELS:
         level = prompts.DEFAULT_LEVEL
-    # Primary translation language (the helper shown under German). Default English keeps the
-    # main prompt byte-identical; any other language is injected via prompts.translation_override.
-    def _warn_lang(text):
-        prev = meta_warnings.get("language_warning")
-        meta_warnings["language_warning"] = (prev + "; " + text) if prev else text
-
-    primary_lang, _lw = _known_language((cfg.get("defaults", {}) or {}).get("translation_language"), prompts.DEFAULT_TRANSLATION_LANG)
+    # Primary translation language (the helper shown under the learning language). Default English
+    # keeps the main prompt byte-identical; any other language is injected via the prompt's override.
+    helpers = prompts.translation_languages(lang)
+    configured = settings["translation"]
+    primary_lang, _lw = _known_language(configured, prompts.default_translation_language(lang), allowed=helpers)
+    if not primary_lang:
+        # A learner of English with English (the default) or an unknown name as translation language: no
+        # language may stand in for the one they read, so they are asked to pick it (friendly_error).
+        raise RuntimeError('no translation language: cards that teach "%s" need another translation language than "%s"'
+                           % (entry["name"], str(configured or "").replace('"', "'") or entry["name"]))
     if _lw:
-        _warn_lang(_lw + ", English was used")
-    secondary_lang, _sw = _known_language(secondary_lang, "")
+        _warn_lang("%s, %s was used" % (_lw, primary_lang))
+    secondary_lang, _sw = _known_language(secondary_lang, "", allowed=helpers)
     if _sw:
         _warn_lang(_sw + ", the second translation was skipped")
     # Never translate into the same language twice, whatever the UI passed in (a stale checkbox
@@ -932,48 +1194,24 @@ def build_card(cfg, provider, deck, word, options):
         meta_warnings["secondary_warning"] = "skipped, it is the same as the main translation language"
         secondary_lang = ""
 
-    word_stem = re.sub(r"^(der|die|das|sich)\s+", "", word.strip().lower())
-
-    def _main_user(strict):
-        # Label the input explicitly: a bare greeting like "Guten Tag!" or "Danke" was read by the model
-        # as the user talking to it ("which word do you want?") instead of as the phrase to teach.
-        u = 'WORD OR PHRASE TO TEACH: "%s". %s' % (word, _pick_context(deck, "main"))
-        if meaning:
-            u += (' MEANING DISAMBIGUATION: the user wants the specific meaning "%s" '
-                  "(may be written in any language; interpret it). "
-                  "Generate the card focused on THIS sense only." % meaning)
-        if scenario:
-            u += (' EXAMPLE SCENARIO HINT: "%s" (may be written in any language; interpret it). '
-                  "Use it as the setting for both example sentences; the deck rules still apply." % scenario)
-        if image_keyword:
-            # The user's image request (any language) is folded into the MAIN call so the model
-            # turns it into a SAFE English imageKeyword, instead of sending raw non-English text to
-            # the English-indexed image providers. No extra LLM call; image-safety rules still apply.
-            u += (' IMAGE HINT: the user wants the picture to show "%s" (may be written in any '
-                  "language). Set imageKeyword to a SAFE, wholesome ENGLISH image search term for "
-                  "THIS, following the image rules." % image_keyword)
-        if strict:
-            u += ' STRICT REQUIREMENT: the "word" field MUST be exactly "%s" (or with proper article).' % word
-        if options.get("exact_word"):
-            u += (' The user confirmed this spelling. Do NOT correct it, even if it looks misspelled: '
-                  'teach "%s" exactly as written.' % word)
-        return u
+    word_stem = _headword_stem(word, lang)
 
     def _call_main(strict):
-        system = (prompts.system_main_for_level(level) + prompts.translation_override(primary_lang)
-                  + (prompts.SYSTEM_LOANWORDS_EXPANDED if scenario else ""))
+        # The user message labels the input explicitly, carries the deck's context and the hints.
+        system = prompts.main_system(lang, level, primary_lang, scenario, voice=voice_target)
+        user = prompts.main_user(lang, word, deck, meaning, scenario, image_keyword, strict, options.get("exact_word"))
         # 3000 (was 1500): gpt-oss "reasoning" models spend HIDDEN reasoning tokens from the same
         # budget before emitting the JSON, and the amount varies per call. With the longer
         # rule set a reasoning spike could eat the whole 1500 and return an empty/truncated reply
         # (the intermittent 'Unreadable response' dialog). Cheap insurance: pay only for what is used.
-        return _coerce_card_types(providers.complete_json(provider, system, _main_user(strict),
-                                                          temperature=0.4, max_tokens=3000, timeout=ai_to, user_agent=ua))
+        answer = providers.complete_json(provider, system, user, temperature=0.4, max_tokens=3000, timeout=ai_to, user_agent=ua)
+        return _coerce_card_types(prompts.read_answer(lang, "main", answer))
 
     progress("generating card content")
     card = _call_main(options.get("strict", False))
-    card = _refuse_if_not_german(card, _call_main, word, options.get("force_input", False))
+    card = rules["input_check"](card, _call_main, word, options.get("force_input", False))
     raw_word = _normalize_word_field(card)
-    got_stem = re.sub(r"^(der|die|das|sich)\s+", "", raw_word.strip().lower())
+    got_stem = _headword_stem(raw_word, lang)
     if word_stem and got_stem and word_stem not in got_stem and got_stem not in word_stem:
         if not options.get("exact_word") and _looks_like_typo(word_stem, got_stem):
             # The model fixed a typo ("benachrichtigong" -> "die Benachrichtigung"). The card it made
@@ -983,34 +1221,41 @@ def build_card(cfg, provider, deck, word, options):
         else:
             card = _call_main(True)
             raw_word = _normalize_word_field(card)
-            got_stem = re.sub(r"^(der|die|das|sich)\s+", "", raw_word.strip().lower())
+            got_stem = _headword_stem(raw_word, lang)
             if word_stem and got_stem and word_stem not in got_stem and got_stem not in word_stem:
                 raise RuntimeError('word mismatch: expected "%s", got "%s"' % (word.replace('"', "'"), raw_word.replace('"', "'")))
 
-    # Exam-clean gate for A1–C1: if an English word leaked into a German field, regenerate once.
-    # Native is exempt — authentic Denglisch is allowed there by design.
-    leak = (_has_english_leak(card.get("example_casual"), card.get("example_formal"), card.get("explanation_de"))
+    # Exam-clean gate for A1–C1: if a word of another language leaked into the learning language's
+    # fields (German: an English word), regenerate once. Native is exempt (Denglisch is allowed there).
+    leak = (rules["leak"](card.get("example_casual"), card.get("example_formal"), card.get("explanation_de"))
             if level in ("A1", "A2", "B1", "B2", "C1") else None)
     if leak:
         # Best-effort (hard rule 2): a valid card already exists, so a 429/timeout on this second
         # back-to-back call must never throw it away. Keep the original and flag the leak instead.
         try:
             retry = _call_main(True)
-            rstem = re.sub(r"^(der|die|das|sich)\s+", "", _normalize_word_field(retry).strip().lower())
+            rstem = _headword_stem(_normalize_word_field(retry), lang)
             word_ok = not (word_stem and rstem and word_stem not in rstem and rstem not in word_stem)
-            clean = not _has_english_leak(retry.get("example_casual"), retry.get("example_formal"), retry.get("explanation_de"))
+            clean = not rules["leak"](retry.get("example_casual"), retry.get("example_formal"), retry.get("explanation_de"))
         except Exception:
             retry, word_ok, clean = None, False, False
         if retry is not None and word_ok and clean:
-            card = retry            # regenerated card is German-clean AND still the right word
+            card = retry            # regenerated card is clean AND still the right word
         else:
             meta_warnings["english_leak"] = leak   # keep original; surface the leak in the toast
 
     _sanitize_card_emojis(card)
+    # Arabic without diacritics (a content rule) is enforced in code on every Arabic translation, the first
+    # one, the grammar call's glosses and the cloze sentence's too, not only on the second one: a model adds a
+    # shadda or a tanween now and then (the first live English run had both).
+    arabic_plain = primary_lang.lower() in _ARABIC
+    if arabic_plain:
+        _strip_arabic_marks(card)
     # Label/direction for the primary-translation section (English default → "🇬🇧 English", LTR).
     card["primary_label"], card["primary_is_rtl"] = prompts.language_label(primary_lang)
     card["primary_lang_name"] = primary_lang
     card["level"] = level  # rendered as a chip on the card
+    card["language"] = lang  # build_back_html takes the section label and the language's parts from it
 
     # Dedicated grammar-extraction call — now ONLY for Native. A1–C1 get level-appropriate
     # grammar_patterns straight from the main call (per-level focus in LEVEL_RULES), so no extra
@@ -1018,11 +1263,9 @@ def build_card(cfg, provider, deck, word, options):
     if level in prompts.GRAMMAR_LEVELS and (card.get("example_casual") or card.get("example_formal")):
         progress("extracting grammar patterns")
         try:
-            gu = ('German casual: "%s"\nGerman formal: "%s"\nEnglish casual: "%s"\nEnglish formal: "%s"\n\n'
-                  "Extract REAL patterns from these sentences. Return ONLY JSON."
-                  % (card.get("example_casual", ""), card.get("example_formal", ""),
-                     card.get("example_casual_en", ""), card.get("example_formal_en", "")))
-            gout = providers.complete_json(provider, prompts.SYSTEM_GRAMMAR, gu, temperature=0.2, max_tokens=800, timeout=ai_to, user_agent=ua)
+            gout = prompts.read_answer(lang, "grammar", providers.complete_json(
+                provider, prompts.grammar_system(lang, primary_lang), prompts.grammar_user(lang, card, primary_lang),
+                temperature=0.2, max_tokens=_GRAMMAR_MAX_TOKENS, timeout=ai_to, user_agent=ua))
             card["grammar_patterns"] = gout.get("grammar_patterns") or []
             card["grammar_patterns_en"] = gout.get("grammar_patterns_en") or []
         except Exception as e:
@@ -1030,7 +1273,9 @@ def build_card(cfg, provider, deck, word, options):
             # empty, so a rate-limited dedicated call doesn't show a misleading "grammar skipped" toast.
             if not (card.get("grammar_patterns") or card.get("grammar_patterns_en")):
                 meta_warnings["grammar_warning"] = str(e)
-    _validate_grammar_patterns(card)
+    if arabic_plain:
+        _strip_arabic_marks(card)          # again: the grammar call's glosses
+    rules["patterns"](card)
     # Morphology (gender/plural/genitive · verb principal parts) is produced INSIDE the main call's
     # JSON for A1–C1 — folded in to avoid a 5th LLM call, which kept tripping the free-tier
     # tokens-per-minute limit. Native keeps its verbatim prompt and simply shows no morphology line.
@@ -1040,16 +1285,11 @@ def build_card(cfg, provider, deck, word, options):
     if secondary_lang:
         progress("translating (%s)" % secondary_lang)
         try:
-            su = ("Translate into %s.\n\nGERMAN WORD: %s\nGERMAN CASUAL: %s\nGERMAN FORMAL: %s\n"
-                  "ENGLISH CASUAL: %s\nENGLISH FORMAL: %s\n\nGenerate word_translation, casual, formal. Return ONLY JSON."
-                  % (secondary_lang, card.get("word", ""), card.get("example_casual", ""), card.get("example_formal", ""),
-                     card.get("example_casual_en", ""), card.get("example_formal_en", "")))
-            if level in ("A1", "A2"):
-                su += " Keep the translation short and simple, matching a beginner."
-            sout = providers.complete_json(provider, prompts.secondary_translation_system(secondary_lang), su,
+            sout = providers.complete_json(provider, prompts.secondary_system(lang, secondary_lang),
+                                           prompts.secondary_user(lang, secondary_lang, card, level, primary_lang),
                                            temperature=0.2, max_tokens=600, timeout=ai_to, user_agent=ua)
             is_ar = secondary_lang.lower() in _ARABIC
-            vals = {k: (re.sub(r"[ً-ْٰ]", "", v) if (is_ar and isinstance(v, str)) else v) for k, v in sout.items()}
+            vals = {k: (_ARABIC_MARKS.sub("", v) if (is_ar and isinstance(v, str)) else v) for k, v in sout.items()}
             card["secondary_word"] = _sanitize_emoji(vals.get("word_translation", ""))
             card["secondary_casual"] = _sanitize_emoji(vals.get("casual", ""))
             card["secondary_formal"] = _sanitize_emoji(vals.get("formal", ""))
@@ -1060,12 +1300,12 @@ def build_card(cfg, provider, deck, word, options):
 
     # Tags
     tags = list(card.get("tags", []) or [])
-    if (card.get("register") or "").lower() == "formal" and "Formell" not in tags:
-        tags.append("Formell")
+    if (card.get("register") or "").lower() == "formal" and entry["formal_tag"] not in tags:
+        tags.append(entry["formal_tag"])
     tags.append("Level::%s" % level)  # hierarchical → Anki shows a "Level" group to filter by (A1..Native)
 
     # Build main fields
-    front = "%s %s." % (_esc(card.get("emoji", "")), _esc(card.get("word", "")))
+    front = _front(card.get("emoji", ""), card.get("word", ""))
     back = build_back_html(card)
 
     media = {}
@@ -1109,9 +1349,9 @@ def build_card(cfg, provider, deck, word, options):
     # Main audio (DE + EN) — each clip independent; a failure just leaves that clip out.
     progress("generating audio")
     de_text = _clean_tts(". ... ".join([card.get("word", ""), card.get("example_casual", ""), card.get("example_formal", "")]))
-    de_clip = _try_audio(de_text, voice_de)
+    de_clip = _try_audio(de_text, voice_target)
     if de_clip is not None:
-        media["TTS_DE"] = (_audio_name("tts_de", front, de_text, de_clip), de_clip.data)
+        media["TTS_DE"] = (_audio_name(rules["audio_names"]["target"], front, de_text, de_clip), de_clip.data)
     # Translation audio — only when a translation voice is set. "(none)" (voice_en == ""), the
     # default, keeps the translation as TEXT only, so we skip the clip entirely (no wasted call, no
     # "audio failed" noise in the toast).
@@ -1119,7 +1359,7 @@ def build_card(cfg, provider, deck, word, options):
         en_text = _clean_tts(" ... ".join([(card.get("translation_en", "") or "") + ".", card.get("example_casual_en", ""), card.get("example_formal_en", "")]))
         en_clip = _try_audio(en_text, voice_en)
         if en_clip is not None:
-            media["TTS_EN"] = (_audio_name("tts_en", front, en_text, en_clip), en_clip.data)
+            media["TTS_EN"] = (_audio_name(rules["audio_names"]["translation"], front, en_text, en_clip), en_clip.data)
     # Secondary-language audio (5th clip) — only when a secondary voice is configured AND the
     # secondary translation was produced. Reads the translation aloud in the secondary language.
     if voice_sec and (card.get("secondary_casual") or card.get("secondary_formal") or card.get("secondary_word")):
@@ -1150,24 +1390,20 @@ def build_card(cfg, provider, deck, word, options):
     if options.get("generate_cloze", True):
         try:
             progress("generating cloze companion")
-            cu = ("Input: %s\nDeck: %s\nEnglish meaning: %s\n%s\n\nClassify and generate a NATURAL German cloze sentence. Restructure if needed."
-                  % (word, deck, card.get("translation_en", ""), _pick_context(deck, "cloze")))
-            cu += prompts.cloze_level_note(level)
-            if not prompts.is_english_language(primary_lang):
-                cu += ('\n\nWrite "translation_en" as the FULL sentence translated naturally into %s '
-                       '(NOT English).' % primary_lang)
-            cz = providers.complete_json(provider, prompts.SYSTEM_CLOZE, cu, temperature=0.3, max_tokens=1600, timeout=ai_to, user_agent=ua)
+            cu = prompts.cloze_user(lang, word, deck, card.get("translation_en", ""), level, primary_lang, voice_target)
+            cz = prompts.read_answer(lang, "cloze", providers.complete_json(
+                provider, prompts.cloze_system(lang), cu, temperature=0.3, max_tokens=1600, timeout=ai_to, user_agent=ua))
             sentence = (cz.get("sentence") or "").strip()
             answer_raw = (cz.get("answer") or "").strip()
             card_case = str(cz.get("case") or "single_word").strip()
-            if card_case not in _CLOZE_CASES:
+            if card_case not in rules["cloze_cases"]:
                 card_case = "single_word"          # it becomes a tag, and tags are rendered on the card
             if not (sentence and answer_raw):
                 bundle["meta"]["cloze_warning"] = "the model produced no usable cloze sentence"
             if sentence and answer_raw:
                 working = answer_raw
                 if card_case != "idiom":
-                    sentence, working = _fix_double_determiner(sentence, working)
+                    sentence, working = rules["cloze_fix"](sentence, working)
                     while working and working not in sentence:
                         ws = working.split()
                         if len(ws) <= 1:
@@ -1175,7 +1411,7 @@ def build_card(cfg, provider, deck, word, options):
                             break
                         working = " ".join(ws[1:])
                     if working:
-                        working = _extend_cloze_answer_with_article(sentence, working, card_case, word)
+                        working = rules["cloze_article"](sentence, working, card_case, word)
                 if not (working or card_case == "idiom"):
                     bundle["meta"]["cloze_warning"] = "the cloze answer was not found in its sentence"
                 if working or card_case == "idiom":
@@ -1188,7 +1424,7 @@ def build_card(cfg, provider, deck, word, options):
                     answer_for_text = answer_raw if card_case == "idiom" else working
                     # Escape BEFORE building the {{c1::}} markup so the cloze syntax itself is untouched.
                     cloze_text = build_cloze_text(_esc(sentence), _esc(answer_for_text), card_case, _esc(cz.get("idiom_meaning_de", "")),
-                                                  beginner=level in ("A1", "A2"))
+                                                  beginner=level in ("A1", "A2"), no_hint=rules["cloze_no_hint"])
                     if "{{c1::" not in cloze_text:
                         # Idiom answers are not substring-verified (dictionary form vs inflection): never
                         # bundle a cloze note with zero deletions.
@@ -1202,8 +1438,8 @@ def build_card(cfg, provider, deck, word, options):
                     split_text = audio.split_for_cloze(sentence, tts_answer)
                     # Whole-sentence blanks leave no words to speak ("Herzlich willkommen!" -> "!"):
                     # skip the pause-drill clip instead of burning 4 doomed TTS attempts.
-                    fb = (_try_audio(split_text, voice_de)
-                          if re.search(r"[A-Za-zÄÖÜäöüß]", split_text) else None)
+                    fb = (_try_audio(split_text, voice_target)
+                          if re.search(r"[^\W\d_]", split_text) else None)
                     if fb is not None:
                         # The pause-drill clip depends on WHICH span is deleted, not just on the
                         # sentence — two cards sharing a sentence but deleting different words
@@ -1212,17 +1448,20 @@ def build_card(cfg, provider, deck, word, options):
                         # the catalogue). Hash the spoken text so the name follows the audio.
                         media["CLOZE_FRONT"] = (_audio_name("cloze_front", sentence, split_text, fb), fb.data)
                         front_audio = "[sound:%s]" % CLOZE_FRONT
-                    bb = _try_audio(sentence, voice_de)
+                    bb = _try_audio(sentence, voice_target)
                     if bb is not None:
                         media["CLOZE_BACK"] = (_audio_name("cloze_back", sentence, sentence, bb), bb.data)
                         back_audio = "[sound:%s]" % CLOZE_BACK
                     image_html = '<img src="%s">' % IMG if "IMG" in media else ""
+                    cloze_translation = (cz.get("translation_en") or "").strip() or card.get("translation_en", "")
+                    if arabic_plain:
+                        cloze_translation = _ARABIC_MARKS.sub("", cloze_translation)
                     bundle["cloze"] = {
                         "deck": cloze_deck,
                         "fields": {
                             "Text": cloze_text,
                             # Full SENTENCE translation (in the primary language) — not the word's meaning.
-                            "Translation": _esc((cz.get("translation_en") or "").strip() or card.get("translation_en", "")),
+                            "Translation": _esc(cloze_translation),
                             "Image": image_html, "FrontAudio": front_audio, "BackAudio": back_audio,
                             "GrammarHint": _esc(cz.get("grammar_hint", "") or ""),
                             "SourceWord": _esc(card.get("word", "")), "DeckOrigin": _esc(deck_slug),

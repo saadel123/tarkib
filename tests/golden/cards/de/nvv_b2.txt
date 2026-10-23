@@ -1,0 +1,95 @@
+# Golden card "nvv_b2" (tests/card_scenarios.py)
+# A noun and verb pair in the NVV deck: the pair restated as its own pattern is dropped, and the cloze blanks the verb alone.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: eine Entscheidung treffen
+deck: Deutsch::Nomen-Verb-Verbindungen | level: B2 | cloze: on
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: de/main_B2
+user:
+WORD OR PHRASE TO TEACH: "eine Entscheidung treffen". CONTEXT: German Nomen-Verb-Verbindung. Professional register: meeting, decision, project, email, Retrospektive. CRITICAL: do NOT replace the NVV with a single verb. The NVV is the learning target and must appear in both examples.
+
+== AI call 2: cloze (temperature 0.3, max_tokens 1600)
+system: de/cloze
+user:
+Input: eine Entscheidung treffen
+Deck: Deutsch::Nomen-Verb-Verbindungen
+English meaning: to make a decision
+CONTEXT: the NVV in professional/work scenarios.
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+== picture search
+keyword: team discussing options at a table | deck: Deutsch::Nomen-Verb-Verbindungen | source: auto -> pexels_team_discussing_options_at_a_table.jpg
+
+== read aloud
+1. edge de-DE-KatjaNeural: eine Entscheidung treffen. ... Wir müssen heute endlich eine Entscheidung treffen.. ... Der Vorstand wird die Entscheidung nächste Woche treffen.
+2. edge de-DE-KatjaNeural: Bis Freitag müssen wir eine Entscheidung. .
+3. edge de-DE-KatjaNeural: Bis Freitag müssen wir eine Entscheidung treffen.
+
+== main note in deck "Deutsch::Nomen-Verb-Verbindungen"
+tags: Arbeit Level::B2
+-- Front
+⚖️ eine Entscheidung treffen.
+-- Back
+<div class="card-translation"><span class="level-chip lvl-b2">B2</span> ⚖️ to make a decision</div>
+<div class="card-image"><img src="pexels_team_discussing_options_at_a_table.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇩🇪 Deutsch</div>
+  <div class="sentence casual"><span class="emoji">🤔</span>Wir müssen heute endlich eine Entscheidung treffen.</div>
+  <div class="sentence formal"><span class="emoji">🏢</span>Der Vorstand wird die Entscheidung nächste Woche treffen.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">müssen + Infinitiv</span></div>
+<div class="explanation">👉 „Man entscheidet sich nach dem Nachdenken für eine Möglichkeit."</div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">🤔</span>We finally have to make a decision today.</div>
+  <div class="sentence formal"><span class="emoji">🏢</span>The board will make the decision next week.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 English patterns</div><span class="pattern-badge">must + infinitive</span></div><br>[sound:tts_de_eine_Entscheidung_tre_4e8553b00c.mp3]
+
+== cloze note in deck "Deutsch::Nomen-Verb-Verbindungen::Cloze"
+tags: cloze nomen-verb-verbindungen case_nvv Level::B2
+-- Text
+Bis Freitag müssen wir eine Entscheidung {{c1::treffen}}.
+-- Translation
+We have to make a decision by Friday.
+-- Image
+<img src="pexels_team_discussing_options_at_a_table.jpg">
+-- FrontAudio
+[sound:cloze_front_Bis_Freitag_müssen_wir_e_1e08412afd.mp3]
+-- BackAudio
+[sound:cloze_back_Bis_Freitag_müssen_wir_e_10443a93dd.mp3]
+-- GrammarHint
+eine Entscheidung treffen
+-- SourceWord
+eine Entscheidung treffen
+-- DeckOrigin
+Nomen-Verb-Verbindungen
+
+== media files
+cloze_back_Bis_Freitag_müssen_wir_e_10443a93dd.mp3 <- audio from edge
+cloze_front_Bis_Freitag_müssen_wir_e_1e08412afd.mp3 <- audio from edge
+pexels_team_discussing_options_at_a_table.jpg <- picture
+tts_de_eine_Entscheidung_tre_4e8553b00c.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "to make a decision",
+  "word": "eine Entscheidung treffen"
+}

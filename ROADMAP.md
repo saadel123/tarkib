@@ -12,6 +12,9 @@ Where Tarkib is going. These are plans, not promises, and there are no dates.
 - **Batch mode.** Paste a list of words and review the cards one by one: keep, regenerate or skip.
 - **"Don't confuse with".** An optional line for word pairs learners mix up, such as legen and
   liegen, or kennen and wissen.
+- **More learning languages.** Tarkib makes German and English cards. Each new language gets its
+  own level rules, patterns and checks, written from the mistakes its learners make, and help from
+  native speakers is very welcome (see [CONTRIBUTING.md](CONTRIBUTING.md)).
 
 ## Principles
 
@@ -23,7 +26,7 @@ Every new feature has to keep these. A feature that breaks one is the wrong feat
 3. **No extra automatic AI calls per card.** Free plans have tight limits. New work goes into the
    main call or behind a button the user clicks.
 4. **The content rules always apply,** also to anything regenerated: no alcohol or pork in
-   examples, the preposition with its case, German that fits the level, Modern Standard Arabic,
+   examples, the preposition with its case, a language that fits the level, Modern Standard Arabic,
    safe images. The full list is in [CONTRIBUTING.md](CONTRIBUTING.md).
 5. **A failed step never breaks the card.** If something optional fails, the card is still added.
 

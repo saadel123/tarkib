@@ -1,0 +1,91 @@
+# Golden card "no_picture_no_audio_a2" (tests/card_scenarios.py)
+# No picture found and Edge refusing the audio: the card still lands, with no picture box and no sound, and the cloze answer loses a doubled determiner.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: die Brille
+deck: Tarkib | level: A2 | cloze: on
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: de/main_A2
+user:
+WORD OR PHRASE TO TEACH: "die Brille". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause.
+
+== AI call 2: cloze (temperature 0.3, max_tokens 1600)
+system: de/cloze
+user:
+Input: die Brille
+Deck: Tarkib
+English meaning: glasses
+
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+LEVEL A2: prefer case "single_word"; a short sentence (present or Perfekt), common words, at most one weil/dass/wenn clause; no idioms.
+
+== picture search
+keyword: glasses on a table | deck: Tarkib | source: auto -> nothing found
+
+== read aloud
+1. edge de-DE-KatjaNeural FAILED: die Brille. ... Wo ist deine Brille?. ... Bitte setzen Sie Ihre Brille auf.
+
+== main note in deck "Tarkib"
+tags: Gesundheit Level::A2
+-- Front
+👓 die Brille.
+-- Back
+<div class="card-translation"><span class="level-chip lvl-a2">A2</span> 👓 glasses</div>
+<div class="morph"><span class="g-die">die</span> · Pl. die Brillen</div>
+
+<div class="section">
+  <div class="section-label">🇩🇪 Deutsch</div>
+  <div class="sentence casual"><span class="emoji">🔎</span>Wo ist deine Brille?</div>
+  <div class="sentence formal"><span class="emoji">📖</span>Bitte setzen Sie Ihre Brille auf.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">die Brille aufsetzen (+Akk)</span></div>
+<div class="explanation">👉 „Mit einer Brille sieht man besser."</div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">🔎</span>Where are your glasses?</div>
+  <div class="sentence formal"><span class="emoji">📖</span>Please put on your glasses.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 English patterns</div><span class="pattern-badge">to put on your glasses</span></div>
+
+== cloze note in deck "Tarkib::Cloze"
+tags: cloze tarkib case_single_word Level::A2
+-- Text
+Ich suche {{c1::meine Brille::me... Bri...}}.
+-- Translation
+I am looking for my glasses.
+-- Image
+
+-- FrontAudio
+
+-- BackAudio
+
+-- GrammarHint
+
+-- SourceWord
+die Brille
+-- DeckOrigin
+Tarkib
+
+== media files
+none
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": "auth",
+    "chosen": "edge",
+    "failures": [
+      "Microsoft Edge refused the connection: HTTP 403 Forbidden"
+    ],
+    "ok": 0,
+    "total": 3,
+    "used": {}
+  },
+  "translation_en": "glasses",
+  "word": "die Brille"
+}

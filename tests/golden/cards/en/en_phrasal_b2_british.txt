@@ -1,0 +1,99 @@
+# Golden card "en_phrasal_b2_british" (tests/card_scenarios.py)
+# A separable phrasal verb at B2 read by a British voice: British spelling in the prompts, French as the translation language, and a cloze of the particle alone.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: put off
+deck: Tarkib English | level: B2 | cloze: on
+settings: {"languages": {"en": {"translation": "French", "voice": "en-GB-SoniaNeural"}}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: en/main_B2 [French, en-GB-SoniaNeural]
+user:
+WORD OR PHRASE TO TEACH: "put off". CONTEXT: Important everyday English. Formal: office, appointment or email scenario. Casual: chat with friends or family (messaging tone). Prefer situations people meet every week: work, shopping, health, travel, home.
+
+== AI call 2: cloze (temperature 0.3, max_tokens 1600)
+system: en/cloze
+user:
+Input: put off
+Deck: Tarkib English
+Meaning in French: reporter
+
+
+Classify and generate a NATURAL English cloze sentence. Restructure if needed.
+
+Write "translation" as the FULL sentence translated naturally into French.
+
+Use British English spelling and words.
+
+== picture search
+keyword: calendar with a meeting moved | deck: Tarkib English | source: auto -> pexels_calendar_with_a_meeting_moved.jpg
+
+== read aloud
+1. edge en-GB-SoniaNeural: put off. ... Can we put the meeting off until Friday?. ... We regret that the launch has been put off until the autumn.
+2. edge en-GB-SoniaNeural: We had to put the trip. Because of the weather.
+3. edge en-GB-SoniaNeural: We had to put the trip off because of the weather.
+
+== main note in deck "Tarkib English"
+tags: Work Level::B2
+-- Front
+📅 put off.
+-- Back
+<div class="card-translation"><span class="level-chip lvl-b2">B2</span> 📅 reporter</div>
+<div class="morph">put off · put off · put off · separable</div>
+<div class="card-image"><img src="pexels_calendar_with_a_meeting_moved.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">🗓️</span>Can we put the meeting off until Friday?</div>
+  <div class="sentence formal"><span class="emoji">🚀</span>We regret that the launch has been put off until the autumn.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">until + time</span> <span class="pattern-badge">put something off</span></div>
+<div class="explanation">👉 “To put something off means to decide to do it later.”</div>
+<div class="section">
+  <div class="section-label">🇫🇷 Français</div>
+  <div class="sentence casual"><span class="emoji">🗓️</span>On peut reporter la réunion à vendredi ?</div>
+  <div class="sentence formal"><span class="emoji">🚀</span>Nous regrettons que le lancement ait été reporté à l'automne.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 French patterns</div><span class="pattern-badge">jusqu'à + moment</span> <span class="pattern-badge">reporter quelque chose</span></div><br>[sound:tts_en_put_off_c62492db4c.mp3]
+
+== cloze note in deck "Tarkib English::Cloze"
+tags: cloze tarkib_english case_phrasal_verb Level::B2
+-- Text
+We had to put the trip {{c1::off}} because of the weather.
+-- Translation
+Nous avons dû reporter le voyage à cause du temps.
+-- Image
+<img src="pexels_calendar_with_a_meeting_moved.jpg">
+-- FrontAudio
+[sound:cloze_front_We_had_to_put_the_trip_o_be07c66e87.mp3]
+-- BackAudio
+[sound:cloze_back_We_had_to_put_the_trip_o_d8fe39bbd0.mp3]
+-- GrammarHint
+put something off
+-- SourceWord
+put off
+-- DeckOrigin
+Tarkib English
+
+== media files
+cloze_back_We_had_to_put_the_trip_o_d8fe39bbd0.mp3 <- audio from edge
+cloze_front_We_had_to_put_the_trip_o_be07c66e87.mp3 <- audio from edge
+pexels_calendar_with_a_meeting_moved.jpg <- picture
+tts_en_put_off_c62492db4c.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "reporter",
+  "word": "put off"
+}

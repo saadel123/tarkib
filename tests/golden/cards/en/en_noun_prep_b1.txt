@@ -1,0 +1,100 @@
+# Golden card "en_noun_prep_b1" (tests/card_scenarios.py)
+# English at B1 with Arabic: a noun with its preposition first in the patterns, a regular plural (no word line), and a cloze of the preposition alone, without a letter hint.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: reason
+deck: Tarkib English | level: B1 | cloze: on
+settings: {"defaults": {"translation_language": "Arabic"}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: en/main_B1 [Arabic, en-US-JennyNeural]
+user:
+WORD OR PHRASE TO TEACH: "reason". CONTEXT: Important everyday English. Formal: office, appointment or email scenario. Casual: chat with friends or family (messaging tone). Prefer situations people meet every week: work, shopping, health, travel, home.
+
+== AI call 2: cloze (temperature 0.3, max_tokens 1600)
+system: en/cloze
+user:
+Input: reason
+Deck: Tarkib English
+Meaning in Arabic: سبب
+
+
+Classify and generate a NATURAL English cloze sentence. Restructure if needed.
+
+LEVEL B1: use case "single_word", "verb_prep" or "phrasal_verb"; a medium everyday sentence with common words.
+
+Write "translation" as the FULL sentence translated naturally into Arabic. Use Modern Standard Arabic only, without diacritics.
+
+Use American English spelling and words.
+
+== picture search
+keyword: delayed train on a timetable board | deck: Tarkib English | source: auto -> pexels_delayed_train_on_a_timetable_board.jpg
+
+== read aloud
+1. edge en-US-JennyNeural: reason. ... What's the reason for the delay?. ... There is no reason for concern at this stage.
+2. edge en-US-JennyNeural: Nobody knows the reason. His decision.
+3. edge en-US-JennyNeural: Nobody knows the reason for his decision.
+
+== main note in deck "Tarkib English"
+tags: Communication Level::B1
+-- Front
+🤔 reason.
+-- Back
+<div class="card-translation" style="direction:rtl;"><span class="level-chip lvl-b1">B1</span> 🤔 سبب</div>
+<div class="card-image"><img src="pexels_delayed_train_on_a_timetable_board.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">⏰</span>What's the reason for the delay?</div>
+  <div class="sentence formal"><span class="emoji">📄</span>There is no reason for concern at this stage.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">the reason for something</span> <span class="pattern-badge">there is no + noun</span></div>
+<div class="explanation">👉 “A reason is the cause of something, or why it happens.”</div>
+<div class="section arabic">
+  <div class="section-label" style="direction:rtl;text-align:right;">🇸🇦 العربية</div>
+  <div class="sentence casual"><span class="emoji">⏰</span>ما سبب التأخير؟</div>
+  <div class="sentence formal"><span class="emoji">📄</span>لا يوجد سبب للقلق في هذه المرحلة.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Arabic patterns</div><span class="pattern-badge">سبب شيء ما</span> <span class="pattern-badge">لا يوجد + اسم</span></div><br>[sound:tts_en_reason_50f1dcc7e8.mp3]
+
+== cloze note in deck "Tarkib English::Cloze"
+tags: cloze tarkib_english case_verb_prep Level::B1
+-- Text
+Nobody knows the reason {{c1::for}} his decision.
+-- Translation
+لا أحد يعرف سبب قراره.
+-- Image
+<img src="pexels_delayed_train_on_a_timetable_board.jpg">
+-- FrontAudio
+[sound:cloze_front_Nobody_knows_the_reason_4bf87493e8.mp3]
+-- BackAudio
+[sound:cloze_back_Nobody_knows_the_reason_e2800cba0e.mp3]
+-- GrammarHint
+the reason for something
+-- SourceWord
+reason
+-- DeckOrigin
+Tarkib English
+
+== media files
+cloze_back_Nobody_knows_the_reason_e2800cba0e.mp3 <- audio from edge
+cloze_front_Nobody_knows_the_reason_4bf87493e8.mp3 <- audio from edge
+pexels_delayed_train_on_a_timetable_board.jpg <- picture
+tts_en_reason_50f1dcc7e8.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "سبب",
+  "word": "reason"
+}

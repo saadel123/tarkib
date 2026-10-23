@@ -1,0 +1,117 @@
+# Golden card "noun_prep_c1_arabic2" (tests/card_scenarios.py)
+# A noun with its preposition at C1, Arabic as the second translation (the MSA prompt, diacritics removed, its own voice), and a cloze of the preposition alone.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: die Rücksicht
+deck: Tarkib | level: C1 | cloze: on
+options: {"secondary_language": "Arabic"}
+settings: {"voices": {"secondary": "ar-SA-ZariyahNeural"}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: de/main_C1
+user:
+WORD OR PHRASE TO TEACH: "die Rücksicht". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause.
+
+== AI call 2: secondary (temperature 0.2, max_tokens 600)
+system: de/secondary_Arabic
+user:
+Translate into Arabic.
+
+GERMAN WORD: die Rücksicht
+GERMAN CASUAL: Nimm bitte ein bisschen Rücksicht auf deine Nachbarn.
+GERMAN FORMAL: Wir bitten Sie, Rücksicht auf die anderen Gäste zu nehmen.
+ENGLISH CASUAL: Please show a bit of consideration for your neighbours.
+ENGLISH FORMAL: We ask you to be considerate of the other guests.
+
+Generate word_translation, casual, formal. Return ONLY JSON.
+
+== AI call 3: cloze (temperature 0.3, max_tokens 1600)
+system: de/cloze
+user:
+Input: die Rücksicht
+Deck: Tarkib
+English meaning: consideration
+
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+== picture search
+keyword: quiet neighbours in an apartment building | deck: Tarkib | source: auto -> pexels_quiet_neighbours_in_an_apartment_buildin.jpg
+
+== read aloud
+1. edge de-DE-KatjaNeural: die Rücksicht. ... Nimm bitte ein bisschen Rücksicht auf deine Nachbarn.. ... Wir bitten Sie, Rücksicht auf die anderen Gäste zu nehmen.
+2. edge ar-SA-ZariyahNeural: مراعاة ... من فضلك راع جيرانك قليلا. ... نرجو منك مراعاة الضيوف الآخرين.
+3. edge de-DE-KatjaNeural: Bitte nimm Rücksicht. Die Kinder.
+4. edge de-DE-KatjaNeural: Bitte nimm Rücksicht auf die Kinder.
+
+== main note in deck "Tarkib"
+tags: Beziehungen Level::C1
+-- Front
+🤝 die Rücksicht.
+-- Back
+<div class="card-translation"><span class="level-chip lvl-c1">C1</span> 🤝 consideration</div>
+<div class="morph"><span class="g-die">die</span> · Gen. der Rücksicht</div>
+<div class="card-image"><img src="pexels_quiet_neighbours_in_an_apartment_buildin.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇩🇪 Deutsch</div>
+  <div class="sentence casual"><span class="emoji">🏠</span>Nimm bitte ein bisschen Rücksicht auf deine Nachbarn.</div>
+  <div class="sentence formal"><span class="emoji">🏨</span>Wir bitten Sie, Rücksicht auf die anderen Gäste zu nehmen.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">Rücksicht nehmen auf (+Akk)</span> <span class="pattern-badge">jemanden bitten, etwas zu tun</span></div>
+<div class="explanation">👉 „Wer Rücksicht nimmt, achtet auf die Gefühle und Bedürfnisse anderer."</div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">🏠</span>Please show a bit of consideration for your neighbours.</div>
+  <div class="sentence formal"><span class="emoji">🏨</span>We ask you to be considerate of the other guests.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 English patterns</div><span class="pattern-badge">to show consideration for</span> <span class="pattern-badge">to ask someone to do something</span></div>
+<div class="section arabic">
+  <div class="section-label" style="direction:ltr;text-align:left;">🇸🇦 العربية</div>
+  <div class="sentence casual"><span class="emoji">🏠</span>من فضلك راع جيرانك قليلا.</div>
+  <div class="sentence formal"><span class="emoji">🏨</span>نرجو منك مراعاة الضيوف الآخرين.</div>
+</div>
+<div class="secondary-word">🤝 مراعاة</div><br>[sound:tts_de_die_Rücksicht_195f52c9e1.mp3][sound:tts_sec_die_Rücksicht_3e2b97dc61.mp3]
+
+== cloze note in deck "Tarkib::Cloze"
+tags: cloze tarkib case_noun_prep Level::C1
+-- Text
+Bitte nimm Rücksicht {{c1::auf}} die Kinder.
+-- Translation
+Please be considerate of the children.
+-- Image
+<img src="pexels_quiet_neighbours_in_an_apartment_buildin.jpg">
+-- FrontAudio
+[sound:cloze_front_Bitte_nimm_Rücksicht_auf_6e3f3c3855.mp3]
+-- BackAudio
+[sound:cloze_back_Bitte_nimm_Rücksicht_auf_0ddab9c6eb.mp3]
+-- GrammarHint
+Rücksicht nehmen auf (+Akk)
+-- SourceWord
+die Rücksicht
+-- DeckOrigin
+Tarkib
+
+== media files
+cloze_back_Bitte_nimm_Rücksicht_auf_0ddab9c6eb.mp3 <- audio from edge
+cloze_front_Bitte_nimm_Rücksicht_auf_6e3f3c3855.mp3 <- audio from edge
+pexels_quiet_neighbours_in_an_apartment_buildin.jpg <- picture
+tts_de_die_Rücksicht_195f52c9e1.mp3 <- audio from edge
+tts_sec_die_Rücksicht_3e2b97dc61.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 4,
+    "total": 4,
+    "used": {
+      "edge": 4
+    }
+  },
+  "translation_en": "consideration",
+  "word": "die Rücksicht"
+}

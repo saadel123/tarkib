@@ -1,8 +1,10 @@
 """The Add-Card dialog: form -> QueryOp(pipeline) -> CollectionOp(write) -> done.
 
-The word field shows "e.g. die Probe" as a placeholder only.
+The word field shows the learning language's example ("e.g. die Probe") as a placeholder only.
+The Language row picks what the card teaches; the deck follows it (rules in ui/lang_rules.py).
 Network/audio run off the UI thread (QueryOp); the collection write runs in a CollectionOp.
 """
+import re
 import traceback
 
 from aqt import mw
@@ -14,9 +16,10 @@ from aqt.utils import qconnect, tooltip, showText, getText, askUser
 from aqt.operations import QueryOp, CollectionOp
 
 from .. import anki_io
-from ..pipeline import generate, providers, prompts, tts
+from ..pipeline import generate, languages, providers, prompts, tts
+from . import lang_rules
 from .support import (support_link, decks_footer_link, note_card_added_and_maybe_thank,
-                      decks_imported, DECKS_URL)
+                      decks_imported, DECKS_URL, DECKS_LANGUAGE)
 from .promo_rules import hint_should_show
 
 FIELD_MIN_W = 340            # text inputs grow to at least this wide
@@ -95,29 +98,45 @@ class AddCardDialog(QDialog):
         qconnect(self.audio_banner.linkActivated, lambda _link: self._open_settings(initial_tab="Voice"))
         self.audio_banner.hide()
         layout.addWidget(self.audio_banner)
+        # The learning language has no translation language yet (English cards when the German ones are
+        # translated into English). Add stays off until one is picked, so no click is spent on a refusal.
+        self.lang_banner = QLabel()
+        self.lang_banner.setWordWrap(True)
+        self.lang_banner.setTextFormat(Qt.TextFormat.RichText)
+        self.lang_banner.setStyleSheet(
+            "background:rgba(217,119,6,0.22);padding:8px;border-radius:6px;font-size:12px;")
+        qconnect(self.lang_banner.linkActivated, lambda _link: self._open_settings(initial_tab="Languages"))
+        self.lang_banner.hide()
+        layout.addWidget(self.lang_banner)
 
         form = QFormLayout()
         form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
 
         self.word_edit = QLineEdit()
-        self.word_edit.setPlaceholderText("e.g. die Probe")
         self.word_edit.setMinimumWidth(FIELD_MIN_W)
         form.addRow("Word / phrase", self.word_edit)
 
+        # The language the card teaches. It starts where the learner left off, and the deck follows it:
+        # every deck remembers the language of its cards (ui/lang_rules.py has the rules and their tests).
+        decks = self._deck_names()
+        self._lang, start_deck = lang_rules.start(self.cfg, decks)
+        self._settings = generate.language_settings(self.cfg, self._lang)
+        self.lang_combo = QComboBox()
+        for code in languages.codes():
+            self.lang_combo.addItem(lang_rules.picker_label(code), code)
+        self.lang_combo.setCurrentIndex(max(0, self.lang_combo.findData(self._lang)))
+        self.lang_combo.setToolTip("The language this card teaches. Its translation language and voices are "
+                                   "in Settings, Languages.")
+        form.addRow("Language", self.lang_combo)
+
         # Deck: editable combo + an "Add deck" button beside it (combo a bit narrower).
         # We list only the user's real decks — no taxonomy is imposed. The chosen deck is
-        # created lazily at write time. Preselect the last-used deck; on first run fall back
-        # to the single configured default (created only when the user actually adds a card).
+        # created lazily at write time. Preselect the language's last-used deck; on first run fall
+        # back to its default deck (created only when the user actually adds a card).
         deck_row = QHBoxLayout()
         self.deck_combo = QComboBox()
         self.deck_combo.setEditable(True)
-        decks = sorted({d.name for d in mw.col.decks.all_names_and_ids()})
-        default_deck = (defaults.get("default_deck") or "Tarkib").strip()
-        if default_deck and default_deck not in decks:
-            decks.insert(0, default_deck)
-        self.deck_combo.addItems(decks)
-        last_deck = (defaults.get("last_deck") or "").strip()
-        self.deck_combo.setCurrentText(last_deck if last_deck in decks else default_deck)
+        self._fill_decks(start_deck, decks)
         add_deck_btn = QPushButton("Add deck")
         add_deck_btn.setToolTip("Create a new deck if the one you want isn't listed")
         qconnect(add_deck_btn.clicked, self._add_deck)
@@ -159,9 +178,15 @@ class AddCardDialog(QDialog):
         level_row = QHBoxLayout()
         self.level_combo = QComboBox()
         for code in prompts.LEVELS:
-            self.level_combo.addItem(prompts.LEVEL_LABELS.get(code, code), code)
+            self.level_combo.addItem(prompts.level_label(code, self._lang), code)
         self._set_level(self._resolve_level(self.deck_combo.currentText().strip()))
         qconnect(self.deck_combo.currentTextChanged, self._on_deck_changed)
+        # A deck picked from the list, or typed and confirmed, brings its language along. Not on every
+        # keystroke: typing "Tarkib English" passes through "Tarkib", which is German's.
+        qconnect(self.deck_combo.activated, lambda _i: self._follow_deck_language())
+        if self.deck_combo.lineEdit() is not None:
+            qconnect(self.deck_combo.lineEdit().editingFinished, self._follow_deck_language)
+        qconnect(self.lang_combo.currentIndexChanged, lambda _i: self._on_language_changed())
         change_default_btn = QPushButton("Change default")
         change_default_btn.setToolTip("Set the default level for new cards in Settings")
         qconnect(change_default_btn.clicked, lambda: self._open_settings(initial_tab="Cards"))
@@ -194,10 +219,12 @@ class AddCardDialog(QDialog):
         btn_row.addWidget(self.settings_btn)
         btn_row.addSpacing(10)
         btn_row.addWidget(support_link(self))
-        decks_lbl = decks_footer_link(self)
-        if decks_lbl is not None:
-            btn_row.addSpacing(10)
-            btn_row.addWidget(decks_lbl)
+        # The ready-made decks teach German: their link shows on German cards only (_apply_language).
+        # The gap is the label's own margin, so it goes away with the label.
+        self.decks_footer = decks_footer_link(self)
+        if self.decks_footer is not None:
+            self.decks_footer.setContentsMargins(10, 0, 0, 0)
+            btn_row.addWidget(self.decks_footer)
         btn_row.addStretch()
         self.close_btn = QPushButton("Close")
         qconnect(self.close_btn.clicked, self.reject)
@@ -208,7 +235,7 @@ class AddCardDialog(QDialog):
         btn_row.addWidget(self.add_btn)
         layout.addLayout(btn_row)
 
-        self._refresh_state()
+        self._apply_language()       # placeholder, level names, second translation, banners, deck links
         self._maybe_show_decks_hint()
         # Start in the word field. When the decks note shows, its x button comes first in the tab
         # order, and on Windows and Linux typing "die Probe" would press it with the space.
@@ -222,7 +249,7 @@ class AddCardDialog(QDialog):
         (isHidden, the provider list) rather than isVisible(), which is False for every child of a
         dialog that is not on screen yet."""
         try:
-            if not self.decks_hint.isHidden() or not DECKS_URL:
+            if not self.decks_hint.isHidden() or not DECKS_URL or self._lang != DECKS_LANGUAGE:
                 return
             cfg = _cfg()
             stats = cfg.setdefault("stats", {})
@@ -272,7 +299,7 @@ class AddCardDialog(QDialog):
         if not self._providers:
             text = ("⚠ No AI provider with an API key yet. Click Settings, pick a provider, and paste "
                     "your key (a free Groq key works).")
-            if DECKS_URL:
+            if DECKS_URL and self._lang == DECKS_LANGUAGE:
                 text += ('<br>Prefer finished cards with no setup? <a style="color:#fff" href="%s">The '
                          'free A1 deck</a> needs no key.' % DECKS_URL)
             self.banner.setText(text)
@@ -290,15 +317,27 @@ class AddCardDialog(QDialog):
             self.info_banner.show()
         else:
             self.info_banner.hide()
-        # Block Add only when there's no usable provider; missing image key is non-fatal.
-        self.add_btn.setEnabled(bool(self._providers))
+        # The cards' language needs a translation language (build_card refuses without one).
+        no_translation = not self._settings.get("translation")
+        if no_translation:
+            self.lang_banner.setText(
+                '⚠ %s cards need a translation language, for example Arabic or French. '
+                '<a href="languages">Pick one in Settings, Languages</a>.' % languages.get(self._lang)["name"])
+            self.lang_banner.show()
+        else:
+            self.lang_banner.hide()
+        # Block Add only when a card cannot be made: no usable provider, or no translation language.
+        # A missing image key is non-fatal.
+        self.add_btn.setEnabled(bool(self._providers) and not no_translation)
 
     def _find_existing(self, deck, word):
-        """Existing Tarkib notes for this word in this deck. Normalises the article so
-        'die Frau' / 'Die Frau' / 'Frau' all match (Anki search is already case-insensitive)."""
+        """Existing Tarkib notes for this word in this deck. Drops the learning language's headword
+        prefixes so 'die Frau' / 'Die Frau' / 'Frau' (or 'to give up' / 'give up') all match (Anki search
+        is already case-insensitive)."""
         try:
-            import re
-            stem = re.sub(r"^(der|die|das|sich)\s+", "", word.strip(), flags=re.IGNORECASE)
+            prefixes = languages.get(self._lang)["headword_prefixes"]
+            stem = re.sub(r"^(%s)\s+" % "|".join(re.escape(p) for p in prefixes), "", word.strip(),
+                          flags=re.IGNORECASE)
             stem = (stem or word).replace('"', "").replace("*", "").strip()
             if not stem:
                 return []
@@ -314,7 +353,8 @@ class AddCardDialog(QDialog):
 
     def _add_deck(self):
         """Prompt for a deck name, create it if missing, then select it in the combo."""
-        name, ok = getText("New deck name (e.g. Deutsch::My Deck):", parent=self, default="")
+        name, ok = getText("New deck name (e.g. %s::My Deck):" % languages.get(self._lang)["native_name"],
+                           parent=self, default="")
         if not ok:
             return
         name = name.strip()
@@ -350,6 +390,73 @@ class AddCardDialog(QDialog):
         if code in prompts.LEVELS:
             self._set_level(code)
 
+    # ── the learning language (rules: ui/lang_rules.py) ──
+    @staticmethod
+    def _deck_names():
+        return sorted({d.name for d in mw.col.decks.all_names_and_ids()})
+
+    def _fill_decks(self, select, decks=None):
+        """List the real decks, plus `select` when it does not exist yet (a language's default deck is
+        created with its first card), and select it. Quiet: the caller decides what the change means."""
+        decks = list(self._deck_names() if decks is None else decks)
+        if select and select not in decks:
+            decks.insert(0, select)
+        self.deck_combo.blockSignals(True)
+        self.deck_combo.clear()
+        self.deck_combo.addItems(decks)
+        self.deck_combo.setCurrentText(select)
+        self.deck_combo.blockSignals(False)
+
+    def _on_language_changed(self):
+        self._set_language(self.lang_combo.currentData() or languages.DEFAULT)
+
+    def _follow_deck_language(self):
+        """A deck that belongs to another language (its last card, or it is that language's default deck)
+        switches the language to it. A deck of no language in particular keeps the current one."""
+        owner = lang_rules.deck_language(self.cfg, self.deck_combo.currentText())
+        if owner and owner != self._lang:
+            self._set_language(owner, move_deck=False)
+
+    def _set_language(self, code, move_deck=True):
+        """Make `code` the card's language. With move_deck, a deck of the old language makes way for the
+        new language's last deck (or its default deck); a deck of no language in particular stays."""
+        if code not in languages.codes():
+            code = languages.DEFAULT
+        self.lang_combo.blockSignals(True)
+        self.lang_combo.setCurrentIndex(max(0, self.lang_combo.findData(code)))
+        self.lang_combo.blockSignals(False)
+        self._lang = code
+        if move_deck:
+            deck = self.deck_combo.currentText().strip()
+            decks = self._deck_names()
+            new_deck = lang_rules.deck_after_switch(self.cfg, deck, code, decks)
+            if new_deck != deck:
+                self._fill_decks(new_deck, decks)
+                self._on_deck_changed(new_deck)        # the deck's own level, when it has one
+        self._apply_language()
+
+    def _apply_language(self):
+        """Everything this window shows that depends on the card's language: the example in the word box,
+        the level names, its second translation, the banners, and the German decks' pointers (the
+        ready-made decks teach German, so they show on German cards only)."""
+        widgets = [w for w in (self.banner, self.info_banner, self.lang_banner, self.decks_hint,
+                               self.secondary_check, self.decks_footer) if w is not None]
+        before = [w.isHidden() for w in widgets]
+        entry = languages.get(self._lang)
+        self.word_edit.setPlaceholderText("e.g. %s" % entry["example_word"])
+        for i in range(self.level_combo.count()):
+            self.level_combo.setItemText(i, prompts.level_label(self.level_combo.itemData(i), self._lang))
+        self._settings = generate.language_settings(self.cfg, self._lang)
+        self._refresh_secondary()
+        german_decks = self._lang == DECKS_LANGUAGE
+        if self.decks_footer is not None:
+            self.decks_footer.setVisible(german_decks)
+        if not german_decks:
+            self.decks_hint.hide()             # shown again only by the check when the window opens
+        self._refresh_state()
+        if self.isVisible() and [w.isHidden() for w in widgets] != before:
+            self._fit_height()                 # a banner or row came or went
+
     def _set_engine_visible(self, visible):
         """The Engine picker only matters with 2+ providers; hide its row for the common
         single-provider case so the dialog stays uncluttered."""
@@ -371,7 +478,8 @@ class AddCardDialog(QDialog):
 
     def _open_settings(self, initial_tab=None):
         from .settings import SettingsDialog
-        dlg = SettingsDialog(self, initial_tab=initial_tab)
+        # Settings opens on this card's language, so its voice and translation languages are the ones shown.
+        dlg = SettingsDialog(self, initial_tab=initial_tab, initial_language=self._lang)
         accepted = dlg.exec()
         # The first Save on a fresh install writes the keys but keeps Settings open while models
         # load, so a Cancel or x after it must refresh this window too, not only an accepted Save.
@@ -392,8 +500,13 @@ class AddCardDialog(QDialog):
             self.engine_combo.addItem(p.get("name") or p.get("id") or p.get("type"))
         self._set_engine_visible(len(self._providers) >= 2)
         self._reload_decks()   # Settings can create starter decks; show them without reopening
-        self._refresh_secondary()
-        self._refresh_state()
+        # Settings shows and saves the language this window was on ("Language you learn"); a language
+        # picked there becomes this window's, with its deck.
+        lang, _ = languages.resolve((self.cfg.get("defaults") or {}).get("learning_language"))
+        if lang != self._lang:
+            self._set_language(lang)
+        else:
+            self._apply_language()   # its translation language, second translation and voices may have changed
         # A new default level ("Change default") applies to the next card at once. A level picked
         # by hand for this session stays when the default did not change.
         level_now = self._resolve_level(self.deck_combo.currentText().strip())
@@ -403,13 +516,16 @@ class AddCardDialog(QDialog):
         self.word_edit.setFocus()
 
     def _refresh_secondary(self):
-        """Sync the 'Add <language> translation' checkbox with the saved config. Hidden (and
-        ignored) when no secondary language is set, so it can never offer a stale language."""
-        defaults = self.cfg.get("defaults", {}) or {}
-        self.secondary_lang = (defaults.get("secondary_translation_language") or "").strip()
+        """Sync the 'Add <language> translation' checkbox with the card language's saved second
+        translation (generate.language_settings). Hidden (and ignored) when it has none, so it can never
+        offer a stale language. A box the user unticked stays unticked while the language is the same."""
+        new = (self._settings.get("secondary") or "").strip()
+        same = bool(new) and new == self.secondary_lang and not self.secondary_check.isHidden()
+        self.secondary_lang = new
         if self.secondary_lang:
             self.secondary_check.setText("Add %s translation" % self.secondary_lang)
-            self.secondary_check.setChecked(True)
+            if not same:
+                self.secondary_check.setChecked(True)
             self.secondary_check.show()
         else:
             self.secondary_check.setChecked(False)
@@ -449,6 +565,7 @@ class AddCardDialog(QDialog):
             "generate_cloze": self.cloze_check.isChecked(),
             "secondary_language": (self.secondary_lang if (self.secondary_check and self.secondary_check.isChecked()) else ""),
             "level": self.level_combo.currentData() or prompts.DEFAULT_LEVEL,
+            "language": self._lang,
             "progress": self._progress,
         }
         self._start(word, deck, provider, options)
@@ -457,7 +574,8 @@ class AddCardDialog(QDialog):
         """Kick off generation. Kept separate from _on_add so a refusal can re-run the same request
         with a flag (see _fail, "Add it anyway?") without re-reading the form."""
         cfg = self.cfg
-        self._pending_deck = deck   # persisted as last_deck only after a successful write
+        self._pending_deck = deck   # remembered (with the language) only after a successful write
+        self._pending_lang = options.get("language") or languages.DEFAULT
         self._pending_model = provider.get("model", "")  # named in friendly error messages
         self._pending_run = {"word": word, "deck": deck, "provider": provider, "options": options}
         self.add_btn.setEnabled(False)
@@ -533,10 +651,12 @@ class AddCardDialog(QDialog):
             for w in (self.word_edit, self.meaning_edit, self.scenario_edit, self.image_edit):
                 w.clear()
             self.word_edit.setFocus()
-            # Remember the deck for next time (mirrors Anki's own Add window).
+            # Remember the deck for next time (mirrors Anki's own Add window): the deck keeps the card's
+            # language, the language its deck, and the window opens in this language next time.
             try:
+                lang_rules.remember(self.cfg, self._pending_deck, self._pending_lang)
                 cfg = _cfg()
-                cfg.setdefault("defaults", {})["last_deck"] = self._pending_deck
+                lang_rules.remember(cfg, self._pending_deck, self._pending_lang)
                 mw.addonManager.writeConfig(__name__, cfg)
             except Exception:
                 pass
@@ -578,12 +698,14 @@ class AddCardDialog(QDialog):
         self.add_btn.setEnabled(True)
         title, body, kind = providers.friendly_error(exc, getattr(self, "_pending_model", ""))
         if kind == "settings":
-            # Fixable in Settings (wrong/limited model, bad key). Offer a one-click jump.
+            # Fixable in Settings (wrong/limited model, bad key, no translation language). Offer a
+            # one-click jump, to the tab that fixes it when there is one.
+            tab = "Languages" if title == "Pick a translation language" else None
             if askUser("%s\n\nOpen Settings now to change it?" % body,
                        parent=self, title=title, defaultno=False):
-                self._open_settings()
+                self._open_settings(initial_tab=tab)
             return
-        if kind == "retry" and title.startswith("That does not look like German"):
+        if kind == "retry" and title.startswith("That does not look like"):
             # The input check refused. The model can be wrong (a regional word, Native Denglisch,
             # a name), so the user gets the last word: the same request runs again with the check off.
             pr = getattr(self, "_pending_run", None)

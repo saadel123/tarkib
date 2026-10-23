@@ -1,0 +1,112 @@
+# Golden card "en_formal_native" (tests/card_scenarios.py)
+# A formal word at Native: casual alternatives on both sides, the Formal tag (not doubled), the separate grammar call, and the Arabic translation read aloud too.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: nevertheless
+deck: Tarkib English | level: Native | cloze: on
+settings: {"defaults": {"translation_language": "Arabic"}, "voices": {"translation": "ar-SA-ZariyahNeural"}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: en/main_Native [Arabic, en-US-JennyNeural]
+user:
+WORD OR PHRASE TO TEACH: "nevertheless". CONTEXT: Important everyday English. Formal: office, appointment or email scenario. Casual: chat with friends or family (messaging tone). Prefer situations people meet every week: work, shopping, health, travel, home.
+
+== AI call 2: grammar (temperature 0.2, max_tokens 2000)
+system: en/grammar [Arabic]
+user:
+English casual: "It's a bit risky, but we're still gonna do it."
+English formal: "The plan is risky, but we will nevertheless go ahead with it."
+Arabic casual: "الأمر فيه بعض المخاطرة، لكننا سنفعله على أي حال."
+Arabic formal: "الخطة محفوفة بالمخاطر، لكننا سنمضي فيها مع ذلك."
+
+Extract REAL patterns from these sentences. Return ONLY JSON.
+
+== AI call 3: cloze (temperature 0.3, max_tokens 1600)
+system: en/cloze
+user:
+Input: nevertheless
+Deck: Tarkib English
+Meaning in Arabic: ومع ذلك
+
+
+Classify and generate a NATURAL English cloze sentence. Restructure if needed.
+
+Write "translation" as the FULL sentence translated naturally into Arabic. Use Modern Standard Arabic only, without diacritics.
+
+Use American English spelling and words.
+
+== picture search
+keyword: team deciding to go ahead with a plan | deck: Tarkib English | source: auto -> pexels_team_deciding_to_go_ahead_with_a_plan.jpg
+
+== read aloud
+1. edge en-US-JennyNeural: nevertheless. ... It's a bit risky, but we're still gonna do it.. ... The plan is risky, but we will nevertheless go ahead with it.
+2. edge ar-SA-ZariyahNeural: ومع ذلك. ... الأمر فيه بعض المخاطرة، لكننا سنفعله على أي حال. ... الخطة محفوفة بالمخاطر، لكننا سنمضي فيها مع ذلك.
+3. edge en-US-JennyNeural: It was raining, but we. Went for a walk.
+4. edge en-US-JennyNeural: It was raining, but we nevertheless went for a walk.
+
+== main note in deck "Tarkib English"
+tags: Communication Formal Level::Native
+-- Front
+⚖️ nevertheless.
+-- Back
+<div class="card-translation" style="direction:rtl;"><span class="level-chip lvl-native">Native</span> ⚖️ ومع ذلك</div>
+<div class="card-image"><img src="pexels_team_deciding_to_go_ahead_with_a_plan.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+<div class="register-hint"><span class="formal-mark">“nevertheless” (Formal)</span> <span class="arrow">→</span> <span class="casual-alt">Everyday:</span> <span class="alt-list">but still · even so</span></div>
+  <div class="sentence casual"><span class="emoji">🤷</span>It's a bit risky, but we're still gonna do it.</div>
+  <div class="sentence formal"><span class="emoji">📊</span>The plan is risky, but we will nevertheless go ahead with it.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">go ahead with something</span></div>
+<div class="explanation">👉 “A formal word for despite what was just said; in casual speech people say but still.”</div>
+<div class="section arabic">
+  <div class="section-label" style="direction:rtl;text-align:right;">🇸🇦 العربية</div>
+<div class="register-hint"><span class="formal-mark">"ومع ذلك" (Formal)</span> <span class="arrow">→</span> <span class="casual-alt">Casual:</span> <span class="alt-list">لكن مع ذلك · حتى مع ذلك</span></div>
+  <div class="sentence casual"><span class="emoji">🤷</span>الأمر فيه بعض المخاطرة، لكننا سنفعله على أي حال.</div>
+  <div class="sentence formal"><span class="emoji">📊</span>الخطة محفوفة بالمخاطر، لكننا سنمضي فيها مع ذلك.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Arabic patterns</div><span class="pattern-badge">يمضي قدما في شيء ما</span></div><br>[sound:tts_en_nevertheless_aace3377b8.mp3][sound:tts_tr_nevertheless_5963d60d79.mp3]
+
+== cloze note in deck "Tarkib English::Cloze"
+tags: cloze tarkib_english case_single_word Level::Native
+-- Text
+It was raining, but we {{c1::nevertheless::nev...}} went for a walk.
+-- Translation
+كانت السماء تمطر، لكننا مع ذلك خرجنا في نزهة.
+-- Image
+<img src="pexels_team_deciding_to_go_ahead_with_a_plan.jpg">
+-- FrontAudio
+[sound:cloze_front_It_was_raining__but_we_n_c9cca9b828.mp3]
+-- BackAudio
+[sound:cloze_back_It_was_raining__but_we_n_35d2fc12ef.mp3]
+-- GrammarHint
+nevertheless = but still (formal)
+-- SourceWord
+nevertheless
+-- DeckOrigin
+Tarkib English
+
+== media files
+cloze_back_It_was_raining__but_we_n_35d2fc12ef.mp3 <- audio from edge
+cloze_front_It_was_raining__but_we_n_c9cca9b828.mp3 <- audio from edge
+pexels_team_deciding_to_go_ahead_with_a_plan.jpg <- picture
+tts_en_nevertheless_aace3377b8.mp3 <- audio from edge
+tts_tr_nevertheless_5963d60d79.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 4,
+    "total": 4,
+    "used": {
+      "edge": 4
+    }
+  },
+  "translation_en": "ومع ذلك",
+  "word": "nevertheless"
+}

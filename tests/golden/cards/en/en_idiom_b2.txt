@@ -1,0 +1,98 @@
+# Golden card "en_idiom_b2" (tests/card_scenarios.py)
+# An idiom at B2: the idiom restated as its own pattern is dropped, two cloze blanks with hints.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: break the ice
+deck: Tarkib English | level: B2 | cloze: on
+settings: {"defaults": {"translation_language": "Arabic"}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: en/main_B2 [Arabic, en-US-JennyNeural]
+user:
+WORD OR PHRASE TO TEACH: "break the ice". CONTEXT: Important everyday English. Formal: office, appointment or email scenario. Casual: chat with friends or family (messaging tone). Prefer situations people meet every week: work, shopping, health, travel, home.
+
+== AI call 2: cloze (temperature 0.3, max_tokens 1600)
+system: en/cloze
+user:
+Input: break the ice
+Deck: Tarkib English
+Meaning in Arabic: يكسر الجليد
+
+
+Classify and generate a NATURAL English cloze sentence. Restructure if needed.
+
+Write "translation" as the FULL sentence translated naturally into Arabic. Use Modern Standard Arabic only, without diacritics.
+
+Use American English spelling and words.
+
+== picture search
+keyword: people smiling at a meeting | deck: Tarkib English | source: auto -> pexels_people_smiling_at_a_meeting.jpg
+
+== read aloud
+1. edge en-US-JennyNeural: break the ice. ... A funny story is a great way to break the ice.. ... The host broke the ice by asking each guest to introduce themselves.
+2. edge en-US-JennyNeural: Let's play a quick game to. The. .
+3. edge en-US-JennyNeural: Let's play a quick game to break the ice.
+
+== main note in deck "Tarkib English"
+tags: Communication Level::B2
+-- Front
+🧊 break the ice.
+-- Back
+<div class="card-translation" style="direction:rtl;"><span class="level-chip lvl-b2">B2</span> 🧊 يكسر الجليد</div>
+<div class="card-image"><img src="pexels_people_smiling_at_a_meeting.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">😄</span>A funny story is a great way to break the ice.</div>
+  <div class="sentence formal"><span class="emoji">🎤</span>The host broke the ice by asking each guest to introduce themselves.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">by + -ing</span> <span class="pattern-badge">a way to + verb</span></div>
+<div class="explanation">👉 “To break the ice means to say or do something that helps people relax when they first meet.”</div>
+<div class="section arabic">
+  <div class="section-label" style="direction:rtl;text-align:right;">🇸🇦 العربية</div>
+  <div class="sentence casual"><span class="emoji">😄</span>القصة المضحكة طريقة رائعة لكسر الجليد.</div>
+  <div class="sentence formal"><span class="emoji">🎤</span>كسر المضيف الجليد عندما طلب من كل ضيف أن يعرف بنفسه.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Arabic patterns</div><span class="pattern-badge">عن طريق + مصدر</span> <span class="pattern-badge">طريقة ل + فعل</span></div><br>[sound:tts_en_break_the_ice_a6806ffe73.mp3]
+
+== cloze note in deck "Tarkib English::Cloze"
+tags: cloze tarkib_english case_idiom Level::B2
+-- Text
+Let's play a quick game to {{c1::break::b...}} the {{c1::ice::i...}}.
+-- Translation
+لنلعب لعبة سريعة لكسر الجليد.
+-- Image
+<img src="pexels_people_smiling_at_a_meeting.jpg">
+-- FrontAudio
+[sound:cloze_front_Let_s_play_a_quick_game_4ceb767f14.mp3]
+-- BackAudio
+[sound:cloze_back_Let_s_play_a_quick_game_b3b384335c.mp3]
+-- GrammarHint
+break the ice: help people relax
+-- SourceWord
+break the ice
+-- DeckOrigin
+Tarkib English
+
+== media files
+cloze_back_Let_s_play_a_quick_game_b3b384335c.mp3 <- audio from edge
+cloze_front_Let_s_play_a_quick_game_4ceb767f14.mp3 <- audio from edge
+pexels_people_smiling_at_a_meeting.jpg <- picture
+tts_en_break_the_ice_a6806ffe73.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "يكسر الجليد",
+  "word": "break the ice"
+}

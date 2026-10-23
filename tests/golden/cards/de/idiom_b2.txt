@@ -1,0 +1,95 @@
+# Golden card "idiom_b2" (tests/card_scenarios.py)
+# An idiom at B2 in the Redewendungen deck: two blanks with hints, and the patterns in value order (the preposition with its case first).
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: jemandem die Daumen drücken
+deck: Deutsch::Redewendungen | level: B2 | cloze: on
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: de/main_B2
+user:
+WORD OR PHRASE TO TEACH: "jemandem die Daumen drücken". CONTEXT: This is a GERMAN IDIOM / REDEWENDUNG. Anchor meaning on NATIVE GERMAN USAGE (Duden/DWDS), never on English-looking component words. Beware false friends. Before translation_en, decide what a native German MEANS, then pick the closest English idiom with the SAME meaning. explanation_de describes the REAL meaning. Both examples put the idiom where the real meaning fits.
+
+== AI call 2: cloze (temperature 0.3, max_tokens 1600)
+system: de/cloze
+user:
+Input: jemandem die Daumen drücken
+Deck: Deutsch::Redewendungen
+English meaning: to keep your fingers crossed for someone
+CONTEXT: a German idiom used naturally in a real situation.
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+== picture search
+keyword: fingers crossed for good luck | deck: Deutsch::Redewendungen | source: auto -> pexels_fingers_crossed_for_good_luck.jpg
+
+== read aloud
+1. edge de-DE-KatjaNeural: jemandem die Daumen drücken. ... Ich drücke dir für die Prüfung die Daumen.. ... Wir drücken Ihnen für das Gespräch die Daumen.
+2. edge de-DE-KatjaNeural: Ich. Dir ganz fest die. .
+3. edge de-DE-KatjaNeural: Ich drücke dir ganz fest die Daumen.
+
+== main note in deck "Deutsch::Redewendungen"
+tags: Redewendung Gefuehle Level::B2
+-- Front
+🤞 jemandem die Daumen drücken.
+-- Back
+<div class="card-translation"><span class="level-chip lvl-b2">B2</span> 🤞 to keep your fingers crossed for someone</div>
+<div class="card-image"><img src="pexels_fingers_crossed_for_good_luck.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇩🇪 Deutsch</div>
+  <div class="sentence casual"><span class="emoji">📚</span>Ich drücke dir für die Prüfung die Daumen.</div>
+  <div class="sentence formal"><span class="emoji">💼</span>Wir drücken Ihnen für das Gespräch die Daumen.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">für (+Akk)</span> <span class="pattern-badge">jemandem die Daumen drücken (+Dat)</span></div>
+<div class="explanation">👉 „Man wünscht jemandem Glück für etwas Wichtiges."</div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">📚</span>I'll keep my fingers crossed for you in the exam.</div>
+  <div class="sentence formal"><span class="emoji">💼</span>We will keep our fingers crossed for your interview.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 English patterns</div><span class="pattern-badge">for (something)</span> <span class="pattern-badge">to keep your fingers crossed for someone</span></div><br>[sound:tts_de_jemandem_die_Daumen_dr_43a24f5916.mp3]
+
+== cloze note in deck "Deutsch::Redewendungen::Cloze"
+tags: cloze redewendungen case_idiom Level::B2
+-- Text
+Ich {{c1::drücke::drü...}} dir ganz fest die {{c1::Daumen::Dau...}}.
+-- Translation
+I'm keeping my fingers crossed for you.
+-- Image
+<img src="pexels_fingers_crossed_for_good_luck.jpg">
+-- FrontAudio
+[sound:cloze_front_Ich_drücke_dir_ganz_fest_05c12aa78e.mp3]
+-- BackAudio
+[sound:cloze_back_Ich_drücke_dir_ganz_fest_e9389b7b4b.mp3]
+-- GrammarHint
+jemandem die Daumen drücken: jemandem Glück wünschen
+-- SourceWord
+jemandem die Daumen drücken
+-- DeckOrigin
+Redewendungen
+
+== media files
+cloze_back_Ich_drücke_dir_ganz_fest_e9389b7b4b.mp3 <- audio from edge
+cloze_front_Ich_drücke_dir_ganz_fest_05c12aa78e.mp3 <- audio from edge
+pexels_fingers_crossed_for_good_luck.jpg <- picture
+tts_de_jemandem_die_Daumen_dr_43a24f5916.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "to keep your fingers crossed for someone",
+  "word": "jemandem die Daumen drücken"
+}

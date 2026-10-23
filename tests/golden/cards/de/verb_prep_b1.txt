@@ -1,0 +1,98 @@
+# Golden card "verb_prep_b1" (tests/card_scenarios.py)
+# A verb with its preposition in the Verben deck: the verb line, the preposition with its case, and a cloze of preposition plus article.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: warten auf
+deck: Deutsch::Verben | level: B1 | cloze: on
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: de/main_B1
+user:
+WORD OR PHRASE TO TEACH: "warten auf". CONTEXT: German everyday verb. (1) If past tense, casual uses Perfekt (ich hab gemacht), not Präteritum. (2) Separable verbs show separation. (3) Prefer one example with a modal. (4) Reflexive verbs show the pronoun.
+
+== AI call 2: cloze (temperature 0.3, max_tokens 1600)
+system: de/cloze
+user:
+Input: warten auf
+Deck: Deutsch::Verben
+English meaning: to wait for
+CONTEXT: the verb in everyday action with clear subject and object.
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+LEVEL B1: use case "single_word", "noun_prep" or "verb_prep_article"; a medium everyday sentence with common words.
+
+== picture search
+keyword: person waiting at a bus stop | deck: Deutsch::Verben | source: auto -> pexels_person_waiting_at_a_bus_stop.jpg
+
+== read aloud
+1. edge de-DE-KatjaNeural: warten auf. ... Ich warte schon seit zehn Minuten auf dich.. ... Bitte warten Sie hier auf den Arzt.
+2. edge de-DE-KatjaNeural: Wir warten. Bus.
+3. edge de-DE-KatjaNeural: Wir warten auf den Bus.
+
+== main note in deck "Deutsch::Verben"
+tags: Alltag Level::B1
+-- Front
+⏳ warten auf.
+-- Back
+<div class="card-translation"><span class="level-chip lvl-b1">B1</span> ⏳ to wait for</div>
+<div class="morph">wartet · wartete · hat gewartet</div>
+<div class="card-image"><img src="pexels_person_waiting_at_a_bus_stop.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇩🇪 Deutsch</div>
+  <div class="sentence casual"><span class="emoji">⌚</span>Ich warte schon seit zehn Minuten auf dich.</div>
+  <div class="sentence formal"><span class="emoji">🩺</span>Bitte warten Sie hier auf den Arzt.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">warten auf (+Akk)</span> <span class="pattern-badge">seit (+Dat)</span></div>
+<div class="explanation">👉 „Man bleibt an einem Ort, bis jemand kommt oder etwas passiert."</div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">⌚</span>I've been waiting for you for ten minutes.</div>
+  <div class="sentence formal"><span class="emoji">🩺</span>Please wait here for the doctor.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 English patterns</div><span class="pattern-badge">to wait for</span> <span class="pattern-badge">for (a period of time)</span></div><br>[sound:tts_de_warten_auf_1b50209037.mp3]
+
+== cloze note in deck "Deutsch::Verben::Cloze"
+tags: cloze verben case_verb_prep_article Level::B1
+-- Text
+Wir warten {{c1::auf den::a... d...}} Bus.
+-- Translation
+We are waiting for the bus.
+-- Image
+<img src="pexels_person_waiting_at_a_bus_stop.jpg">
+-- FrontAudio
+[sound:cloze_front_Wir_warten_auf_den_Bus_882bfe3a13.mp3]
+-- BackAudio
+[sound:cloze_back_Wir_warten_auf_den_Bus_3a5ee05141.mp3]
+-- GrammarHint
+warten auf (+Akk)
+-- SourceWord
+warten auf
+-- DeckOrigin
+Verben
+
+== media files
+cloze_back_Wir_warten_auf_den_Bus_3a5ee05141.mp3 <- audio from edge
+cloze_front_Wir_warten_auf_den_Bus_882bfe3a13.mp3 <- audio from edge
+pexels_person_waiting_at_a_bus_stop.jpg <- picture
+tts_de_warten_auf_1b50209037.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "to wait for",
+  "word": "warten auf"
+}

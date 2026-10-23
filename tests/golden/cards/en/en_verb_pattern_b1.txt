@@ -1,0 +1,100 @@
+# Golden card "en_verb_pattern_b1" (tests/card_scenarios.py)
+# A verb pattern with -ing ranked in, an invented pattern dropped (none of its words is in the sentences) and a whole sentence dropped; a regular verb shows no word line.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: enjoy
+deck: Tarkib English | level: B1 | cloze: on
+settings: {"defaults": {"translation_language": "Arabic"}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: en/main_B1 [Arabic, en-US-JennyNeural]
+user:
+WORD OR PHRASE TO TEACH: "enjoy". CONTEXT: Important everyday English. Formal: office, appointment or email scenario. Casual: chat with friends or family (messaging tone). Prefer situations people meet every week: work, shopping, health, travel, home.
+
+== AI call 2: cloze (temperature 0.3, max_tokens 1600)
+system: en/cloze
+user:
+Input: enjoy
+Deck: Tarkib English
+Meaning in Arabic: يستمتع
+
+
+Classify and generate a NATURAL English cloze sentence. Restructure if needed.
+
+LEVEL B1: use case "single_word", "verb_prep" or "phrasal_verb"; a medium everyday sentence with common words.
+
+Write "translation" as the FULL sentence translated naturally into Arabic. Use Modern Standard Arabic only, without diacritics.
+
+Use American English spelling and words.
+
+== picture search
+keyword: friends cooking together | deck: Tarkib English | source: auto -> pexels_friends_cooking_together.jpg
+
+== read aloud
+1. edge en-US-JennyNeural: enjoy. ... I really enjoy cooking for my friends.. ... We hope you enjoyed your stay with us.
+2. edge en-US-JennyNeural: Did you. The film?
+3. edge en-US-JennyNeural: Did you enjoy the film?
+
+== main note in deck "Tarkib English"
+tags: Feelings Level::B1
+-- Front
+😊 enjoy.
+-- Back
+<div class="card-translation" style="direction:rtl;"><span class="level-chip lvl-b1">B1</span> 😊 يستمتع</div>
+<div class="card-image"><img src="pexels_friends_cooking_together.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">🍳</span>I really enjoy cooking for my friends.</div>
+  <div class="sentence formal"><span class="emoji">🏨</span>We hope you enjoyed your stay with us.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">enjoy + -ing</span></div>
+<div class="explanation">👉 “To enjoy something means to like it and have a good time doing it.”</div>
+<div class="section arabic">
+  <div class="section-label" style="direction:rtl;text-align:right;">🇸🇦 العربية</div>
+  <div class="sentence casual"><span class="emoji">🍳</span>أستمتع حقا بالطبخ لأصدقائي.</div>
+  <div class="sentence formal"><span class="emoji">🏨</span>نأمل أنك استمتعت بإقامتك معنا.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Arabic patterns</div><span class="pattern-badge">يستمتع ب + مصدر</span></div><br>[sound:tts_en_enjoy_eedf895f98.mp3]
+
+== cloze note in deck "Tarkib English::Cloze"
+tags: cloze tarkib_english case_single_word Level::B1
+-- Text
+Did you {{c1::enjoy::e...}} the film?
+-- Translation
+هل استمتعت بالفيلم؟
+-- Image
+<img src="pexels_friends_cooking_together.jpg">
+-- FrontAudio
+[sound:cloze_front_Did_you_enjoy_the_film_fb2059f962.mp3]
+-- BackAudio
+[sound:cloze_back_Did_you_enjoy_the_film_0b65db64ba.mp3]
+-- GrammarHint
+
+-- SourceWord
+enjoy
+-- DeckOrigin
+Tarkib English
+
+== media files
+cloze_back_Did_you_enjoy_the_film_0b65db64ba.mp3 <- audio from edge
+cloze_front_Did_you_enjoy_the_film_fb2059f962.mp3 <- audio from edge
+pexels_friends_cooking_together.jpg <- picture
+tts_en_enjoy_eedf895f98.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "يستمتع",
+  "word": "enjoy"
+}

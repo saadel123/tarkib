@@ -1,6 +1,6 @@
-# Tarkib: AI German flashcards for Anki
+# Tarkib: AI German and English flashcards for Anki
 
-### One German word. A complete, well-structured Anki card.
+### One German or English word. A complete, well-structured Anki card.
 
 > A free, open-source Anki add-on that turns one typed word into a full language card: meaning and a natural translation, a related image, memory emojis, audio, a casual and a formal example sentence, and the grammar that actually matters.
 
@@ -24,11 +24,11 @@ Now I type one word, pick the level (A1 to C1, or Native for real spoken German)
 
 ## How it works
 
-![The Tarkib window: type one German word, pick a deck and a level, and click Add](assets/tarkib-window.gif)
+![The Tarkib window: type one word, pick the language, a deck and a level, and click Add](assets/tarkib-window.gif)
 
 1. Install it from [AnkiWeb](https://ankiweb.net/shared/info/83323714): in Anki, **Tools → Add-ons → Get Add-ons**, paste the code `83323714` and restart Anki.
 2. Add your free keys in **Settings**: a Groq key writes the cards (free, no credit card), and a Pexels key adds the photos (free, optional). The [setup guide](https://tarkib-anki.pages.dev/docs/addon-install) shows every step with screenshots, about five minutes.
-3. Open Tarkib with **Tools → "Add a card with Tarkib"**, `Ctrl+Shift+G`, or the Tarkib button in the editor, the Decks screen or the top toolbar. Type one German word or phrase, pick a deck and a level, and click **Add**. About 15 to 20 seconds later the card (and the optional cloze companion) is in your collection, with image and audio.
+3. Open Tarkib with **Tools → "Add a card with Tarkib"**, `Ctrl+Shift+G`, or the Tarkib button in the editor, the Decks screen or the top toolbar. Type one word or phrase, pick German or English, a deck and a level, and click **Add**. About 15 to 20 seconds later the card (and the optional cloze companion) is in your collection, with image and audio.
 
 Create on the desktop, study anywhere: the cards are normal Anki notes and media, so they sync and study fully on AnkiDroid and iOS like any other deck. The generator runs on Anki Desktop only (the mobile apps do not run add-ons).
 
@@ -40,15 +40,21 @@ Type one word, get a full card:
 
 - **Meaning and a natural translation**, in your helper language.
 - **A casual and a formal example sentence**, each translated, so you learn when to use the word, not just what it means.
-- **The grammar learners actually trip on:** article, plural, and (from B1) genitive for nouns, the correct past forms of strong verbs, and for verbs the preposition with its case, like `warten auf` with Akkusativ.
+- **The grammar learners actually trip on:** in German, article, plural, and (from B1) genitive for nouns, the correct past forms of strong verbs, and for verbs the preposition with its case, like `warten auf` with Akkusativ. In English, irregular verbs and plurals, uncountable nouns, and the patterns that come with a word, like `depend on`, `interested in` or `look forward to + -ing`.
 - **A real image and a couple of memory emojis** tied to the word, so it has something to hook onto.
-- **German audio**, so you hear how the word and the sentences sound. The translations are read aloud only if you turn on their voices in **Settings, Languages**.
+- **Audio in the language you learn**, so you hear how the word and the sentences sound. The translations are read aloud only if you turn on their voices in **Settings, Languages**.
 - **An optional fill-in-the-blank (cloze) companion card**, to practice producing the word, not just recognizing it.
-- **Sentences that match your level:** A1 to C1, plus a "Native" style for real spoken German.
+- **Sentences that match your level:** A1 to C1, plus a "Native" style for real spoken German or English.
+
+## German and English
+
+Pick the language of the card in the **Language** row, above the deck. English cards go to their own deck, "Tarkib English", unless you pick another, and every deck remembers the language of its cards: pick a deck where you made English cards, and the window switches to English. The window opens where you made your last card.
+
+English cards contrast everyday words and contractions with formal words (get and receive), since English has one "you". They use American spelling, or British spelling when a British voice reads them. In **Settings, Languages**, pick the language you learn first: its voice, its translation language and its second translation are kept separately, so German cards can stay in English while English cards come in Arabic.
 
 ## Translation languages
 
-The helper text under the German can be any of **24 languages** (English by default). Optionally add a **second language** on every card, for example English plus Arabic for a bilingual learner.
+The translation under the word can be any of **24 languages**. German cards start in English. English cards cannot be translated into English, so their list has German instead: they use your German cards' translation language until you pick their own, and if that is English, the window asks you to pick one. Optionally add a **second language** on every card, for example English plus Arabic for a bilingual learner.
 
 Every language has a natural Microsoft voice. The translations stay silent until you pick their voices in **Settings, Languages**. Press **▶** next to a voice to hear a sample sentence before you decide.
 
@@ -66,7 +72,7 @@ Rather not make the cards yourself? I made German decks, A1 to C1, in the same c
 
 Tarkib is free and open source, with no account and no server of mine in between. It runs on your own key. The default is a free model on Groq, enough for a few dozen cards a day, and OpenAI, Google Gemini, Anthropic, Mistral, OpenRouter or a local Ollama model work too.
 
-Your keys stay on your computer, are never synced, and each one goes only to its own service. The German, and a translation only when its voice is on, goes to the voice service that reads it: Microsoft's Edge read-aloud service by default, or the one you set up in **Settings, Voice**. Nothing is sent to me. The Edge read-aloud service is not an official API, so it can change without notice. If it does, the card is still made, Tarkib tells you why it has no sound, and a voice service with your own key can take over.
+Your keys stay on your computer, are never synced, and each one goes only to its own service. The words you learn, and a translation only when its voice is on, go to the voice service that reads them: Microsoft's Edge read-aloud service by default, or the one you set up in **Settings, Voice**. Nothing is sent to me. The Edge read-aloud service is not an official API, so it can change without notice. If it does, the card is still made, Tarkib tells you why it has no sound, and a voice service with your own key can take over.
 
 ## A note on quality
 
@@ -84,7 +90,7 @@ This add-on is free and stays free. If it saves you time, you can support its de
 
 Buying one of the [ready-made decks](https://ko-fi.com/tarkib/shop) helps too.
 
-Inside the add-on there is a small "♥ Support this add-on" link and a quiet "Free A1 deck" link in the window footer, which becomes "A1 to C1 decks" once you have one of the decks. A short thank-you appears three times, at 50, 200 and 500 cards, with a permanent "Don't show this again". After your fifth card, a short note about the ready-made decks appears inside the window on up to three openings, and its x hides it for good. At the bottom of the Settings "Cards" tab, one line points to the ready-made decks. While no AI key is set, the setup message also says that the free A1 deck needs no key.
+Inside the add-on there is a small "♥ Support this add-on" link and a quiet "Free A1 deck" link in the window footer, which becomes "A1 to C1 decks" once you have one of the decks. A short thank-you appears three times, at 50, 200 and 500 cards, with a permanent "Don't show this again". After your fifth card, a short note about the ready-made decks appears inside the window on up to three openings, and its x hides it for good. At the bottom of the Settings "Cards" tab, one line points to the ready-made decks. While no AI key is set, the setup message also says that the free A1 deck needs no key. The decks teach German, so these deck pointers show only while the window or Settings is on German.
 
 ## License
 

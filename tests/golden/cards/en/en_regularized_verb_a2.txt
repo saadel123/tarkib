@@ -1,0 +1,101 @@
+# Golden card "en_regularized_verb_a2" (tests/card_scenarios.py)
+# The AI regularized an irregular verb (teached): the word line shows the right forms.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: teach
+deck: Tarkib English | level: A2 | cloze: on
+settings: {"defaults": {"translation_language": "Arabic"}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: en/main_A2 [Arabic, en-US-JennyNeural]
+user:
+WORD OR PHRASE TO TEACH: "teach". CONTEXT: Important everyday English. Formal: office, appointment or email scenario. Casual: chat with friends or family (messaging tone). Prefer situations people meet every week: work, shopping, health, travel, home.
+
+== AI call 2: cloze (temperature 0.3, max_tokens 1600)
+system: en/cloze
+user:
+Input: teach
+Deck: Tarkib English
+Meaning in Arabic: يعلم
+
+
+Classify and generate a NATURAL English cloze sentence. Restructure if needed.
+
+LEVEL A2: prefer case "single_word"; a short sentence (present or past simple), common words, at most one because, when or if clause; no idioms.
+
+Write "translation" as the FULL sentence translated naturally into Arabic. Use Modern Standard Arabic only, without diacritics.
+
+Use American English spelling and words.
+
+== picture search
+keyword: teacher helping a student | deck: Tarkib English | source: auto -> pexels_teacher_helping_a_student.jpg
+
+== read aloud
+1. edge en-US-JennyNeural: teach. ... My mom taught me how to swim.. ... Could you teach me a few words?
+2. edge en-US-JennyNeural: She. Math at a school.
+3. edge en-US-JennyNeural: She teaches math at a school.
+
+== main note in deck "Tarkib English"
+tags: Education Level::A2
+-- Front
+👩‍🏫 teach.
+-- Back
+<div class="card-translation" style="direction:rtl;"><span class="level-chip lvl-a2">A2</span> 👩‍🏫 يعلم</div>
+<div class="morph">teach · taught · taught</div>
+<div class="card-image"><img src="pexels_teacher_helping_a_student.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">🏊</span>My mom taught me how to swim.</div>
+  <div class="sentence formal"><span class="emoji">📚</span>Could you teach me a few words?</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">teach someone how to + verb</span></div>
+<div class="explanation">👉 “To teach means to help someone learn something.”</div>
+<div class="section arabic">
+  <div class="section-label" style="direction:rtl;text-align:right;">🇸🇦 العربية</div>
+  <div class="sentence casual"><span class="emoji">🏊</span>علمتني أمي السباحة.</div>
+  <div class="sentence formal"><span class="emoji">📚</span>هل يمكنك أن تعلمني بعض الكلمات؟</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Arabic patterns</div><span class="pattern-badge">يعلم شخصا كيف + فعل</span></div><br>[sound:tts_en_teach_3e2ea9ddc1.mp3]
+
+== cloze note in deck "Tarkib English::Cloze"
+tags: cloze tarkib_english case_single_word Level::A2
+-- Text
+She {{c1::teaches::tea...}} math at a school.
+-- Translation
+هي تدرس الرياضيات في مدرسة.
+-- Image
+<img src="pexels_teacher_helping_a_student.jpg">
+-- FrontAudio
+[sound:cloze_front_She_teaches_math_at_a_sc_20eb9e1050.mp3]
+-- BackAudio
+[sound:cloze_back_She_teaches_math_at_a_sc_e36077c132.mp3]
+-- GrammarHint
+
+-- SourceWord
+teach
+-- DeckOrigin
+Tarkib English
+
+== media files
+cloze_back_She_teaches_math_at_a_sc_e36077c132.mp3 <- audio from edge
+cloze_front_She_teaches_math_at_a_sc_20eb9e1050.mp3 <- audio from edge
+pexels_teacher_helping_a_student.jpg <- picture
+tts_en_teach_3e2ea9ddc1.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "يعلم",
+  "word": "teach"
+}

@@ -1,0 +1,3 @@
+
+
+LEVEL B1: use case "single_word", "noun_prep" or "verb_prep_article"; a medium everyday sentence with common words.

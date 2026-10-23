@@ -54,15 +54,19 @@
     }
   },
   "defaults": {
+    "learning_language": "de",
     "translation_language": "English",
     "secondary_translation_language": "",
     "generate_cloze": true,
     "image_source": "auto",
     "default_deck": "Tarkib",
     "last_deck": "",
+    "last_decks": {},
     "level": "B1"
   },
   "deck_levels": {},
+  "languages": {},
+  "deck_languages": {},
   "timeouts": {
     "ai_seconds": 60,
     "image_seconds": 15,

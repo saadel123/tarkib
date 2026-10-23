@@ -1,0 +1,101 @@
+# Golden card "leak_retry_b1" (tests/card_scenarios.py)
+# An English word in a German sentence at B1: one strict retry, and the clean card is used.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: die Besprechung
+deck: Tarkib | level: B1 | cloze: on
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: de/main_B1
+user:
+WORD OR PHRASE TO TEACH: "die Besprechung". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause.
+
+== AI call 2: main (temperature 0.4, max_tokens 3000)
+system: de/main_B1
+user:
+WORD OR PHRASE TO TEACH: "die Besprechung". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause. STRICT REQUIREMENT: the "word" field MUST be exactly "die Besprechung" (or with proper article).
+
+== AI call 3: cloze (temperature 0.3, max_tokens 1600)
+system: de/cloze
+user:
+Input: die Besprechung
+Deck: Tarkib
+English meaning: meeting
+
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+LEVEL B1: use case "single_word", "noun_prep" or "verb_prep_article"; a medium everyday sentence with common words.
+
+== picture search
+keyword: colleagues in a meeting room | deck: Tarkib | source: auto -> pexels_colleagues_in_a_meeting_room.jpg
+
+== read aloud
+1. edge de-DE-KatjaNeural: die Besprechung. ... Wir haben die Besprechung morgen um zehn.. ... Die Besprechung beginnt pünktlich um neun Uhr.
+2. edge de-DE-KatjaNeural: Dauert eine Stunde.
+3. edge de-DE-KatjaNeural: Die Besprechung dauert eine Stunde.
+
+== main note in deck "Tarkib"
+tags: Arbeit Level::B1
+-- Front
+🗓️ die Besprechung.
+-- Back
+<div class="card-translation"><span class="level-chip lvl-b1">B1</span> 🗓️ meeting</div>
+<div class="morph"><span class="g-die">die</span> · Pl. die Besprechungen · Gen. der Besprechung</div>
+<div class="card-image"><img src="pexels_colleagues_in_a_meeting_room.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇩🇪 Deutsch</div>
+  <div class="sentence casual"><span class="emoji">💬</span>Wir haben die Besprechung morgen um zehn.</div>
+  <div class="sentence formal"><span class="emoji">🕘</span>Die Besprechung beginnt pünktlich um neun Uhr.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">um ... Uhr (Uhrzeit)</span></div>
+<div class="explanation">👉 „In einer Besprechung reden Kollegen über ein Thema."</div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">💬</span>We have the meeting tomorrow at ten.</div>
+  <div class="sentence formal"><span class="emoji">🕘</span>The meeting starts at nine o'clock sharp.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 English patterns</div><span class="pattern-badge">at ... o'clock (time)</span></div><br>[sound:tts_de_die_Besprechung_bed3fb2698.mp3]
+
+== cloze note in deck "Tarkib::Cloze"
+tags: cloze tarkib case_single_word Level::B1
+-- Text
+{{c1::Die Besprechung::D... Bes...}} dauert eine Stunde.
+-- Translation
+The meeting lasts one hour.
+-- Image
+<img src="pexels_colleagues_in_a_meeting_room.jpg">
+-- FrontAudio
+[sound:cloze_front_Die_Besprechung_dauert_e_6470b3dd62.mp3]
+-- BackAudio
+[sound:cloze_back_Die_Besprechung_dauert_e_d00d843cf9.mp3]
+-- GrammarHint
+
+-- SourceWord
+die Besprechung
+-- DeckOrigin
+Tarkib
+
+== media files
+cloze_back_Die_Besprechung_dauert_e_d00d843cf9.mp3 <- audio from edge
+cloze_front_Die_Besprechung_dauert_e_6470b3dd62.mp3 <- audio from edge
+pexels_colleagues_in_a_meeting_room.jpg <- picture
+tts_de_die_Besprechung_bed3fb2698.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "meeting",
+  "word": "die Besprechung"
+}

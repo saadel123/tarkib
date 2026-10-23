@@ -3,6 +3,42 @@
 All notable changes to **Tarkib** are listed here, newest first.
 Versions follow [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+## [1.2.0]
+
+- **English cards.** Tarkib now makes cards for learners of English too. Pick English in the new
+  Language row above the deck: the card gets a casual and a formal English sentence, the patterns
+  English learners need (depend on, interested in, look forward to + -ing, phrasal verbs), the
+  irregular forms of verbs and plurals, English audio and the optional cloze card. English cards go
+  to the deck "Tarkib English" unless you pick another, and they have the same levels, A1 to C1 and
+  Native.
+- **American or British English.** English cards use American spelling, or British spelling when
+  a British voice reads them (Settings, Languages, English voice).
+- **Each language keeps its own settings.** Settings, Languages now starts with "Language you
+  learn". The voice, the translation language and the second translation below it belong to that
+  language, so German cards can stay in English while English cards come in Arabic. English cards
+  can be translated into any of 24 languages, German included. If your German cards are translated
+  into English, the Tarkib window asks you to pick another language for your English cards first.
+- **Decks remember their language.** Picking a deck where you made English cards switches the window
+  to English, and the window opens where you made your last card.
+- The link to the free A1 deck, the note about the ready-made decks and the starter decks show only
+  while the window is on German, since those decks teach German.
+- A phrase that ends in a question or exclamation mark keeps its own mark on the front of the card:
+  "Wie spät ist es?" instead of "Wie spät ist es?.".
+- When the AI leaves out a sentence or the explanation, the card no longer shows an empty box for it,
+  and a card without an emoji no longer starts with a space.
+- When the AI sends a grammar pattern in an unusual format, every pattern still sits next to its own
+  translation.
+- Native cards get their grammar patterns from their own step. With the default AI model that step could run
+  out of room, and the card then quietly used the simpler patterns from the main step.
+- On Native cards with a translation language other than English, the patterns are now translated into that
+  language. Before, they came in English even when the box said Arabic.
+- Arabic translations never show diacritics, on every part of the card. Before, only the second
+  translation was cleaned.
+- In Settings, a language changed while the voice list was still loading for the first time could
+  get the previous language's voice back. It keeps its own now.
+
 ## [1.1.0]
 
 - **Audio works again.** Since 13 October 2026, Microsoft refuses the old way the free Edge voices
@@ -88,6 +124,7 @@ On AnkiWeb: [83323714](https://ankiweb.net/shared/info/83323714) (Tools, Add-ons
   top toolbar.
 - Works with Anki 23.10 and newer. Pure Python, nothing to install.
 
+[1.2.0]: https://github.com/saadel123/tarkib/releases/tag/v1.2.0
 [1.1.0]: https://github.com/saadel123/tarkib/releases/tag/v1.1.0
 [1.0.2]: https://github.com/saadel123/tarkib/releases/tag/v1.0.2
 [1.0.1]: https://github.com/saadel123/tarkib/releases/tag/v1.0.1

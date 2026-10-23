@@ -1,0 +1,97 @@
+# Golden card "noun_a1_arabic" (tests/card_scenarios.py)
+# A1 with Arabic as the translation language: right to left, no genitive at A1, no patterns box when the AI gives none, and the diacritics the AI added to the translations removed.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: der Tisch
+deck: Tarkib | level: A1 | cloze: on
+settings: {"defaults": {"translation_language": "Arabic"}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: de/main_A1 + de/translation_override_Arabic
+user:
+WORD OR PHRASE TO TEACH: "der Tisch". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause.
+
+== AI call 2: cloze (temperature 0.3, max_tokens 1600)
+system: de/cloze
+user:
+Input: der Tisch
+Deck: Tarkib
+English meaning: طاولة
+
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+LEVEL A1: use ONLY case "single_word"; a SHORT present-tense sentence (3-7 words) with the most common words; no idioms, no subordinate clause.
+
+Write "translation_en" as the FULL sentence translated naturally into Arabic (NOT English).
+
+== picture search
+keyword: wooden table | deck: Tarkib | source: auto -> pexels_wooden_table.jpg
+
+== read aloud
+1. edge de-DE-KatjaNeural: der Tisch. ... Siehst du den Tisch dort?. ... Möchten Sie diesen Tisch?
+2. edge de-DE-KatjaNeural: Ist neu.
+3. edge de-DE-KatjaNeural: Der Tisch ist neu.
+
+== main note in deck "Tarkib"
+tags: Haushalt Level::A1
+-- Front
+🪑 der Tisch.
+-- Back
+<div class="card-translation" style="direction:rtl;"><span class="level-chip lvl-a1">A1</span> 🪑 طاولة</div>
+<div class="morph"><span class="g-der">der</span> · Pl. die Tische</div>
+<div class="card-image"><img src="pexels_wooden_table.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇩🇪 Deutsch</div>
+  <div class="sentence casual"><span class="emoji">👀</span>Siehst du den Tisch dort?</div>
+  <div class="sentence formal"><span class="emoji">🍽️</span>Möchten Sie diesen Tisch?</div>
+</div>
+<div class="explanation">👉 „Auf einem Tisch isst oder arbeitet man."</div>
+<div class="section arabic">
+  <div class="section-label" style="direction:rtl;text-align:right;">🇸🇦 العربية</div>
+  <div class="sentence casual"><span class="emoji">👀</span>هل ترى الطاولة هناك؟</div>
+  <div class="sentence formal"><span class="emoji">🍽️</span>هل ترغب في هذه الطاولة؟</div>
+</div><br>[sound:tts_de_der_Tisch_a63f0b2b0d.mp3]
+
+== cloze note in deck "Tarkib::Cloze"
+tags: cloze tarkib case_single_word Level::A1
+-- Text
+{{c1::Der Tisch::D... Ti...}} ist neu.
+-- Translation
+الطاولة جديدة.
+-- Image
+<img src="pexels_wooden_table.jpg">
+-- FrontAudio
+[sound:cloze_front_Der_Tisch_ist_neu_12bb490d56.mp3]
+-- BackAudio
+[sound:cloze_back_Der_Tisch_ist_neu_c2636dcf72.mp3]
+-- GrammarHint
+
+-- SourceWord
+der Tisch
+-- DeckOrigin
+Tarkib
+
+== media files
+cloze_back_Der_Tisch_ist_neu_c2636dcf72.mp3 <- audio from edge
+cloze_front_Der_Tisch_ist_neu_12bb490d56.mp3 <- audio from edge
+pexels_wooden_table.jpg <- picture
+tts_de_der_Tisch_a63f0b2b0d.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "طاولة",
+  "word": "der Tisch"
+}

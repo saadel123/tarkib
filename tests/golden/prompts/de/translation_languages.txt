@@ -1,0 +1,24 @@
+English | 🇬🇧 English | False
+Arabic | 🇸🇦 العربية | True
+French | 🇫🇷 Français | False
+Spanish | 🇪🇸 Español | False
+Turkish | 🇹🇷 Türkçe | False
+Russian | 🇷🇺 Русский | False
+Ukrainian | 🇺🇦 Українська | False
+Italian | 🇮🇹 Italiano | False
+Polish | 🇵🇱 Polski | False
+Portuguese | 🇵🇹 Português | False
+Persian | 🇮🇷 فارسی | True
+Dutch | 🇳🇱 Nederlands | False
+Greek | 🇬🇷 Ελληνικά | False
+Czech | 🇨🇿 Čeština | False
+Romanian | 🇷🇴 Română | False
+Hungarian | 🇭🇺 Magyar | False
+Swedish | 🇸🇪 Svenska | False
+Indonesian | 🇮🇩 Bahasa Indonesia | False
+Vietnamese | 🇻🇳 Tiếng Việt | False
+Hindi | 🇮🇳 हिन्दी | False
+Urdu | 🇵🇰 اردو | True
+Japanese | 🇯🇵 日本語 | False
+Korean | 🇰🇷 한국어 | False
+Chinese (Simplified) | 🇨🇳 中文 | False

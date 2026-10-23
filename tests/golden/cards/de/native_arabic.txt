@@ -1,0 +1,107 @@
+# Golden card "native_arabic" (tests/card_scenarios.py)
+# Native with Arabic as the translation language: the grammar call is told to gloss in Arabic (it asked for English before, whatever the translation language), gets 2000 tokens, and the diacritics the AI added are removed from every Arabic text.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: chillen
+deck: Tarkib | level: Native | cloze: on
+settings: {"defaults": {"translation_language": "Arabic"}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: de/main_Native + de/translation_override_Arabic
+user:
+WORD OR PHRASE TO TEACH: "chillen". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause.
+
+== AI call 2: grammar (temperature 0.2, max_tokens 2000)
+system: de/grammar + de/grammar_override_Arabic
+user:
+German casual: "Am Wochenende will ich einfach nur chillen."
+German formal: "Nach der Arbeit möchte ich mich ein wenig entspannen."
+Arabic casual: "في عطلة نهاية الأسبوع أريد فقط أن أسترخي."
+Arabic formal: "بعد العمل أود أن أرتاح قليلا."
+
+Extract REAL patterns from these sentences. Return ONLY JSON.
+
+== AI call 3: cloze (temperature 0.3, max_tokens 1600)
+system: de/cloze
+user:
+Input: chillen
+Deck: Tarkib
+English meaning: يسترخي
+
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+Write "translation_en" as the FULL sentence translated naturally into Arabic (NOT English).
+
+== picture search
+keyword: friends relaxing on a sofa | deck: Tarkib | source: auto -> pexels_friends_relaxing_on_a_sofa.jpg
+
+== read aloud
+1. edge de-DE-KatjaNeural: chillen. ... Am Wochenende will ich einfach nur chillen.. ... Nach der Arbeit möchte ich mich ein wenig entspannen.
+2. edge de-DE-KatjaNeural: Heute Abend will ich nur. .
+3. edge de-DE-KatjaNeural: Heute Abend will ich nur chillen.
+
+== main note in deck "Tarkib"
+tags: Umgangssprache Level::Native
+-- Front
+😌 chillen.
+-- Back
+<div class="card-translation" style="direction:rtl;"><span class="level-chip lvl-native">Native</span> 😌 يسترخي</div>
+<div class="morph">chillt · chillte · hat gechillt</div>
+<div class="card-image"><img src="pexels_friends_relaxing_on_a_sofa.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇩🇪 Deutsch</div>
+  <div class="sentence casual"><span class="emoji">🎮</span>Am Wochenende will ich einfach nur chillen.</div>
+  <div class="sentence formal"><span class="emoji">🛋️</span>Nach der Arbeit möchte ich mich ein wenig entspannen.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">sich entspannen (reflexiv)</span> <span class="pattern-badge">will ... chillen (Modalverb + Infinitiv)</span></div>
+<div class="explanation">👉 „Umgangssprachlich für sich entspannen und nichts tun."</div>
+<div class="section arabic">
+  <div class="section-label" style="direction:rtl;text-align:right;">🇸🇦 العربية</div>
+  <div class="sentence casual"><span class="emoji">🎮</span>في عطلة نهاية الأسبوع أريد فقط أن أسترخي.</div>
+  <div class="sentence formal"><span class="emoji">🛋️</span>بعد العمل أود أن أرتاح قليلا.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Arabic patterns</div><span class="pattern-badge">يسترخي، فعل انعكاسي</span> <span class="pattern-badge">يريد + فعل</span></div><br>[sound:tts_de_chillen_08ccbcceae.mp3]
+
+== cloze note in deck "Tarkib::Cloze"
+tags: cloze tarkib case_single_word Level::Native
+-- Text
+Heute Abend will ich nur {{c1::chillen::chi...}}.
+-- Translation
+الليلة أريد فقط أن أسترخي.
+-- Image
+<img src="pexels_friends_relaxing_on_a_sofa.jpg">
+-- FrontAudio
+[sound:cloze_front_Heute_Abend_will_ich_nur_bf1a5b4429.mp3]
+-- BackAudio
+[sound:cloze_back_Heute_Abend_will_ich_nur_6286f80430.mp3]
+-- GrammarHint
+
+-- SourceWord
+chillen
+-- DeckOrigin
+Tarkib
+
+== media files
+cloze_back_Heute_Abend_will_ich_nur_6286f80430.mp3 <- audio from edge
+cloze_front_Heute_Abend_will_ich_nur_bf1a5b4429.mp3 <- audio from edge
+pexels_friends_relaxing_on_a_sofa.jpg <- picture
+tts_de_chillen_08ccbcceae.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "يسترخي",
+  "word": "chillen"
+}

@@ -1,0 +1,38 @@
+## IT
+CONTEXT: developer/tech scenario (code review, deploy, bug fix, PR, standup, sprint, server, Jira, Slack, CI/CD). NOT generic everyday life.
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+## Redewendungen
+CONTEXT: a German idiom used naturally in a real situation.
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+## Supermarkt
+CONTEXT: grocery/food/shopping/cooking.
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+## NVV
+CONTEXT: the NVV in professional/work scenarios.
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+## Verben
+CONTEXT: the verb in everyday action with clear subject and object.
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+## Alltagsdeutsch
+CONTEXT: casual/Alltagsdeutsch register, conversational.
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+## Behörden
+CONTEXT: a real Behördengang / bureaucratic scenario (Bürgeramt, Anmeldung, Ummeldung, Krankenkasse, Ausländerbehörde, Termin vereinbaren). NOT generic office vocabulary.
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+## Default
+
+

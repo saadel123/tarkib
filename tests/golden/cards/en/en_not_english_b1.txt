@@ -1,0 +1,26 @@
+# Golden card "en_not_english_b1" (tests/card_scenarios.py)
+# A German word typed as English: two calls agree it is not English, so the card is refused with the suggestion the AI made.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: danke
+deck: Tarkib English | level: B1 | cloze: on
+settings: {"defaults": {"translation_language": "Arabic"}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: en/main_B1 [Arabic, en-US-JennyNeural]
+user:
+WORD OR PHRASE TO TEACH: "danke". CONTEXT: Important everyday English. Formal: office, appointment or email scenario. Casual: chat with friends or family (messaging tone). Prefer situations people meet every week: work, shopping, health, travel, home.
+
+== AI call 2: main (temperature 0.4, max_tokens 3000)
+system: en/main_B1 [Arabic, en-US-JennyNeural]
+user:
+WORD OR PHRASE TO TEACH: "danke". CONTEXT: Important everyday English. Formal: office, appointment or email scenario. Casual: chat with friends or family (messaging tone). Prefer situations people meet every week: work, shopping, health, travel, home. STRICT REQUIREMENT: the "word" field MUST be exactly "danke".
+
+== picture search
+none
+
+== read aloud
+nothing
+
+== refused
+RuntimeError: not english: "danke"; suggestion "thanks"

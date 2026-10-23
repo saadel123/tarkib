@@ -1,0 +1,1 @@
+WORD OR PHRASE TO TEACH: "il tavolo". CONTEXT: Important everyday Italian. Formal: office, appointment or email scenario. Casual: chat with friends or family (messaging tone). STRICT REQUIREMENT: the "word" field MUST be exactly "il tavolo".

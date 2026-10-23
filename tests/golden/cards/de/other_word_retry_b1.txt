@@ -1,0 +1,101 @@
+# Golden card "other_word_retry_b1" (tests/card_scenarios.py)
+# The AI answered a different word: one strict retry brings the right one.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: der Termin
+deck: Tarkib | level: B1 | cloze: on
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: de/main_B1
+user:
+WORD OR PHRASE TO TEACH: "der Termin". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause.
+
+== AI call 2: main (temperature 0.4, max_tokens 3000)
+system: de/main_B1
+user:
+WORD OR PHRASE TO TEACH: "der Termin". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause. STRICT REQUIREMENT: the "word" field MUST be exactly "der Termin" (or with proper article).
+
+== AI call 3: cloze (temperature 0.3, max_tokens 1600)
+system: de/cloze
+user:
+Input: der Termin
+Deck: Tarkib
+English meaning: appointment
+
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+LEVEL B1: use case "single_word", "noun_prep" or "verb_prep_article"; a medium everyday sentence with common words.
+
+== picture search
+keyword: calendar with appointment reminder | deck: Tarkib | source: auto -> pexels_calendar_with_appointment_reminder.jpg
+
+== read aloud
+1. edge de-DE-KatjaNeural: der Termin. ... Ich habe morgen einen Termin beim Zahnarzt.. ... Könnten Sie mir bitte einen neuen Termin geben?
+2. edge de-DE-KatjaNeural: Ich muss. Leider absagen.
+3. edge de-DE-KatjaNeural: Ich muss den Termin leider absagen.
+
+== main note in deck "Tarkib"
+tags: Alltag Gesundheit Level::B1
+-- Front
+📅 der Termin.
+-- Back
+<div class="card-translation"><span class="level-chip lvl-b1">B1</span> 📅 appointment</div>
+<div class="morph"><span class="g-der">der</span> · Pl. die Termine · Gen. des Termins</div>
+<div class="card-image"><img src="pexels_calendar_with_appointment_reminder.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇩🇪 Deutsch</div>
+  <div class="sentence casual"><span class="emoji">🦷</span>Ich habe morgen einen Termin beim Zahnarzt.</div>
+  <div class="sentence formal"><span class="emoji">🗓️</span>Könnten Sie mir bitte einen neuen Termin geben?</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">einen Termin bei jemandem haben (+Dat)</span> <span class="pattern-badge">Könnten Sie ...? (höflich)</span></div>
+<div class="explanation">👉 „Ein Termin ist eine feste Zeit für ein Treffen."</div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">🦷</span>I have an appointment at the dentist tomorrow.</div>
+  <div class="sentence formal"><span class="emoji">🗓️</span>Could you please give me a new appointment?</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 English patterns</div><span class="pattern-badge">to have an appointment with someone</span> <span class="pattern-badge">Could you ...? (polite)</span></div><br>[sound:tts_de_der_Termin_79e9513743.mp3]
+
+== cloze note in deck "Tarkib::Cloze"
+tags: cloze tarkib case_single_word Level::B1
+-- Text
+Ich muss {{c1::den Termin::d... Ter...}} leider absagen.
+-- Translation
+Unfortunately I have to cancel the appointment.
+-- Image
+<img src="pexels_calendar_with_appointment_reminder.jpg">
+-- FrontAudio
+[sound:cloze_front_Ich_muss_den_Termin_leid_9fffc63a9e.mp3]
+-- BackAudio
+[sound:cloze_back_Ich_muss_den_Termin_leid_c7604645a2.mp3]
+-- GrammarHint
+einen Termin absagen
+-- SourceWord
+der Termin
+-- DeckOrigin
+Tarkib
+
+== media files
+cloze_back_Ich_muss_den_Termin_leid_c7604645a2.mp3 <- audio from edge
+cloze_front_Ich_muss_den_Termin_leid_9fffc63a9e.mp3 <- audio from edge
+pexels_calendar_with_appointment_reminder.jpg <- picture
+tts_de_der_Termin_79e9513743.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "appointment",
+  "word": "der Termin"
+}

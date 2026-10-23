@@ -1,0 +1,120 @@
+# Golden card "en_collocation_c1_german2" (tests/card_scenarios.py)
+# A collocation at C1: the headword restated as a pattern is dropped, German as the second translation with its own voice, and a cloze of the verb alone.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: make a decision
+deck: Tarkib English | level: C1 | cloze: on
+options: {"secondary_language": "German"}
+settings: {"languages": {"en": {"secondary": "German", "secondary_voice": "de-DE-KatjaNeural", "translation": "Arabic"}}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: en/main_C1 [Arabic, en-US-JennyNeural]
+user:
+WORD OR PHRASE TO TEACH: "make a decision". CONTEXT: Important everyday English. Formal: office, appointment or email scenario. Casual: chat with friends or family (messaging tone). Prefer situations people meet every week: work, shopping, health, travel, home.
+
+== AI call 2: secondary (temperature 0.2, max_tokens 600)
+system: en/secondary_German
+user:
+Translate into German.
+
+ENGLISH WORD: make a decision
+ENGLISH CASUAL: Honestly, I can't make a decision until I've slept on it.
+ENGLISH FORMAL: Only after reviewing all the evidence did the committee make a decision.
+ARABIC CASUAL: بصراحة، لا أستطيع أن أتخذ قرارا قبل أن أفكر في الأمر جيدا.
+ARABIC FORMAL: لم تتخذ اللجنة قرارا إلا بعد مراجعة جميع الأدلة.
+
+Generate word_translation, casual, formal. Return ONLY JSON.
+
+== AI call 3: cloze (temperature 0.3, max_tokens 1600)
+system: en/cloze
+user:
+Input: make a decision
+Deck: Tarkib English
+Meaning in Arabic: يتخذ قرارا
+
+
+Classify and generate a NATURAL English cloze sentence. Restructure if needed.
+
+Write "translation" as the FULL sentence translated naturally into Arabic. Use Modern Standard Arabic only, without diacritics.
+
+Use American English spelling and words.
+
+== picture search
+keyword: committee meeting around a table | deck: Tarkib English | source: auto -> pexels_committee_meeting_around_a_table.jpg
+
+== read aloud
+1. edge en-US-JennyNeural: make a decision. ... Honestly, I can't make a decision until I've slept on it.. ... Only after reviewing all the evidence did the committee make a decision.
+2. edge de-DE-KatjaNeural: eine Entscheidung treffen ... Ehrlich gesagt kann ich mich erst entscheiden, wenn ich eine Nacht darüber geschlafen habe. ... Erst nach Prüfung aller Beweise traf der Ausschuss eine Entscheidung.
+3. edge en-US-JennyNeural: We need to. A decision by Friday.
+4. edge en-US-JennyNeural: We need to make a decision by Friday.
+
+== main note in deck "Tarkib English"
+tags: Work Level::C1
+-- Front
+⚖️ make a decision.
+-- Back
+<div class="card-translation" style="direction:rtl;"><span class="level-chip lvl-c1">C1</span> ⚖️ يتخذ قرارا</div>
+<div class="card-image"><img src="pexels_committee_meeting_around_a_table.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">😴</span>Honestly, I can't make a decision until I've slept on it.</div>
+  <div class="sentence formal"><span class="emoji">🏛️</span>Only after reviewing all the evidence did the committee make a decision.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">sleep on it</span> <span class="pattern-badge">only after + -ing, did + subject (inversion)</span></div>
+<div class="explanation">👉 “To make a decision means to choose what to do after thinking about it.”</div>
+<div class="section arabic">
+  <div class="section-label" style="direction:rtl;text-align:right;">🇸🇦 العربية</div>
+  <div class="sentence casual"><span class="emoji">😴</span>بصراحة، لا أستطيع أن أتخذ قرارا قبل أن أفكر في الأمر جيدا.</div>
+  <div class="sentence formal"><span class="emoji">🏛️</span>لم تتخذ اللجنة قرارا إلا بعد مراجعة جميع الأدلة.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Arabic patterns</div><span class="pattern-badge">يفكر في الأمر قبل أن يقرر</span> <span class="pattern-badge">لم ... إلا بعد، مع تقديم الفعل للتوكيد</span></div>
+<div class="section">
+  <div class="section-label">German</div>
+  <div class="sentence casual"><span class="emoji">😴</span>Ehrlich gesagt kann ich mich erst entscheiden, wenn ich eine Nacht darüber geschlafen habe.</div>
+  <div class="sentence formal"><span class="emoji">🏛️</span>Erst nach Prüfung aller Beweise traf der Ausschuss eine Entscheidung.</div>
+</div>
+<div class="secondary-word" style="direction:ltr;">⚖️ eine Entscheidung treffen</div><br>[sound:tts_en_make_a_decision_97deb1b139.mp3][sound:tts_sec_make_a_decision_f52c153882.mp3]
+
+== cloze note in deck "Tarkib English::Cloze"
+tags: cloze tarkib_english case_collocation Level::C1
+-- Text
+We need to {{c1::make}} a decision by Friday.
+-- Translation
+يجب أن نتخذ قرارا بحلول يوم الجمعة.
+-- Image
+<img src="pexels_committee_meeting_around_a_table.jpg">
+-- FrontAudio
+[sound:cloze_front_We_need_to_make_a_decisi_6b98eaf5dc.mp3]
+-- BackAudio
+[sound:cloze_back_We_need_to_make_a_decisi_77d6cbbbee.mp3]
+-- GrammarHint
+make a decision
+-- SourceWord
+make a decision
+-- DeckOrigin
+Tarkib English
+
+== media files
+cloze_back_We_need_to_make_a_decisi_77d6cbbbee.mp3 <- audio from edge
+cloze_front_We_need_to_make_a_decisi_6b98eaf5dc.mp3 <- audio from edge
+pexels_committee_meeting_around_a_table.jpg <- picture
+tts_en_make_a_decision_97deb1b139.mp3 <- audio from edge
+tts_sec_make_a_decision_f52c153882.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 4,
+    "total": 4,
+    "used": {
+      "edge": 4
+    }
+  },
+  "translation_en": "يتخذ قرارا",
+  "word": "make a decision"
+}

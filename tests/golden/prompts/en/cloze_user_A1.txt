@@ -1,0 +1,12 @@
+Input: give up
+Deck: Tarkib English
+Meaning in Arabic: يستسلم
+
+
+Classify and generate a NATURAL English cloze sentence. Restructure if needed.
+
+LEVEL A1: use ONLY case "single_word"; a SHORT present-tense sentence (3 to 7 words) with the most common words; no idioms, no clause.
+
+Write "translation" as the FULL sentence translated naturally into Arabic. Use Modern Standard Arabic only, without diacritics.
+
+Use American English spelling and words.

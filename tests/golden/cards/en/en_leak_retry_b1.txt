@@ -1,0 +1,105 @@
+# Golden card "en_leak_retry_b1" (tests/card_scenarios.py)
+# An Arabic word in an English sentence at B1: one strict retry, and the clean card is used.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: appointment
+deck: Tarkib English | level: B1 | cloze: on
+settings: {"defaults": {"translation_language": "Arabic"}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: en/main_B1 [Arabic, en-US-JennyNeural]
+user:
+WORD OR PHRASE TO TEACH: "appointment". CONTEXT: Important everyday English. Formal: office, appointment or email scenario. Casual: chat with friends or family (messaging tone). Prefer situations people meet every week: work, shopping, health, travel, home.
+
+== AI call 2: main (temperature 0.4, max_tokens 3000)
+system: en/main_B1 [Arabic, en-US-JennyNeural]
+user:
+WORD OR PHRASE TO TEACH: "appointment". CONTEXT: Important everyday English. Formal: office, appointment or email scenario. Casual: chat with friends or family (messaging tone). Prefer situations people meet every week: work, shopping, health, travel, home. STRICT REQUIREMENT: the "word" field MUST be exactly "appointment".
+
+== AI call 3: cloze (temperature 0.3, max_tokens 1600)
+system: en/cloze
+user:
+Input: appointment
+Deck: Tarkib English
+Meaning in Arabic: موعد
+
+
+Classify and generate a NATURAL English cloze sentence. Restructure if needed.
+
+LEVEL B1: use case "single_word", "verb_prep" or "phrasal_verb"; a medium everyday sentence with common words.
+
+Write "translation" as the FULL sentence translated naturally into Arabic. Use Modern Standard Arabic only, without diacritics.
+
+Use American English spelling and words.
+
+== picture search
+keyword: calendar with appointment reminder | deck: Tarkib English | source: auto -> pexels_calendar_with_appointment_reminder.jpg
+
+== read aloud
+1. edge en-US-JennyNeural: appointment. ... I have a doctor's appointment tomorrow morning.. ... Please call us if you need to cancel your appointment.
+2. edge en-US-JennyNeural: I have an. At ten.
+3. edge en-US-JennyNeural: I have an appointment at ten.
+
+== main note in deck "Tarkib English"
+tags: Health Level::B1
+-- Front
+🩺 appointment.
+-- Back
+<div class="card-translation" style="direction:rtl;"><span class="level-chip lvl-b1">B1</span> 🩺 موعد</div>
+<div class="card-image"><img src="pexels_calendar_with_appointment_reminder.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">🗓️</span>I have a doctor's appointment tomorrow morning.</div>
+  <div class="sentence formal"><span class="emoji">📞</span>Please call us if you need to cancel your appointment.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">need to + verb</span> <span class="pattern-badge">cancel an appointment</span></div>
+<div class="explanation">👉 “An appointment is a fixed time to see someone, for example a doctor.”</div>
+<div class="section arabic">
+  <div class="section-label" style="direction:rtl;text-align:right;">🇸🇦 العربية</div>
+  <div class="sentence casual"><span class="emoji">🗓️</span>لدي موعد عند الطبيب صباح الغد.</div>
+  <div class="sentence formal"><span class="emoji">📞</span>يرجى الاتصال بنا إذا كنت بحاجة إلى إلغاء موعدك.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Arabic patterns</div><span class="pattern-badge">يحتاج إلى + فعل</span> <span class="pattern-badge">يلغي موعدا</span></div><br>[sound:tts_en_appointment_5a30997667.mp3]
+
+== cloze note in deck "Tarkib English::Cloze"
+tags: cloze tarkib_english case_single_word Level::B1
+-- Text
+I have an {{c1::appointment::app...}} at ten.
+-- Translation
+لدي موعد في العاشرة.
+-- Image
+<img src="pexels_calendar_with_appointment_reminder.jpg">
+-- FrontAudio
+[sound:cloze_front_I_have_an_appointment_at_0b5dcec415.mp3]
+-- BackAudio
+[sound:cloze_back_I_have_an_appointment_at_86b7bf55a0.mp3]
+-- GrammarHint
+
+-- SourceWord
+appointment
+-- DeckOrigin
+Tarkib English
+
+== media files
+cloze_back_I_have_an_appointment_at_86b7bf55a0.mp3 <- audio from edge
+cloze_front_I_have_an_appointment_at_0b5dcec415.mp3 <- audio from edge
+pexels_calendar_with_appointment_reminder.jpg <- picture
+tts_en_appointment_5a30997667.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "موعد",
+  "word": "appointment"
+}

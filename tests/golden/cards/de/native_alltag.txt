@@ -1,0 +1,108 @@
+# Golden card "native_alltag" (tests/card_scenarios.py)
+# Native in the Alltagsdeutsch deck: the original prompt, the separate grammar call (a whole sentence in its answer is dropped), the English read aloud too, and a cloze of the verb alone.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: Bock haben
+deck: Deutsch::Alltagsdeutsch | level: Native | cloze: on
+settings: {"voices": {"translation": "en-US-AvaMultilingualNeural"}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: de/main_Native
+user:
+WORD OR PHRASE TO TEACH: "Bock haben". CONTEXT: Textbook German vs real street German. The CONTRAST is the purpose: formal uses the Schuldeutsch word; casual uses what Germans actually say (erhalten→kriegen, verstehen→checken, funktionieren→klappen, sehr→mega, möchte→will). Formal sounds textbook-correct; casual sounds like WhatsApp.
+
+== AI call 2: grammar (temperature 0.2, max_tokens 2000)
+system: de/grammar
+user:
+German casual: "Hast du Bock auf Kino heute Abend?"
+German formal: "Ehrlich gesagt habe ich heute keinen Bock auf die Besprechung."
+English casual: "Do you feel like going to the cinema tonight?"
+English formal: "To be honest, I really don't feel like the meeting today."
+
+Extract REAL patterns from these sentences. Return ONLY JSON.
+
+== AI call 3: cloze (temperature 0.3, max_tokens 1600)
+system: de/cloze
+user:
+Input: Bock haben
+Deck: Deutsch::Alltagsdeutsch
+English meaning: to feel like (doing something)
+CONTEXT: casual/Alltagsdeutsch register, conversational.
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+== picture search
+keyword: friends going to the cinema | deck: Deutsch::Alltagsdeutsch | source: auto -> pexels_friends_going_to_the_cinema.jpg
+
+== read aloud
+1. edge de-DE-KatjaNeural: Bock haben. ... Hast du Bock auf Kino heute Abend?. ... Ehrlich gesagt habe ich heute keinen Bock auf die Besprechung.
+2. edge en-US-AvaMultilingualNeural: to feel like doing something. ... Do you feel like going to the cinema tonight? ... To be honest, I really don't feel like the meeting today.
+3. edge de-DE-KatjaNeural: Ich. Heute echt keinen Bock.
+4. edge de-DE-KatjaNeural: Ich habe heute echt keinen Bock.
+
+== main note in deck "Deutsch::Alltagsdeutsch"
+tags: Umgangssprache Alltag Level::Native
+-- Front
+😎 Bock haben.
+-- Back
+<div class="card-translation"><span class="level-chip lvl-native">Native</span> 😎 to feel like (doing something)</div>
+<div class="card-image"><img src="pexels_friends_going_to_the_cinema.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇩🇪 Deutsch</div>
+  <div class="sentence casual"><span class="emoji">🎬</span>Hast du Bock auf Kino heute Abend?</div>
+  <div class="sentence formal"><span class="emoji">💼</span>Ehrlich gesagt habe ich heute keinen Bock auf die Besprechung.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">Bock auf etwas haben (+Akk)</span></div>
+<div class="explanation">👉 „Umgangssprachlich für Lust auf etwas haben."</div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">🎬</span>Do you feel like going to the cinema tonight?</div>
+  <div class="sentence formal"><span class="emoji">💼</span>To be honest, I really don't feel like the meeting today.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 English patterns</div><span class="pattern-badge">to feel like something</span></div><br>[sound:tts_de_Bock_haben_e66c633b4d.mp3][sound:tts_en_Bock_haben_014889e876.mp3]
+
+== cloze note in deck "Deutsch::Alltagsdeutsch::Cloze"
+tags: cloze alltagsdeutsch case_nvv Level::Native
+-- Text
+Ich {{c1::habe}} heute echt keinen Bock.
+-- Translation
+I really don't feel like it today.
+-- Image
+<img src="pexels_friends_going_to_the_cinema.jpg">
+-- FrontAudio
+[sound:cloze_front_Ich_habe_heute_echt_kein_76c65ad861.mp3]
+-- BackAudio
+[sound:cloze_back_Ich_habe_heute_echt_kein_8c8c0c90b1.mp3]
+-- GrammarHint
+Bock haben: Lust haben
+-- SourceWord
+Bock haben
+-- DeckOrigin
+Alltagsdeutsch
+
+== media files
+cloze_back_Ich_habe_heute_echt_kein_8c8c0c90b1.mp3 <- audio from edge
+cloze_front_Ich_habe_heute_echt_kein_76c65ad861.mp3 <- audio from edge
+pexels_friends_going_to_the_cinema.jpg <- picture
+tts_de_Bock_haben_e66c633b4d.mp3 <- audio from edge
+tts_en_Bock_haben_014889e876.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 4,
+    "total": 4,
+    "used": {
+      "edge": 4
+    }
+  },
+  "translation_en": "to feel like (doing something)",
+  "word": "Bock haben"
+}

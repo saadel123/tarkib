@@ -1,0 +1,63 @@
+# Golden card "hints_no_cloze_b1" (tests/card_scenarios.py)
+# Meaning, scenario and picture hints (the scenario adds the loanwords table), a second translation language equal to the first (skipped with a warning), and no cloze card.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: der Termin
+deck: Tarkib | level: B1 | cloze: off
+options: {"image_keyword": "Kalender", "meaning": "appointment at the doctor's", "scenario": "beim Arzt anrufen", "secondary_language": "English"}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: de/main_B1 + de/loanwords
+user:
+WORD OR PHRASE TO TEACH: "der Termin". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause. MEANING DISAMBIGUATION: the user wants the specific meaning "appointment at the doctor's" (may be written in any language; interpret it). Generate the card focused on THIS sense only. EXAMPLE SCENARIO HINT: "beim Arzt anrufen" (may be written in any language; interpret it). Use it as the setting for both example sentences; the deck rules still apply. IMAGE HINT: the user wants the picture to show "Kalender" (may be written in any language). Set imageKeyword to a SAFE, wholesome ENGLISH image search term for THIS, following the image rules.
+
+== picture search
+keyword: calendar | deck: Tarkib | source: auto -> pexels_calendar.jpg
+
+== read aloud
+1. edge de-DE-KatjaNeural: der Termin. ... Ich rufe beim Arzt an und mache einen Termin.. ... Ich möchte bitte einen Termin bei Dr. Weber vereinbaren.
+
+== main note in deck "Tarkib"
+tags: Gesundheit Level::B1
+-- Front
+📅 der Termin.
+-- Back
+<div class="card-translation"><span class="level-chip lvl-b1">B1</span> 📅 appointment</div>
+<div class="morph"><span class="g-der">der</span> · Pl. die Termine · Gen. des Termins</div>
+<div class="card-image"><img src="pexels_calendar.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇩🇪 Deutsch</div>
+  <div class="sentence casual"><span class="emoji">☎️</span>Ich rufe beim Arzt an und mache einen Termin.</div>
+  <div class="sentence formal"><span class="emoji">🩺</span>Ich möchte bitte einen Termin bei Dr. Weber vereinbaren.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">bei jemandem anrufen (+Dat)</span> <span class="pattern-badge">einen Termin vereinbaren</span></div>
+<div class="explanation">👉 „Ein Termin ist eine feste Zeit, zum Beispiel beim Arzt."</div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">☎️</span>I'll call the doctor's office and make an appointment.</div>
+  <div class="sentence formal"><span class="emoji">🩺</span>I would like to make an appointment with Dr. Weber, please.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 English patterns</div><span class="pattern-badge">to call someone's office</span> <span class="pattern-badge">to make an appointment</span></div><br>[sound:tts_de_der_Termin_7c91e643c2.mp3]
+
+== media files
+pexels_calendar.jpg <- picture
+tts_de_der_Termin_7c91e643c2.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 1,
+    "total": 1,
+    "used": {
+      "edge": 1
+    }
+  },
+  "secondary_warning": "skipped, it is the same as the main translation language",
+  "translation_en": "appointment",
+  "word": "der Termin"
+}

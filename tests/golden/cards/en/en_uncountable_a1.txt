@@ -1,0 +1,101 @@
+# Golden card "en_uncountable_a1" (tests/card_scenarios.py)
+# English at A1: an uncountable noun says so on the word line.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: information
+deck: Tarkib English | level: A1 | cloze: on
+settings: {"defaults": {"translation_language": "Arabic"}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: en/main_A1 [Arabic, en-US-JennyNeural]
+user:
+WORD OR PHRASE TO TEACH: "information". CONTEXT: Important everyday English. Formal: office, appointment or email scenario. Casual: chat with friends or family (messaging tone). Prefer situations people meet every week: work, shopping, health, travel, home.
+
+== AI call 2: cloze (temperature 0.3, max_tokens 1600)
+system: en/cloze
+user:
+Input: information
+Deck: Tarkib English
+Meaning in Arabic: معلومات
+
+
+Classify and generate a NATURAL English cloze sentence. Restructure if needed.
+
+LEVEL A1: use ONLY case "single_word"; a SHORT present-tense sentence (3 to 7 words) with the most common words; no idioms, no clause.
+
+Write "translation" as the FULL sentence translated naturally into Arabic. Use Modern Standard Arabic only, without diacritics.
+
+Use American English spelling and words.
+
+== picture search
+keyword: information desk | deck: Tarkib English | source: auto -> pexels_information_desk.jpg
+
+== read aloud
+1. edge en-US-JennyNeural: information. ... I need more information.. ... Can you give me some information?
+2. edge en-US-JennyNeural: I need some. .
+3. edge en-US-JennyNeural: I need some information.
+
+== main note in deck "Tarkib English"
+tags: Communication Level::A1
+-- Front
+ℹ️ information.
+-- Back
+<div class="card-translation" style="direction:rtl;"><span class="level-chip lvl-a1">A1</span> ℹ️ معلومات</div>
+<div class="morph">uncountable</div>
+<div class="card-image"><img src="pexels_information_desk.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">📋</span>I need more information.</div>
+  <div class="sentence formal"><span class="emoji">🙋</span>Can you give me some information?</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">give someone something</span></div>
+<div class="explanation">👉 “Information is facts about something.”</div>
+<div class="section arabic">
+  <div class="section-label" style="direction:rtl;text-align:right;">🇸🇦 العربية</div>
+  <div class="sentence casual"><span class="emoji">📋</span>أحتاج إلى معلومات أكثر.</div>
+  <div class="sentence formal"><span class="emoji">🙋</span>هل يمكنك أن تعطيني بعض المعلومات؟</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Arabic patterns</div><span class="pattern-badge">يعطي شخصا شيئا</span></div><br>[sound:tts_en_ℹ__information_8dcec4121c.mp3]
+
+== cloze note in deck "Tarkib English::Cloze"
+tags: cloze tarkib_english case_single_word Level::A1
+-- Text
+I need some {{c1::information::inf...}}.
+-- Translation
+أحتاج إلى بعض المعلومات.
+-- Image
+<img src="pexels_information_desk.jpg">
+-- FrontAudio
+[sound:cloze_front_I_need_some_information_e4bf959b2d.mp3]
+-- BackAudio
+[sound:cloze_back_I_need_some_information_5b02daa7a6.mp3]
+-- GrammarHint
+
+-- SourceWord
+information
+-- DeckOrigin
+Tarkib English
+
+== media files
+cloze_back_I_need_some_information_5b02daa7a6.mp3 <- audio from edge
+cloze_front_I_need_some_information_e4bf959b2d.mp3 <- audio from edge
+pexels_information_desk.jpg <- picture
+tts_en_ℹ__information_8dcec4121c.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "معلومات",
+  "word": "information"
+}

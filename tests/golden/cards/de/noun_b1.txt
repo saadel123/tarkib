@@ -1,0 +1,96 @@
+# Golden card "noun_b1" (tests/card_scenarios.py)
+# A neuter noun at B1 with two patterns, a picture, only the German read aloud (the default) and a cloze card whose answer takes its article.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: das Schloss
+deck: Tarkib | level: B1 | cloze: on
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: de/main_B1
+user:
+WORD OR PHRASE TO TEACH: "das Schloss". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause.
+
+== AI call 2: cloze (temperature 0.3, max_tokens 1600)
+system: de/cloze
+user:
+Input: das Schloss
+Deck: Tarkib
+English meaning: castle
+
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+LEVEL B1: use case "single_word", "noun_prep" or "verb_prep_article"; a medium everyday sentence with common words.
+
+== picture search
+keyword: castle on a hill | deck: Tarkib | source: auto -> pexels_castle_on_a_hill.jpg
+
+== read aloud
+1. edge de-DE-KatjaNeural: das Schloss. ... Hast du das Schloss am Fluss schon gesehen?. ... Das Schloss steht seit vielen Jahren auf dem Hügel.
+2. edge de-DE-KatjaNeural: Am Wochenende besuchen wir. .
+3. edge de-DE-KatjaNeural: Am Wochenende besuchen wir das Schloss.
+
+== main note in deck "Tarkib"
+tags: Reisen Level::B1
+-- Front
+🏰 das Schloss.
+-- Back
+<div class="card-translation"><span class="level-chip lvl-b1">B1</span> 🏰 castle</div>
+<div class="morph"><span class="g-das">das</span> · Pl. die Schlösser · Gen. des Schlosses</div>
+<div class="card-image"><img src="pexels_castle_on_a_hill.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇩🇪 Deutsch</div>
+  <div class="sentence casual"><span class="emoji">💬</span>Hast du das Schloss am Fluss schon gesehen?</div>
+  <div class="sentence formal"><span class="emoji">🏛️</span>Das Schloss steht seit vielen Jahren auf dem Hügel.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">auf dem Hügel stehen (+Dat)</span> <span class="pattern-badge">seit (+Dat)</span></div>
+<div class="explanation">👉 „Ein Schloss ist ein großes, altes Gebäude, in dem früher Könige wohnten."</div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">💬</span>Have you seen the castle by the river yet?</div>
+  <div class="sentence formal"><span class="emoji">🏛️</span>The castle has stood on the hill for many years.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 English patterns</div><span class="pattern-badge">to stand on the hill</span> <span class="pattern-badge">for (a period of time)</span></div><br>[sound:tts_de_das_Schloss_6982e6c9e5.mp3]
+
+== cloze note in deck "Tarkib::Cloze"
+tags: cloze tarkib case_single_word Level::B1
+-- Text
+Am Wochenende besuchen wir {{c1::das Schloss::d... Sch...}}.
+-- Translation
+At the weekend we are visiting the castle.
+-- Image
+<img src="pexels_castle_on_a_hill.jpg">
+-- FrontAudio
+[sound:cloze_front_Am_Wochenende_besuchen_w_d1238e2ea1.mp3]
+-- BackAudio
+[sound:cloze_back_Am_Wochenende_besuchen_w_24833ff642.mp3]
+-- GrammarHint
+
+-- SourceWord
+das Schloss
+-- DeckOrigin
+Tarkib
+
+== media files
+cloze_back_Am_Wochenende_besuchen_w_24833ff642.mp3 <- audio from edge
+cloze_front_Am_Wochenende_besuchen_w_d1238e2ea1.mp3 <- audio from edge
+pexels_castle_on_a_hill.jpg <- picture
+tts_de_das_Schloss_6982e6c9e5.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "castle",
+  "word": "das Schloss"
+}

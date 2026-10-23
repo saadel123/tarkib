@@ -1,0 +1,1 @@
+ # TRANSLATION LANGUAGE = Arabic (NOT English): write grammar_patterns_en in Arabic instead of English: the same entries in the same order, natural Arabic, with no German word, no German grammar term and no case marker. Keep the JSON key names exactly as given. Use Modern Standard Arabic (MSA / Fusha) ONLY, never any dialect, and no diacritics.

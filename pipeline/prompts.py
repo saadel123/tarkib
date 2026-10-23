@@ -3,6 +3,9 @@
 The "Arabic" call is generalized: SYSTEM_ARABIC is used when the configured secondary
 translation language is Arabic; any other language uses a generic translation prompt.
 """
+import functools
+
+from . import english, languages
 
 _RANKED = ('verb+preposition+case ("warten auf (+Akk)"), noun/adjective+preposition+case ("Angst vor (+Dat)"), a verb with a case you cannot guess ("helfen (+Dat)", "jemandem etwas geben (+Dat, +Akk)"), noun+verb collocations ("eine Entscheidung treffen"), a verb that opens a clause ("mitteilen, dass"), zu-infinitive frames ("um ... zu"), reflexive/separable verbs, then level structures (Perfekt, Konjunktiv, Passiv, weak nouns)')
 
@@ -207,9 +210,9 @@ CONTEXTS_CLOZE = {
 }
 
 # Single source of truth for the optional starter-deck pack. Drives BOTH the Settings checkbox
-# list (name + flavor description) AND the create-on-demand logic; _pick_context() routes these
-# exact names to the CONTEXTS_* flavor above (Wichtig falls through to Default by design).
-# v2 multi-language: each LanguageProfile supplies its own list of these entries.
+# list (name + flavor description) AND the create-on-demand logic; deck_context_de() (end of this
+# file) routes these exact names to the CONTEXTS_* flavor above (Wichtig falls through to Default by
+# design). These are the German decks; another learning language brings its own.
 STARTER_DECKS = [
     {'name': 'Deutsch::Alltagsdeutsch', 'description': 'everyday spoken German, casual vs formal contrast', 'default_checked': True},
     {'name': 'Deutsch::Verben', 'description': 'verbs (separable, reflexive, Perfekt rules)', 'default_checked': True},
@@ -226,14 +229,24 @@ STARTER_DECKS = [
 # A1..C1 = a difficulty ladder (each uses level-appropriate words + grammar). "Native" = the
 # original SYSTEM_MAIN prompt, verbatim — real spoken German with the full register machinery,
 # kept as its own choice so it's preserved exactly.
-# The LEVEL CODES are language-agnostic; the rule TEXT is German. A future LanguageProfile would
-# swap SYSTEM_MAIN_LEVELED / LEVEL_RULES per target language (the seam is system_main_for_level()).
+# The LEVEL CODES are language-agnostic; the rule TEXT is German. Another learning language gets its
+# own rule text through PROMPTS at the end of this file, the one way the pipeline asks for a prompt.
 LEVELS = ["A1", "A2", "B1", "B2", "C1", "Native"]
 DEFAULT_LEVEL = "B1"
 LEVEL_LABELS = {  # dropdown display text
     "A1": "A1: Beginner", "A2": "A2: Elementary", "B1": "B1: Intermediate",
     "B2": "B2: Upper-intermediate", "C1": "C1: Advanced", "Native": "Native: real spoken German",
 }
+
+
+def level_label(code, lang):
+    """A level as the dropdowns show it: Native names the learning language ("Native: real spoken
+    English"); German's labels are LEVEL_LABELS, byte for byte."""
+    if code == "Native":
+        return "Native: real spoken %s" % languages.get(lang)["name"]
+    return LEVEL_LABELS.get(code, code)
+
+
 GRAMMAR_LEVELS = ("Native",)  # only Native uses the separate grammar call; A1–C1 get grammar_patterns
 #                               from the MAIN call (per-level focus in LEVEL_RULES) — no extra call
 
@@ -381,7 +394,7 @@ _LANG_LABELS = {
     "dutch": "🇳🇱 Nederlands", "greek": "🇬🇷 Ελληνικά", "czech": "🇨🇿 Čeština", "romanian": "🇷🇴 Română",
     "hungarian": "🇭🇺 Magyar", "swedish": "🇸🇪 Svenska", "indonesian": "🇮🇩 Bahasa Indonesia",
     "vietnamese": "🇻🇳 Tiếng Việt", "hindi": "🇮🇳 हिन्दी", "japanese": "🇯🇵 日本語", "korean": "🇰🇷 한국어",
-    "chinese (simplified)": "🇨🇳 中文", "chinese": "🇨🇳 中文",
+    "chinese (simplified)": "🇨🇳 中文", "chinese": "🇨🇳 中文", "german": "🇩🇪 Deutsch",
 }
 
 
@@ -393,6 +406,23 @@ def language_label(lang):
     """(display label with flag, is_rtl) for the translation section header."""
     key = (lang or "").strip().lower()
     return _LANG_LABELS.get(key, "🌐 %s" % (lang or "English")), key in _RTL_LANGS
+
+
+def grammar_override(lang):
+    """Appended to SYSTEM_GRAMMAR (Native's separate pattern call) when the translation language is not
+    English, so the glosses come in that language and match the card's translation box: the call used to ask
+    for English glosses whatever the translation language was. "" for English, so that prompt stays
+    byte-identical."""
+    if is_english_language(lang):
+        return ""
+    extra = ""
+    if (lang or "").strip().lower() in ("arabic", "العربية", "fusha", "msa"):
+        extra = " Use Modern Standard Arabic (MSA / Fusha) ONLY, never any dialect, and no diacritics."
+    return (
+        ' # TRANSLATION LANGUAGE = %s (NOT English): write grammar_patterns_en in %s instead of English: the same '
+        'entries in the same order, natural %s, with no German word, no German grammar term and no case marker. '
+        'Keep the JSON key names exactly as given.%s' % (lang, lang, lang, extra)
+    )
 
 
 def translation_override(lang):
@@ -410,3 +440,588 @@ def translation_override(lang):
         '%s (never word-for-word); leave NO English or German words in them.%s'
         % (lang, lang, lang, extra)
     )
+
+
+# ── One prompt set per learning language: the only way the pipeline gets a prompt ──────────────
+# Everything above is the German set, tuned on real cards and kept byte for byte (the frozen copies
+# in tests/golden/prompts/de/ fail on any change). generate.build_card asks for every system prompt
+# and user message through the functions at the end, with the learning language's code from
+# pipeline/languages.py, so the pipeline itself holds no German text. A code missing from PROMPTS is a
+# KeyError, never a silent German card; tests/test_languages.py checks every language has every entry.
+
+def deck_context_de(deck, kind):
+    """The CONTEXT line for a German deck, picked by words in its name; kind is "main" or "cloze".
+    The starter deck names (STARTER_DECKS) route here; Wichtig falls through to Default on purpose."""
+    table = CONTEXTS_MAIN if kind == "main" else CONTEXTS_CLOZE
+    if "IT Wortschatz" in deck:
+        return table["IT"]
+    if "Redewendungen" in deck:
+        return table["Redewendungen"]
+    if "Supermarkt" in deck:
+        return table["Supermarkt"]
+    if "Nomen Verb Verbindung" in deck or "Nomen-Verb-Verbindung" in deck:
+        return table["NVV"]
+    if "Verben" in deck:
+        return table["Verben"]
+    if "Alltagsdeutsch" in deck or "statt Schuldeutsch" in deck:
+        return table["Alltagsdeutsch"]
+    if "Behörden" in deck or "Behoerden" in deck:
+        return table["Behörden"]
+    return table["Default"]
+
+
+def _main_system_de(level, helper, scenario, voice=""):
+    return system_main_for_level(level) + translation_override(helper) + (SYSTEM_LOANWORDS_EXPANDED if scenario else "")
+
+
+def _main_user_de(word, deck, meaning, scenario, image_keyword, strict, exact_word):
+    # Label the input explicitly: a bare greeting like "Guten Tag!" or "Danke" was read by the model
+    # as the user talking to it ("which word do you want?") instead of as the phrase to teach.
+    u = 'WORD OR PHRASE TO TEACH: "%s". %s' % (word, deck_context_de(deck, "main"))
+    u += _hint_lines(meaning, scenario, image_keyword)
+    if strict:
+        u += ' STRICT REQUIREMENT: the "word" field MUST be exactly "%s" (or with proper article).' % word
+    if exact_word:
+        u += (' The user confirmed this spelling. Do NOT correct it, even if it looks misspelled: '
+              'teach "%s" exactly as written.' % word)
+    return u
+
+
+def _grammar_system_de(helper=""):
+    return SYSTEM_GRAMMAR + grammar_override(helper)
+
+
+def _grammar_user_de(card, helper=""):
+    # The second pair of sentences is the translation: name its language (it was always called English).
+    tr = "English" if is_english_language(helper) else helper
+    return ('German casual: "%s"\nGerman formal: "%s"\n%s casual: "%s"\n%s formal: "%s"\n\n'
+            "Extract REAL patterns from these sentences. Return ONLY JSON."
+            % (card.get("example_casual", ""), card.get("example_formal", ""),
+               tr, card.get("example_casual_en", ""), tr, card.get("example_formal_en", "")))
+
+
+def _secondary_user_de(helper, card, level, primary=""):
+    su = ("Translate into %s.\n\nGERMAN WORD: %s\nGERMAN CASUAL: %s\nGERMAN FORMAL: %s\n"
+          "ENGLISH CASUAL: %s\nENGLISH FORMAL: %s\n\nGenerate word_translation, casual, formal. Return ONLY JSON."
+          % (helper, card.get("word", ""), card.get("example_casual", ""), card.get("example_formal", ""),
+             card.get("example_casual_en", ""), card.get("example_formal_en", "")))
+    if level in ("A1", "A2"):
+        su += " Keep the translation short and simple, matching a beginner."
+    return su
+
+
+def _cloze_system_de():
+    return SYSTEM_CLOZE
+
+
+def _cloze_user_de(word, deck, meaning, level, helper, voice=""):
+    cu = ("Input: %s\nDeck: %s\nEnglish meaning: %s\n%s\n\nClassify and generate a NATURAL German cloze sentence. Restructure if needed."
+          % (word, deck, meaning, deck_context_de(deck, "cloze")))
+    cu += cloze_level_note(level)
+    if not is_english_language(helper):
+        cu += ('\n\nWrite "translation_en" as the FULL sentence translated naturally into %s '
+               '(NOT English).' % helper)
+    return cu
+
+
+# ── The generic prompt set: every learning language without a tuned set of its own ─────────────
+# The language's name and its NOTE (pipeline/<language>.py, e.g. pipeline/english.py) fill the slots;
+# a language without a note gets _DEFAULT_NOTE, which names no other language, so the set works for any
+# language the registry lists (tests/test_languages.py proves it with a made-up one). The JSON keys are
+# neutral here ("translation", "explanation"): a key named explanation_de would pull the model toward
+# German. read_answer() maps them back to the card's historical keys in ONE place (_GENERIC_KEYS).
+
+NOTES = {"en": english.NOTE}
+
+_GENERIC_KEYS = {
+    "main": {"translation": "translation_en", "casual_alternatives_translation": "casual_alternatives_en",
+             "example_formal_translation": "example_formal_en", "example_casual_translation": "example_casual_en",
+             "explanation": "explanation_de", "grammar_patterns_translation": "grammar_patterns_en",
+             "input_in_language": "input_is_german"},
+    "grammar": {"grammar_patterns_translation": "grammar_patterns_en"},
+    "cloze": {"translation": "translation_en", "idiom_meaning": "idiom_meaning_de"},
+}
+
+_DEFAULT_NOTE = {
+    "input_examples": ("Loanwords used in {language}, names, and {a_language} word with a small typo COUNT AS "
+                       "{LANGUAGE} (fix the typo)."),
+    "word_rule": ("If {language} uses articles and the input is a bare noun, add its article, like a dictionary entry. "
+                  "Phrases and sentences stay as they are."),
+    "register_pair": ('example_casual is everyday spoken {language}, the way friends talk; example_formal is polite '
+                      'standard {language}, the way you speak to a stranger, an office or a teacher. If {language} has an '
+                      'informal and a polite way to say "you", casual uses the informal one and formal the polite one. '),
+    "self_check": ("verb forms and agreement, word order, the right preposition, and (where {language} has them) the right "
+                   "case, gender and article. "),
+    "standard": ('# STANDARD {LANGUAGE} (these are CEFR levels A1 to C1, used by learners preparing for official exams): '
+                 'standard {language} as taught to learners. No slang, no text-speak, and no words from other languages '
+                 'where {language} has its own. (The separate "Native" style is the only place for them.) '),
+    "levels": {
+        "A1": (' # LEVEL A1 (beginner): use ONLY the ~600 most common everyday words. MAXIMUM 6 words per sentence, count '
+               'them. ONE simple main clause, exactly ONE action. Present tense only. No subordinate or relative clauses, '
+               'no idioms, no slang. Apart from the target word, EVERY other word must be basic beginner vocabulary '
+               '(family, home, food, shopping, school, work, time, weather, transport, greetings).'),
+        "A2": (' # LEVEL A2 (elementary): ~1200 common words. MAXIMUM ~10 words per sentence. At most ONE simple '
+               'subordinate clause (because, when, if, that), never nested. The present and the most common past tense. '
+               'No idioms, no slang. Apart from the target word, every other word basic A1 or A2 vocabulary.'),
+        "B1": (' # LEVEL B1 (intermediate): ~2500 common words. Medium sentences; subordinate clauses are fine. All common '
+               'tenses and polite conditional forms. At most ONE well-known idiom (note its meaning in the explanation). '
+               'Light register contrast.'),
+        "B2": (' # LEVEL B2 (upper-intermediate): wide everyday and common professional words. Longer, more complex '
+               'sentences, the passive, conditionals, common idioms. A clear but MODERATE casual style (no heavy slang).'),
+        "C1": (' # LEVEL C1 (advanced): rich, near-native {language} across registers, with reported speech, the passive '
+               'and a precise formal style where natural. Idioms and advanced linkers used naturally. Still REAL, '
+               'everyday-useful {language}, NEVER rare words. The casual example may be genuinely colloquial.'),
+    },
+    "native": (' # NATIVE: real spoken {language} of people aged 20 to 40 today, with the words, loanwords and slang they '
+               'actually use. Casual is 5 to 12 words, formal 8 to 18. Vary how sentences start. '),
+    "register_examples": ('"casual" = slang or very informal words. "neutral" = words that work in both. "formal" = legal, '
+                          'official or written words not used in casual speech. '),
+    "ranked": ("a verb, adjective or noun with its fixed preposition (and its case, where {language} has cases), a verb "
+               "with a case or a pattern you cannot guess, collocations, a verb that opens a clause, then level structures"),
+    "pattern_rule": ("At EVERY level: a verb, adjective or noun with a fixed preposition in a sentence MUST appear as a "
+                     "pattern (with its case, where {language} has cases)."),
+    "pattern_format": "Write each pattern as a short frame with placeholders where the object goes.",
+    "morphology": ('NOUN -> {"pos":"noun","article":"<its article, or empty if {language} has none>","plural":"<plural>"}. '
+                   'VERB -> {"pos":"verb","forms":"<the 2 or 3 forms a learner must know, comma-separated>"}. Anything '
+                   'else -> {"pos":"other"}. Be 100% correct, with every irregular form.'),
+    "tags": ("Everyday", "Work", "Home", "Transport", "Money", "Health", "Food", "Kitchen", "Clothes", "Shopping",
+             "Technology", "Feelings", "Education", "Sport", "Travel", "Time", "Qualities", "Communication",
+             "Relationships"),
+    "tags_native": ("Everyday", "Work", "Idiom", "Home", "Transport", "Money", "Health", "Food", "Kitchen", "Clothes",
+                    "Shopping", "Technology", "Feelings", "Grammar", "Education", "Sport", "Travel", "Time", "Qualities",
+                    "Slang", "Communication", "Relationships", "Formal"),
+    "explanation": "1 short, simple {language} sentence that explains the word (never a translation)",
+    "cloze_cases": ('A. "single_word": one content word; cloze just the word.\n'
+                    'E. "long_phrase": a phrase of more than 3 words that is not an idiom; cloze the whole phrase.\n'
+                    'F. "idiom": cloze 2 to 3 key content words, comma-separated.'),
+    "cloze_case_names": ("single_word", "long_phrase", "idiom"),
+    "cloze_levels": {
+        "A1": ('\n\nLEVEL A1: use ONLY case "single_word"; a SHORT present-tense sentence (3 to 7 words) with the most '
+               'common words; no idioms.'),
+        "A2": '\n\nLEVEL A2: prefer case "single_word"; a short sentence with common words; no idioms.',
+        "B1": '\n\nLEVEL B1: a medium everyday sentence with common words.',
+    },
+    "contexts": {
+        "Default": ("CONTEXT: Important everyday {language}. Formal: office, appointment or email scenario. Casual: chat "
+                    "with friends or family (messaging tone)."),
+    },
+    "contexts_cloze": {"Default": ""},
+    "variety_line": None,
+}
+
+
+def _merged(note):
+    out = dict(_DEFAULT_NOTE)
+    out.update(note or {})
+    return out
+
+
+def _fill(text, **slots):
+    """Fill {name} slots. JSON braces stay as they are: a slot is only ever a bare {word}."""
+    for key, value in slots.items():
+        text = text.replace("{%s}" % key, value)
+    return text
+
+
+def _a(name):
+    """ "a German", "an English": the article for the language's name."""
+    return ("an " if name[:1].lower() in "aeiou" else "a ") + name
+
+
+def _is_arabic(helper):
+    return (helper or "").strip().lower() in ("arabic", "msa", "fusha", "العربية", "ar")
+
+
+_GENERIC_SCHEMA = (
+    'Return ONLY valid JSON: {'
+    '"emoji":"one emoji",'
+    '"word":"<EXACT user input, copy it from the user message, NEVER copy this placeholder>",'
+    '"translation":"<the meaning in {helper}, generate it fresh>",'
+    '"register":"neutral",'
+    '"casual_alternatives":[],'
+    '"casual_alternatives_translation":[],'
+    '"example_formal":"{language} formal sentence.",'
+    '"example_casual":"{language} casual sentence.",'
+    '"example_formal_translation":"The formal sentence in {helper}.",'
+    '"example_casual_translation":"The casual sentence in {helper}.",'
+    '"explanation":"1 short {language} sentence.",'
+    '"tags":["{tag0}"],'
+    '"imageKeyword":"english image search term",'
+    '"emoji_formal":"emoji for the formal scene",'
+    '"emoji_casual":"emoji for the casual scene",'
+    '"grammar_patterns":[],'
+    '"grammar_patterns_translation":[],'
+    '"morphology":{},'
+    '"input_in_language":true,'
+    '"input_suggestion":""'
+    '} '
+)
+
+_GENERIC_SAFETY = (
+    '# CONTENT: examples and ALL emoji fields must NEVER reference alcohol (beer, wine, 🍺🍷) or pork (pork, bacon, ham, '
+    '🐖🥓); use neutral everyday alternatives (water, juice, coffee, chicken, vegetables). Hard rule, and it applies to '
+    'imageKeyword too: never search for a bar, a pub, a brewery, beer, wine or any pork product, even when the sentence '
+    'mentions one. Only exception: if the requested WORD itself is one of these, teach it but keep the rest neutral. '
+    '# IMAGEKEYWORD: 1 to 3 SAFE, wholesome, classroom-appropriate ENGLISH search terms (the picture search is English, '
+    'all ages). NEVER a term that could return suggestive, swimwear, bikini, lingerie, glamour or model photos. MODESTY '
+    '(hard rule): people in photos must be modestly dressed, no bare-skin close-ups (bare legs, shoulders, midriff), no '
+    'tight or revealing clothing, no swimwear or sleeveless glamour shots. For body-part words (knee, arm, back) choose a '
+    'CLOTHED context (person in jeans holding their knee, physiotherapy with clothing) instead of bare skin. For a person '
+    'word (girl, woman, man, boy, child) search a WHOLESOME ACTIVITY or SCENE instead of the bare person, e.g. "girl '
+    'reading a book", "woman cooking", "boy playing football", "child in a classroom". Base it on the WORD\'s core meaning '
+    'as a POSITIVE or NEUTRAL everyday scene. ABSTRACT WORDS: if the word cannot be photographed (an adjective, adverb, '
+    'verb, abstract noun or a phrase), do NOT search the word itself: describe the concrete SCENE of example_casual (or '
+    'example_formal), so the picture matches the sentence the learner reads (e.g. "important" with a doctor appointment '
+    'sentence -> "calendar with appointment reminder"); for a photographable noun, name the object itself. Avoid dark, '
+    'morbid, medical or distressing images (graves, hospitals, accidents, crying) unless the word is itself about that, '
+    'and ignore any negative emotion in a meaning or scenario hint when choosing the image. '
+    '# NO SLASHES "/" in any sentence or translation (the voice reads it as "slash"): put alternatives after a comma. No '
+    'em-dash "—" or en-dash "–" in ANY example (the voice does not pause on them): use a comma or a period. '
+    '# EMOJIS: emit the literal emoji glyph (👍 🛒 📝), never ":name:" shortcodes or \\uXXXX escapes. emoji_formal and '
+    'emoji_casual fit their scene and differ from the word emoji. '
+)
+
+
+def _generic_main_system(entry, note, level, helper, scenario, voice):
+    """The MAIN call for a language without a tuned set. A1 to C1: the CEFR ladder with the language's level
+    rules; Native: real spoken language with the register machinery (formal word -> casual alternatives)."""
+    n = _merged(note)
+    leveled = level in LEVEL_RULES
+    standard = n["standard"](voice) if callable(n["standard"]) else n["standard"]
+    msa = (" Use Modern Standard Arabic (MSA, Fusha) ONLY, never any dialect, and no diacritics. Address one person in "
+           "the singular, also in the formal sentence: Arabic shows politeness with words, never with the plural."
+           if _is_arabic(helper) else "")
+    tags = n["tags"] if leveled else n["tags_native"]
+    parts = [
+        "You create {language} Anki flashcards for a learner at a given CEFR level. " if leveled
+        else "You create {language} Anki flashcards in real spoken {language}. ",
+        _GENERIC_SCHEMA,
+        '# INPUT CHECK: set input_in_language to false when the input is NOT {a_language} word or phrase: another '
+        'language, random letters, or another language written in Latin letters ("blorptex", "shukran"). '
+        + n["input_examples"] + ' If false, still fill every other field with your best guess and put the {language} '
+        'word the user probably meant in input_suggestion, or "" if there is none. ',
+        '# MORPHOLOGY: fill "morphology" for the headword. ' + n["morphology"] + ' ',
+        '# WORD: EXACTLY the user input. Fix only obvious typos. ' + n["word_rule"] + ' ',
+    ]
+    if leveled:
+        parts += [
+            '# TWO EXAMPLES = a casual/formal PAIR that teaches the contrast: ' + n["register_pair"]
+            + 'If the word has NO real register difference, still give TWO useful, DIFFERENT everyday sentences at this '
+            'level (casual = a bit more conversational, formal = a bit more polite). BOTH must teach the word. ',
+        ]
+    else:
+        parts += [
+            '# REGISTER: classify the word as "casual", "neutral" or "formal". ' + n["register_examples"],
+            '# IF register == "formal": (1) casual_alternatives = 2 to 4 casual {language} replacements. (2) '
+            'casual_alternatives_translation = the same in {helper}. (3) example_casual must NOT contain the formal word: '
+            'use one of the alternatives, so it reads as real casual speech. (4) example_casual_translation mirrors it. '
+            '(5) example_formal keeps the formal word. (6) The explanation says that the word is formal or official '
+            'language and that casual speakers prefer the alternatives. (7) Add "{formal_tag}" to tags. ',
+            '# IF register == "neutral" or "casual": casual_alternatives = [] and example_casual uses the word itself. ',
+            '# TWO EXAMPLES: ' + n["register_pair"],
+            '# If the input is a phrase of more than 2 words, BOTH examples use that exact phrase. NEVER substitute '
+            'synonyms: the card teaches THAT word or phrase. ',
+        ]
+    parts += [
+        '# USEFULNESS: every sentence must be REAL, natural {language} that people actually say, and genuinely useful to '
+        'learn. NEVER use rare or bookish words almost nobody uses. ',
+    ]
+    if leveled:
+        parts += [
+            '# MATCH THE LEVEL: the LEVEL RULES below set vocabulary, sentence length, tenses and grammar. Lower levels = '
+            'shorter sentences, more common words, fewer tenses, simpler grammar. Obey the word-count cap STRICTLY. ',
+        ]
+    parts += [
+        '# ONE sentence per example (no second sentence in the same field). ',
+        '# GRAMMAR SELF-CHECK (re-read EACH {language} sentence before returning and FIX any error; these cards teach '
+        'learners, a wrong form must never appear): ' + n["self_check"],
+        '# ANTI-TRANSLATIONESE: would a native speaker say each sentence word for word? If it reads like a translation, '
+        'rewrite it the way a native speaker would. ',
+    ]
+    if leveled:
+        parts += [
+            standard,
+            "# HINTS DO NOT RAISE THE LEVEL: a meaning or scenario hint only sets the sense or topic; keep the sentence "
+            "within THIS level's word-count and grammar limits anyway. ",
+        ]
+    parts += [
+        _GENERIC_SAFETY,
+        '# EXPLANATION: ' + n["explanation"] + '. ',
+        '# TRANSLATION LANGUAGE = {helper}: translation, example_casual_translation, example_formal_translation, '
+        'casual_alternatives_translation and grammar_patterns_translation are written in {helper}, natural and idiomatic, '
+        'never word for word, with no {language} words left in them (translate names of places, institutions and shops '
+        'naturally). The formal sentence uses the polite way of addressing someone that {helper} has, and only if it has '
+        'one.' + msa + ' ',
+        '# TAGS from: ' + ", ".join(tags) + '. ',
+        '# grammar_patterns: up to 5 short reusable fragments that LITERALLY occur in YOUR {language} sentences, best '
+        'first: ' + n["ranked"] + '. ' + (n["pattern_rule"] + ' ' if leveled else '') + n["pattern_format"]
+        + ' Never a whole sentence, an adjective with an intensifier, a bare object of an everyday verb, or the headword '
+        'restated (a phrase teaches itself). Empty beats filler. grammar_patterns_translation = the same entries, same '
+        'order, glossed in {helper} only, with no {language} word: each gloss is correct, natural {helper}, with its own word '
+        'order and prepositions. ',
+        n["levels"][level] if leveled else n["native"],
+    ]
+    if not leveled and n["variety_line"]:
+        parts.append("# SPELLING: " + n["variety_line"](voice).strip() + " ")
+    name = entry["name"]
+    return _fill("".join(parts), language=name, LANGUAGE=name.upper(), a_language=_a(name), helper=helper or "English",
+                 formal_tag=entry["formal_tag"], tag0=tags[0])
+
+
+def _hint_lines(meaning, scenario, image_keyword):
+    """The user's hints, any language, as the MAIN user message carries them (German and generic alike)."""
+    u = ""
+    if meaning:
+        u += (' MEANING DISAMBIGUATION: the user wants the specific meaning "%s" '
+              "(may be written in any language; interpret it). "
+              "Generate the card focused on THIS sense only." % meaning)
+    if scenario:
+        u += (' EXAMPLE SCENARIO HINT: "%s" (may be written in any language; interpret it). '
+              "Use it as the setting for both example sentences; the deck rules still apply." % scenario)
+    if image_keyword:
+        # The user's image request (any language) is folded into the MAIN call so the model turns it
+        # into a SAFE English imageKeyword, instead of sending raw non-English text to the
+        # English-indexed image providers. No extra LLM call; image-safety rules still apply.
+        u += (' IMAGE HINT: the user wants the picture to show "%s" (may be written in any '
+              "language). Set imageKeyword to a SAFE, wholesome ENGLISH image search term for "
+              "THIS, following the image rules." % image_keyword)
+    return u
+
+
+def _generic_context(note, deck, kind):
+    n = _merged(note)
+    table = n["contexts"] if kind == "main" else n["contexts_cloze"]
+    return table.get("Default", "")
+
+
+def _generic_main_user(entry, note, word, deck, meaning, scenario, image_keyword, strict, exact_word):
+    u = 'WORD OR PHRASE TO TEACH: "%s". %s' % (word, _fill(_generic_context(note, deck, "main"), language=entry["name"]))
+    u += _hint_lines(meaning, scenario, image_keyword)
+    if strict:
+        u += ' STRICT REQUIREMENT: the "word" field MUST be exactly "%s".' % word
+    if exact_word:
+        u += (' The user confirmed this spelling. Do NOT correct it, even if it looks misspelled: '
+              'teach "%s" exactly as written.' % word)
+    return u
+
+
+def _generic_grammar_system(entry, note, helper):
+    n = _merged(note)
+    text = ('You extract reusable grammar patterns from the given sentences. Return ONLY valid JSON: '
+            '{"grammar_patterns":[],"grammar_patterns_translation":[]}. Up to 5 {language} fragments of 2 to 6 words that '
+            'LITERALLY occur in the {language} sentences, best first: ' + n["ranked"] + '. ' + n["pattern_format"]
+            + ' Never a whole sentence, a sentence cut off with "...", a sentence with a gap, an adjective with an '
+            'intensifier, a bare object of an everyday verb, or an invented textbook example. Empty beats filler. '
+            'grammar_patterns_translation glosses the same entries in the same order, in {helper} only, with no {language} '
+            'word: each gloss is correct, natural {helper}, with its own word order and prepositions.')
+    return _fill(text, language=entry["name"], helper=helper or "English")
+
+
+def _generic_grammar_user(entry, card, helper):
+    name, helper = entry["name"], helper or "English"
+    return ('%s casual: "%s"\n%s formal: "%s"\n%s casual: "%s"\n%s formal: "%s"\n\n'
+            "Extract REAL patterns from these sentences. Return ONLY JSON."
+            % (name, card.get("example_casual", ""), name, card.get("example_formal", ""),
+               helper, card.get("example_casual_en", ""), helper, card.get("example_formal_en", "")))
+
+
+_GENERIC_ARABIC = (
+    'You are an expert translator into Modern Standard Arabic (الفصحى). '
+    'ABSOLUTE RULES: '
+    '(1) ONLY Modern Standard Arabic (Fusha). NEVER any dialect. '
+    '(2) Output must be 100% Arabic letters and Arabic punctuation. NEVER any Latin characters. '
+    '(3) NO diacritics (تشكيل): plain unvocalized Arabic only. '
+    '(4) Use proper hamza, proper ta marbuta (ة not ه), and full grammatical inflection. '
+    '(5) FORBIDDEN dialect words: لازم، دلوقتي، عايز، بدي، هيكون، مافيه، شي، هلق، قبل ما، أتجاوز، مرا، بحين، هيك، زي، كده، أوي. '
+    '(6) REQUIRED MSA equivalents: يجب، الآن، أريد، سيكون، لا يوجد، شيء، حالياً، قبل أن، أتخطى، مرة. '
+    '(7) Style: like an Al Jazeera news anchor or formal literary Arabic. '
+    '(8) Both casual and formal sentences use MSA; they differ only in tone, still 100% Fusha grammar. '
+    '(9) word_translation must MATCH WHAT THE {LANGUAGE} WORD IS. A bare noun -> an Arabic noun phrase. An ADJECTIVE -> an '
+    'Arabic adjective, never the related noun. A verb -> the masdar is fine as a dictionary form. A FULL PHRASE OR '
+    'SENTENCE -> translate the WHOLE thing, never a one-word label naming its topic. Never describe the phrase; '
+    'translate it. '
+    '(10) FORMALITY: Arabic has NO plural-for-politeness convention. A sentence that speaks to ONE person is translated '
+    'with the SINGULAR (لديك، يمكنك، معك), also when it is polite. Formality is carried by register and word choice, and '
+    'by honorifics which are themselves singular (حضرتك، سيادتك), never by switching to أنتم, which reads as addressing a '
+    'group. Use the plural ONLY when the sentence actually addresses several people. '
+    'Return ONLY valid JSON: {"word_translation":"...","casual":"...","formal":"..."}'
+)
+
+
+def _generic_secondary_system(entry, helper):
+    if _is_arabic(helper):
+        return _fill(_GENERIC_ARABIC, LANGUAGE=entry["name"].upper())
+    return ("You are an expert translator into %s. Translate naturally and idiomatically (not word-for-word). No alcohol "
+            "or pork in any example.\n"
+            "word_translation must match what the %s word IS: an adjective stays an adjective (never the related noun), "
+            "and a full phrase or sentence is translated WHOLE, never replaced by a one-word label naming its topic.\n"
+            "FORMALITY: render the formal sentence with the polite form of address %s actually uses, and only if it has "
+            "one. Never impose a politeness pattern on a language that lacks it.\n"
+            'Return ONLY valid JSON: {"word_translation":"...","casual":"...","formal":"..."}'
+            % (helper, entry["name"], helper))
+
+
+def _generic_secondary_user(entry, helper, card, level, primary):
+    name, primary = entry["name"].upper(), (primary or "English").upper()
+    su = ("Translate into %s.\n\n%s WORD: %s\n%s CASUAL: %s\n%s FORMAL: %s\n%s CASUAL: %s\n%s FORMAL: %s\n\n"
+          "Generate word_translation, casual, formal. Return ONLY JSON."
+          % (helper, name, card.get("word", ""), name, card.get("example_casual", ""), name,
+             card.get("example_formal", ""), primary, card.get("example_casual_en", ""), primary,
+             card.get("example_formal_en", "")))
+    if level in ("A1", "A2"):
+        su += " Keep the translation short and simple, matching a beginner."
+    return su
+
+
+def _generic_cloze_system(entry, note):
+    n = _merged(note)
+    names = " | ".join('"%s"' % c for c in n["cloze_case_names"])
+    text = (
+        'You create cloze-deletion companion cards for {language} Anki flashcards.\n\n'
+        'TOP PRIORITY: The generated sentence MUST be 100% grammatically correct and sound COMPLETELY natural, the way a '
+        'native {language} speaker actually speaks. Stilted textbook {language} is UNACCEPTABLE.\n\n'
+        'RULES:\n'
+        '1. NATURAL {LANGUAGE} ABOVE ALL: favor common everyday {language}; reread mentally: would a native speaker say '
+        'this?\n'
+        '2. PRESERVE CONTENT WORDS, NOT WORD ORDER: keep the target nouns, verbs, adjectives and prepositions; you MAY '
+        'rearrange word order, adjust inflection, and add helper words. You may NOT add or remove content words.\n'
+        '3. FIX FRAGMENT INPUTS: embed fragments in a natural complete sentence; the answer matches the final grammatical '
+        'form.\n'
+        '4. CONTEXT SPECIFICITY: only the target fits naturally.\n'
+        '5. CONTENT RESTRICTION: NEVER reference alcohol or pork. Use neutral alternatives (water, juice, coffee, chicken, '
+        'vegetables). Hard rule. Only exception: if the user-requested word itself is one of these, keep it but make the '
+        'rest neutral.\n'
+        '6. ANSWER MUST MATCH SENTENCE EXACTLY: after ANY restructuring, the answer field MUST be a LITERAL substring of '
+        'the sentence (same words, case and spelling). Verify before returning. This is the #1 rule.\n'
+        '7. Classify the input into ONE of the cases below and apply its cloze strategy.\n\n'
+        'CASES:\n' + n["cloze_cases"] + '\n\n'
+        'Return ONLY valid JSON:\n'
+        '{\n'
+        '  "case": ' + names + ',\n'
+        '  "sentence": "Natural {language} sentence with the answer present as plain text (no cloze syntax)",\n'
+        '  "answer": "Exact substring from sentence. Max 3 words per blank (idiom: comma-separated).",\n'
+        '  "translation": "The full sentence in the translation language",\n'
+        '  "grammar_hint": "Short pattern for the back, or empty",\n'
+        '  "idiom_meaning": "For an idiom of more than 4 words: {a_language} paraphrase, or empty"\n'
+        '}\n\n'
+        'CRITICAL: answer MUST appear EXACTLY in sentence, as a STANDALONE word, NEVER inside another word. Short, '
+        'natural sentences.'
+    )
+    return _fill(text, language=entry["name"], LANGUAGE=entry["name"].upper(), a_language=_a(entry["name"]))
+
+
+def _generic_cloze_user(entry, note, word, deck, meaning, level, helper, voice):
+    n = _merged(note)
+    helper = helper or "English"
+    cu = ("Input: %s\nDeck: %s\nMeaning in %s: %s\n%s\n\nClassify and generate a NATURAL %s cloze sentence. Restructure "
+          "if needed." % (word, deck, helper, meaning, _generic_context(note, deck, "cloze"), entry["name"]))
+    cu += n["cloze_levels"].get(level, "")
+    cu += '\n\nWrite "translation" as the FULL sentence translated naturally into %s.' % helper
+    if _is_arabic(helper):
+        cu += " Use Modern Standard Arabic only, without diacritics."
+    if n["variety_line"]:
+        cu += n["variety_line"](voice)
+    return cu
+
+
+def _generic_read_answer(kind, data):
+    keys = _GENERIC_KEYS.get(kind, {})
+    if not isinstance(data, dict):
+        return data
+    return {keys.get(k, k): v for k, v in data.items()}
+
+
+def _read_answer_de(kind, data):
+    return data          # the German prompts already use the card's keys
+
+
+def generic_prompts(code):
+    """The generic set for a registry language, with its NOTE where it has one."""
+    entry, note = languages.get(code), NOTES.get(code, {})
+    return {
+        "main": functools.partial(_generic_main_system, entry, note),
+        "main_user": functools.partial(_generic_main_user, entry, note),
+        "grammar": functools.partial(_generic_grammar_system, entry, note),
+        "grammar_user": functools.partial(_generic_grammar_user, entry),
+        "secondary": functools.partial(_generic_secondary_system, entry),
+        "secondary_user": functools.partial(_generic_secondary_user, entry),
+        "cloze": functools.partial(_generic_cloze_system, entry, note),
+        "cloze_user": functools.partial(_generic_cloze_user, entry, note),
+        "read_answer": _generic_read_answer,
+    }
+
+
+# The same keys for every language: what each call is told, as functions of the card's facts.
+PROMPTS = {
+    "de": {
+        "main": _main_system_de,                     # (level, helper, scenario, voice) -> MAIN system prompt
+        "main_user": _main_user_de,                  # the word, the deck's context and the hints
+        "grammar": _grammar_system_de,               # Native only: the separate pattern call
+        "grammar_user": _grammar_user_de,
+        "secondary": secondary_translation_system,   # (helper) -> the second translation's system prompt
+        "secondary_user": _secondary_user_de,
+        "cloze": _cloze_system_de,
+        "cloze_user": _cloze_user_de,
+        "read_answer": _read_answer_de,              # (kind, answer) -> the answer with the card's keys
+    },
+    "en": generic_prompts("en"),
+}
+
+
+# ── Translation (helper) languages per learning language ─────────────────────────────────────────
+# The common list, plus every learning language that is not on it (German), so each learning language is
+# a translation language for the others, never for itself. German learners get exactly the old list.
+TRANSLATION_LANGS_ALL = COMMON_TRANSLATION_LANGS + [e["name"] for e in languages.LANGUAGES
+                                                    if e["name"] not in COMMON_TRANSLATION_LANGS]
+
+
+def translation_languages(lang):
+    name = languages.get(lang)["name"].lower()
+    return [t for t in TRANSLATION_LANGS_ALL if t.lower() != name]
+
+
+def default_translation_language(lang):
+    """English when the learner may pick it, else none: a learner of English must choose."""
+    return DEFAULT_TRANSLATION_LANG if DEFAULT_TRANSLATION_LANG in translation_languages(lang) else None
+
+
+def main_system(lang, level, helper, scenario=False, voice=""):
+    """The MAIN call's system prompt. German: the level's prompt, the helper language's override, and the
+    loanwords table when the user gave a scenario hint. Generic: one template, see _generic_main_system.
+    voice: the voice reading the learning language (English: it decides US or UK spelling)."""
+    return PROMPTS[lang]["main"](level, helper, bool(scenario), voice)
+
+
+def main_user(lang, word, deck, meaning="", scenario="", image_keyword="", strict=False, exact_word=False):
+    return PROMPTS[lang]["main_user"](word, deck, meaning, scenario, image_keyword, strict, exact_word)
+
+
+def grammar_system(lang, helper=""):
+    return PROMPTS[lang]["grammar"](helper)
+
+
+def grammar_user(lang, card, helper=""):
+    return PROMPTS[lang]["grammar_user"](card, helper)
+
+
+def secondary_system(lang, helper):
+    return PROMPTS[lang]["secondary"](helper)
+
+
+def secondary_user(lang, helper, card, level, primary=""):
+    """primary: the first translation language, which the card's *_en fields hold."""
+    return PROMPTS[lang]["secondary_user"](helper, card, level, primary)
+
+
+def cloze_system(lang):
+    return PROMPTS[lang]["cloze"]()
+
+
+def cloze_user(lang, word, deck, meaning, level, helper, voice=""):
+    """meaning: the word's meaning in the helper language, as the MAIN call gave it."""
+    return PROMPTS[lang]["cloze_user"](word, deck, meaning, level, helper, voice)
+
+
+def read_answer(lang, kind, data):
+    """An AI answer ("main", "grammar" or "cloze") with the card's own keys."""
+    return PROMPTS[lang]["read_answer"](kind, data)

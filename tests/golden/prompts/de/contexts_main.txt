@@ -1,0 +1,24 @@
+## IT
+CONTEXT: Software developer / tech team in Germany, 2026. REAL DENGLISCH IS NORMAL: gemergt, gepusht, gereviewt, deployed; ein Ticket ziehen; im Standup; im Sprint; auf Prod; PR aufmachen; Pipeline; CI läuft durch; on-call. Scenarios: code review, bug fix, merge conflict, Slack-Nachricht, Jira-Ticket, Retro, Debugging. AVOID generic office vocabulary.
+
+## Redewendungen
+CONTEXT: This is a GERMAN IDIOM / REDEWENDUNG. Anchor meaning on NATIVE GERMAN USAGE (Duden/DWDS), never on English-looking component words. Beware false friends. Before translation_en, decide what a native German MEANS, then pick the closest English idiom with the SAME meaning. explanation_de describes the REAL meaning. Both examples put the idiom where the real meaning fits.
+
+## Supermarkt
+CONTEXT: Grocery shopping / cooking in Germany. Stores: REWE, Edeka, Aldi, Lidl, Kaufland, dm. Vocabulary: Pfand, Flaschen zurückgeben, Kassenzettel, an der Kasse, Bio, Angebot, reduziert, Obst- und Gemüseabteilung, Bäckerei, Tiefkühlregal. Actions: einkaufen, kochen, aufwärmen, braten, einfrieren.
+
+## NVV
+CONTEXT: German Nomen-Verb-Verbindung. Professional register: meeting, decision, project, email, Retrospektive. CRITICAL: do NOT replace the NVV with a single verb. The NVV is the learning target and must appear in both examples.
+
+## Verben
+CONTEXT: German everyday verb. (1) If past tense, casual uses Perfekt (ich hab gemacht), not Präteritum. (2) Separable verbs show separation. (3) Prefer one example with a modal. (4) Reflexive verbs show the pronoun.
+
+## Alltagsdeutsch
+CONTEXT: Textbook German vs real street German. The CONTRAST is the purpose: formal uses the Schuldeutsch word; casual uses what Germans actually say (erhalten→kriegen, verstehen→checken, funktionieren→klappen, sehr→mega, möchte→will). Formal sounds textbook-correct; casual sounds like WhatsApp.
+
+## Behörden
+CONTEXT: German bureaucracy / Behördengang. Real Behörden scenarios: Bürgeramt (Anmeldung, Ummeldung), Krankenkasse, Ausländerbehörde, Arbeitsamt, Finanzamt, Steuererklärung, Aufenthaltstitel, Wohnberechtigungsschein, einen Termin vereinbaren, verschieben oder absagen. Formal example: a polite in-person or written interaction with an official, full Sie-Form, precise vocabulary. Casual example: a friend giving advice about a Behördengang ("Geh früh hin", "Nimm dir einen Termin"). Both examples must reflect real German bureaucratic reality, not generic office vocabulary.
+
+## Default
+CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause.
+

@@ -1,0 +1,101 @@
+# Golden card "en_irregular_verb_a2_german" (tests/card_scenarios.py)
+# English at A2 with German as the translation language: an irregular verb on the word line, patterns in value order, and a beginner letter hint.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: buy
+deck: Tarkib English | level: A2 | cloze: on
+settings: {"defaults": {"translation_language": "German"}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: en/main_A2 [German, en-US-JennyNeural]
+user:
+WORD OR PHRASE TO TEACH: "buy". CONTEXT: Important everyday English. Formal: office, appointment or email scenario. Casual: chat with friends or family (messaging tone). Prefer situations people meet every week: work, shopping, health, travel, home.
+
+== AI call 2: cloze (temperature 0.3, max_tokens 1600)
+system: en/cloze
+user:
+Input: buy
+Deck: Tarkib English
+Meaning in German: kaufen
+
+
+Classify and generate a NATURAL English cloze sentence. Restructure if needed.
+
+LEVEL A2: prefer case "single_word"; a short sentence (present or past simple), common words, at most one because, when or if clause; no idioms.
+
+Write "translation" as the FULL sentence translated naturally into German.
+
+Use American English spelling and words.
+
+== picture search
+keyword: person buying shoes in a shop | deck: Tarkib English | source: auto -> pexels_person_buying_shoes_in_a_shop.jpg
+
+== read aloud
+1. edge en-US-JennyNeural: buy. ... I bought new shoes yesterday.. ... I would like to buy a present for my sister.
+2. edge en-US-JennyNeural: We. Bread at the market.
+3. edge en-US-JennyNeural: We bought bread at the market.
+
+== main note in deck "Tarkib English"
+tags: Shopping Level::A2
+-- Front
+🛍️ buy.
+-- Back
+<div class="card-translation"><span class="level-chip lvl-a2">A2</span> 🛍️ kaufen</div>
+<div class="morph">buy · bought · bought</div>
+<div class="card-image"><img src="pexels_person_buying_shoes_in_a_shop.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">👟</span>I bought new shoes yesterday.</div>
+  <div class="sentence formal"><span class="emoji">🎁</span>I would like to buy a present for my sister.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">buy something for someone</span> <span class="pattern-badge">would like to + verb</span></div>
+<div class="explanation">👉 “To buy something means to pay money to get it.”</div>
+<div class="section">
+  <div class="section-label">🇩🇪 Deutsch</div>
+  <div class="sentence casual"><span class="emoji">👟</span>Ich habe gestern neue Schuhe gekauft.</div>
+  <div class="sentence formal"><span class="emoji">🎁</span>Ich möchte ein Geschenk für meine Schwester kaufen.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 German patterns</div><span class="pattern-badge">etwas für jemanden kaufen</span> <span class="pattern-badge">möchte + Infinitiv</span></div><br>[sound:tts_en_buy_517e1eb428.mp3]
+
+== cloze note in deck "Tarkib English::Cloze"
+tags: cloze tarkib_english case_single_word Level::A2
+-- Text
+We {{c1::bought::bou...}} bread at the market.
+-- Translation
+Wir haben auf dem Markt Brot gekauft.
+-- Image
+<img src="pexels_person_buying_shoes_in_a_shop.jpg">
+-- FrontAudio
+[sound:cloze_front_We_bought_bread_at_the_m_9830d603d8.mp3]
+-- BackAudio
+[sound:cloze_back_We_bought_bread_at_the_m_4c46a4ca1c.mp3]
+-- GrammarHint
+buy, bought, bought
+-- SourceWord
+buy
+-- DeckOrigin
+Tarkib English
+
+== media files
+cloze_back_We_bought_bread_at_the_m_4c46a4ca1c.mp3 <- audio from edge
+cloze_front_We_bought_bread_at_the_m_9830d603d8.mp3 <- audio from edge
+pexels_person_buying_shoes_in_a_shop.jpg <- picture
+tts_en_buy_517e1eb428.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "kaufen",
+  "word": "buy"
+}

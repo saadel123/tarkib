@@ -1,0 +1,90 @@
+# Golden card "missing_fields_b1" (tests/card_scenarios.py)
+# A weak model that leaves fields out (no formal sentence, no explanation, no emojis, no word line): what the card shows then.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: die Küche
+deck: Tarkib | level: B1 | cloze: on
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: de/main_B1
+user:
+WORD OR PHRASE TO TEACH: "die Küche". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause.
+
+== AI call 2: cloze (temperature 0.3, max_tokens 1600)
+system: de/cloze
+user:
+Input: die Küche
+Deck: Tarkib
+English meaning: kitchen
+
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+LEVEL B1: use case "single_word", "noun_prep" or "verb_prep_article"; a medium everyday sentence with common words.
+
+== picture search
+keyword: modern kitchen | deck: Tarkib | source: auto -> pexels_modern_kitchen.jpg
+
+== read aloud
+1. edge de-DE-KatjaNeural: die Küche. ... Die Küche ist ganz neu.. ...
+2. edge de-DE-KatjaNeural: Wir kochen heute in. .
+3. edge de-DE-KatjaNeural: Wir kochen heute in der Küche.
+
+== main note in deck "Tarkib"
+tags: Haushalt Level::B1
+-- Front
+die Küche.
+-- Back
+<div class="card-translation"><span class="level-chip lvl-b1">B1</span>  kitchen</div>
+<div class="card-image"><img src="pexels_modern_kitchen.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇩🇪 Deutsch</div>
+  <div class="sentence casual"><span class="emoji">💬</span>Die Küche ist ganz neu.</div>
+</div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">💬</span>The kitchen is brand new.</div>
+</div><br>[sound:tts_de_die_Küche_cefd5aa0c9.mp3]
+
+== cloze note in deck "Tarkib::Cloze"
+tags: cloze tarkib case_single_word Level::B1
+-- Text
+Wir kochen heute in {{c1::der Küche::d... K...}}.
+-- Translation
+We are cooking in the kitchen today.
+-- Image
+<img src="pexels_modern_kitchen.jpg">
+-- FrontAudio
+[sound:cloze_front_Wir_kochen_heute_in_der_b1d5e2482c.mp3]
+-- BackAudio
+[sound:cloze_back_Wir_kochen_heute_in_der_300e5e4825.mp3]
+-- GrammarHint
+
+-- SourceWord
+die Küche
+-- DeckOrigin
+Tarkib
+
+== media files
+cloze_back_Wir_kochen_heute_in_der_300e5e4825.mp3 <- audio from edge
+cloze_front_Wir_kochen_heute_in_der_b1d5e2482c.mp3 <- audio from edge
+pexels_modern_kitchen.jpg <- picture
+tts_de_die_Küche_cefd5aa0c9.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "kitchen",
+  "word": "die Küche"
+}

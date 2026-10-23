@@ -1,0 +1,1 @@
+ # TRANSLATION LANGUAGE = French (NOT English): write grammar_patterns_en in French instead of English: the same entries in the same order, natural French, with no German word, no German grammar term and no case marker. Keep the JSON key names exactly as given.

@@ -1,0 +1,118 @@
+# Golden card "formal_c1_french" (tests/card_scenarios.py)
+# A formal word at C1: casual alternatives, the register hint on both sides, the Formell tag added by the code, a whole sentence dropped from the patterns, and French as a second translation with its own voice.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: gegebenenfalls
+deck: Tarkib | level: C1 | cloze: on
+options: {"secondary_language": "French"}
+settings: {"voices": {"secondary": "fr-FR-DeniseNeural"}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: de/main_C1
+user:
+WORD OR PHRASE TO TEACH: "gegebenenfalls". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause.
+
+== AI call 2: secondary (temperature 0.2, max_tokens 600)
+system: de/secondary_French
+user:
+Translate into French.
+
+GERMAN WORD: gegebenenfalls
+GERMAN CASUAL: Falls nötig, schick ich dir die Sachen nochmal.
+GERMAN FORMAL: Gegebenenfalls senden wir Ihnen die Unterlagen noch einmal zu.
+ENGLISH CASUAL: If need be, I'll send you the stuff again.
+ENGLISH FORMAL: If necessary, we will send you the documents again.
+
+Generate word_translation, casual, formal. Return ONLY JSON.
+
+== AI call 3: cloze (temperature 0.3, max_tokens 1600)
+system: de/cloze
+user:
+Input: gegebenenfalls
+Deck: Tarkib
+English meaning: if necessary
+
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+== picture search
+keyword: documents in an envelope | deck: Tarkib | source: auto -> pexels_documents_in_an_envelope.jpg
+
+== read aloud
+1. edge de-DE-KatjaNeural: gegebenenfalls. ... Falls nötig, schick ich dir die Sachen nochmal.. ... Gegebenenfalls senden wir Ihnen die Unterlagen noch einmal zu.
+2. edge fr-FR-DeniseNeural: le cas échéant ... Si besoin, je t'envoie les affaires encore une fois. ... Le cas échéant, nous vous renverrons les documents.
+3. edge de-DE-KatjaNeural: Rufen wir Sie zurück.
+4. edge de-DE-KatjaNeural: Gegebenenfalls rufen wir Sie zurück.
+
+== main note in deck "Tarkib"
+tags: Arbeit Formell Level::C1
+-- Front
+📄 gegebenenfalls.
+-- Back
+<div class="card-translation"><span class="level-chip lvl-c1">C1</span> 📄 if necessary</div>
+<div class="card-image"><img src="pexels_documents_in_an_envelope.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇩🇪 Deutsch</div>
+<div class="register-hint"><span class="formal-mark">„gegebenenfalls" (Formell)</span> <span class="arrow">→</span> <span class="casual-alt">Im Alltag:</span> <span class="alt-list">falls nötig · wenn es sein muss</span> <span class="casual-alt">(Casual)</span></div>
+  <div class="sentence casual"><span class="emoji">💬</span>Falls nötig, schick ich dir die Sachen nochmal.</div>
+  <div class="sentence formal"><span class="emoji">📨</span>Gegebenenfalls senden wir Ihnen die Unterlagen noch einmal zu.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">jemandem etwas zusenden (+Dat, +Akk)</span></div>
+<div class="explanation">👉 „Das Wort gehört zur Behörden- und Geschäftssprache, im Alltag sagt man lieber falls nötig."</div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+<div class="register-hint"><span class="formal-mark">"if necessary" (Formal)</span> <span class="arrow">→</span> <span class="casual-alt">Casual:</span> <span class="alt-list">if need be · if we have to</span></div>
+  <div class="sentence casual"><span class="emoji">💬</span>If need be, I'll send you the stuff again.</div>
+  <div class="sentence formal"><span class="emoji">📨</span>If necessary, we will send you the documents again.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 English patterns</div><span class="pattern-badge">to send something to someone</span></div>
+<div class="section">
+  <div class="section-label">French</div>
+  <div class="sentence casual"><span class="emoji">💬</span>Si besoin, je t'envoie les affaires encore une fois.</div>
+  <div class="sentence formal"><span class="emoji">📨</span>Le cas échéant, nous vous renverrons les documents.</div>
+</div>
+<div class="secondary-word" style="direction:ltr;">📄 le cas échéant</div><br>[sound:tts_de_gegebenenfalls_7d4b96801f.mp3][sound:tts_sec_gegebenenfalls_472ce5ccff.mp3]
+
+== cloze note in deck "Tarkib::Cloze"
+tags: cloze tarkib case_single_word Level::C1
+-- Text
+{{c1::Gegebenenfalls::Geg...}} rufen wir Sie zurück.
+-- Translation
+If necessary, we will call you back.
+-- Image
+<img src="pexels_documents_in_an_envelope.jpg">
+-- FrontAudio
+[sound:cloze_front_Gegebenenfalls_rufen_wir_80e7dbe848.mp3]
+-- BackAudio
+[sound:cloze_back_Gegebenenfalls_rufen_wir_66bf40cc50.mp3]
+-- GrammarHint
+
+-- SourceWord
+gegebenenfalls
+-- DeckOrigin
+Tarkib
+
+== media files
+cloze_back_Gegebenenfalls_rufen_wir_66bf40cc50.mp3 <- audio from edge
+cloze_front_Gegebenenfalls_rufen_wir_80e7dbe848.mp3 <- audio from edge
+pexels_documents_in_an_envelope.jpg <- picture
+tts_de_gegebenenfalls_7d4b96801f.mp3 <- audio from edge
+tts_sec_gegebenenfalls_472ce5ccff.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 4,
+    "total": 4,
+    "used": {
+      "edge": 4
+    }
+  },
+  "translation_en": "if necessary",
+  "word": "gegebenenfalls"
+}

@@ -1,0 +1,101 @@
+# Golden card "not_german_overruled_b1" (tests/card_scenarios.py)
+# The first call says the word is not German, the strict second call disagrees: the second card is used.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: das Handy
+deck: Tarkib | level: B1 | cloze: on
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: de/main_B1
+user:
+WORD OR PHRASE TO TEACH: "das Handy". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause.
+
+== AI call 2: main (temperature 0.4, max_tokens 3000)
+system: de/main_B1
+user:
+WORD OR PHRASE TO TEACH: "das Handy". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause. STRICT REQUIREMENT: the "word" field MUST be exactly "das Handy" (or with proper article).
+
+== AI call 3: cloze (temperature 0.3, max_tokens 1600)
+system: de/cloze
+user:
+Input: das Handy
+Deck: Tarkib
+English meaning: mobile phone
+
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+LEVEL B1: use case "single_word", "noun_prep" or "verb_prep_article"; a medium everyday sentence with common words.
+
+== picture search
+keyword: smartphone on a desk | deck: Tarkib | source: auto -> pexels_smartphone_on_a_desk.jpg
+
+== read aloud
+1. edge de-DE-KatjaNeural: das Handy. ... Mein Handy ist schon wieder leer.. ... Bitte schalten Sie Ihr Handy aus.
+2. edge de-DE-KatjaNeural: Ist leer.
+3. edge de-DE-KatjaNeural: Mein Handy ist leer.
+
+== main note in deck "Tarkib"
+tags: Technik Level::B1
+-- Front
+📱 das Handy.
+-- Back
+<div class="card-translation"><span class="level-chip lvl-b1">B1</span> 📱 mobile phone</div>
+<div class="morph"><span class="g-das">das</span> · Pl. die Handys · Gen. des Handys</div>
+<div class="card-image"><img src="pexels_smartphone_on_a_desk.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇩🇪 Deutsch</div>
+  <div class="sentence casual"><span class="emoji">🔋</span>Mein Handy ist schon wieder leer.</div>
+  <div class="sentence formal"><span class="emoji">🔕</span>Bitte schalten Sie Ihr Handy aus.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">etwas ausschalten (+Akk)</span></div>
+<div class="explanation">👉 „Ein Handy ist ein kleines Telefon für unterwegs."</div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">🔋</span>My phone is dead again.</div>
+  <div class="sentence formal"><span class="emoji">🔕</span>Please switch off your mobile phone.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 English patterns</div><span class="pattern-badge">to switch something off</span></div><br>[sound:tts_de_das_Handy_4f744aa2eb.mp3]
+
+== cloze note in deck "Tarkib::Cloze"
+tags: cloze tarkib case_single_word Level::B1
+-- Text
+{{c1::Mein Handy::M... H...}} ist leer.
+-- Translation
+My phone is dead.
+-- Image
+<img src="pexels_smartphone_on_a_desk.jpg">
+-- FrontAudio
+[sound:cloze_front_Mein_Handy_ist_leer_004179fa74.mp3]
+-- BackAudio
+[sound:cloze_back_Mein_Handy_ist_leer_85efa17649.mp3]
+-- GrammarHint
+
+-- SourceWord
+das Handy
+-- DeckOrigin
+Tarkib
+
+== media files
+cloze_back_Mein_Handy_ist_leer_85efa17649.mp3 <- audio from edge
+cloze_front_Mein_Handy_ist_leer_004179fa74.mp3 <- audio from edge
+pexels_smartphone_on_a_desk.jpg <- picture
+tts_de_das_Handy_4f744aa2eb.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "mobile phone",
+  "word": "das Handy"
+}

@@ -1,0 +1,78 @@
+# Golden card "leak_kept_b2" (tests/card_scenarios.py)
+# The English word survives the retry: the first card is kept and the warning goes to the dialog. The cloze answer is not in its sentence, so there is no cloze card.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: unterbrechen
+deck: Tarkib | level: B2 | cloze: on
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: de/main_B2
+user:
+WORD OR PHRASE TO TEACH: "unterbrechen". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause.
+
+== AI call 2: main (temperature 0.4, max_tokens 3000)
+system: de/main_B2
+user:
+WORD OR PHRASE TO TEACH: "unterbrechen". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause. STRICT REQUIREMENT: the "word" field MUST be exactly "unterbrechen" (or with proper article).
+
+== AI call 3: cloze (temperature 0.3, max_tokens 1600)
+system: de/cloze
+user:
+Input: unterbrechen
+Deck: Tarkib
+English meaning: to interrupt
+
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+== picture search
+keyword: raised hand in a meeting | deck: Tarkib | source: auto -> pexels_raised_hand_in_a_meeting.jpg
+
+== read aloud
+1. edge de-DE-KatjaNeural: unterbrechen. ... Er interrupts mich ständig, wenn ich rede.. ... Darf ich Sie kurz unterbrechen?
+
+== main note in deck "Tarkib"
+tags: Kommunikation Level::B2
+-- Front
+✋ unterbrechen.
+-- Back
+<div class="card-translation"><span class="level-chip lvl-b2">B2</span> ✋ to interrupt</div>
+<div class="morph">unterbricht · unterbrach · hat unterbrochen</div>
+<div class="card-image"><img src="pexels_raised_hand_in_a_meeting.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇩🇪 Deutsch</div>
+  <div class="sentence casual"><span class="emoji">😤</span>Er interrupts mich ständig, wenn ich rede.</div>
+  <div class="sentence formal"><span class="emoji">🙋</span>Darf ich Sie kurz unterbrechen?</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">jemanden unterbrechen (+Akk)</span></div>
+<div class="explanation">👉 „Wenn man unterbricht, stoppt man ein Gespräch für kurze Zeit."</div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">😤</span>He keeps interrupting me when I talk.</div>
+  <div class="sentence formal"><span class="emoji">🙋</span>May I interrupt you for a moment?</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 English patterns</div><span class="pattern-badge">to interrupt someone</span></div><br>[sound:tts_de_unterbrechen_fa66cb04da.mp3]
+
+== media files
+pexels_raised_hand_in_a_meeting.jpg <- picture
+tts_de_unterbrechen_fa66cb04da.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 1,
+    "total": 1,
+    "used": {
+      "edge": 1
+    }
+  },
+  "cloze_warning": "the cloze answer was not found in its sentence",
+  "english_leak": "interrupts",
+  "translation_en": "to interrupt",
+  "word": "unterbrechen"
+}

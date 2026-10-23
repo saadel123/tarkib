@@ -1,0 +1,102 @@
+# Golden card "typo_b1" (tests/card_scenarios.py)
+# A typo the AI fixed: the card is kept and the dialog will ask Did you mean. The translation language in the saved settings is not one Tarkib knows, so English is used with a warning.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: benachrichtigong
+deck: Tarkib | level: B1 | cloze: on
+settings: {"defaults": {"translation_language": "Chihasa"}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: de/main_B1
+user:
+WORD OR PHRASE TO TEACH: "benachrichtigong". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause.
+
+== AI call 2: cloze (temperature 0.3, max_tokens 1600)
+system: de/cloze
+user:
+Input: benachrichtigong
+Deck: Tarkib
+English meaning: notification
+
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+LEVEL B1: use case "single_word", "noun_prep" or "verb_prep_article"; a medium everyday sentence with common words.
+
+== picture search
+keyword: phone notification on a screen | deck: Tarkib | source: auto -> pexels_phone_notification_on_a_screen.jpg
+
+== read aloud
+1. edge de-DE-KatjaNeural: die Benachrichtigung. ... Hast du meine Benachrichtigung bekommen?. ... Sie erhalten eine Benachrichtigung per E-Mail.
+2. edge de-DE-KatjaNeural: Ich habe keine. Bekommen.
+3. edge de-DE-KatjaNeural: Ich habe keine Benachrichtigung bekommen.
+
+== main note in deck "Tarkib"
+tags: Technik Level::B1
+-- Front
+🔔 die Benachrichtigung.
+-- Back
+<div class="card-translation"><span class="level-chip lvl-b1">B1</span> 🔔 notification</div>
+<div class="morph"><span class="g-die">die</span> · Pl. die Benachrichtigungen · Gen. der Benachrichtigung</div>
+<div class="card-image"><img src="pexels_phone_notification_on_a_screen.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇩🇪 Deutsch</div>
+  <div class="sentence casual"><span class="emoji">📱</span>Hast du meine Benachrichtigung bekommen?</div>
+  <div class="sentence formal"><span class="emoji">📧</span>Sie erhalten eine Benachrichtigung per E-Mail.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">eine Benachrichtigung bekommen</span></div>
+<div class="explanation">👉 „Eine Benachrichtigung ist eine kurze Nachricht über etwas Neues."</div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">📱</span>Did you get my notification?</div>
+  <div class="sentence formal"><span class="emoji">📧</span>You will receive a notification by email.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 English patterns</div><span class="pattern-badge">to get a notification</span></div><br>[sound:tts_de_die_Benachrichtigung_b38fe6af45.mp3]
+
+== cloze note in deck "Tarkib::Cloze"
+tags: cloze tarkib case_single_word Level::B1
+-- Text
+Ich habe keine {{c1::Benachrichtigung::Ben...}} bekommen.
+-- Translation
+I didn't get a notification.
+-- Image
+<img src="pexels_phone_notification_on_a_screen.jpg">
+-- FrontAudio
+[sound:cloze_front_Ich_habe_keine_Benachric_c09c1fbe88.mp3]
+-- BackAudio
+[sound:cloze_back_Ich_habe_keine_Benachric_0aabad48b9.mp3]
+-- GrammarHint
+
+-- SourceWord
+die Benachrichtigung
+-- DeckOrigin
+Tarkib
+
+== media files
+cloze_back_Ich_habe_keine_Benachric_0aabad48b9.mp3 <- audio from edge
+cloze_front_Ich_habe_keine_Benachric_c09c1fbe88.mp3 <- audio from edge
+pexels_phone_notification_on_a_screen.jpg <- picture
+tts_de_die_Benachrichtigung_b38fe6af45.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "language_warning": "translation language \"Chihasa\" is not in the supported list, English was used",
+  "translation_en": "notification",
+  "typo": {
+    "input": "benachrichtigong",
+    "word": "die Benachrichtigung"
+  },
+  "word": "die Benachrichtigung"
+}

@@ -1,0 +1,93 @@
+# Golden card "phrase_a2" (tests/card_scenarios.py)
+# A whole phrase at A2: the AI restates the phrase as its own pattern (dropped, so no box) and the cloze blanks the phrase with a hint for each word.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: Wie spät ist es?
+deck: Tarkib | level: A2 | cloze: on
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: de/main_A2
+user:
+WORD OR PHRASE TO TEACH: "Wie spät ist es?". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause.
+
+== AI call 2: cloze (temperature 0.3, max_tokens 1600)
+system: de/cloze
+user:
+Input: Wie spät ist es?
+Deck: Tarkib
+English meaning: What time is it?
+
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+LEVEL A2: prefer case "single_word"; a short sentence (present or Perfekt), common words, at most one weil/dass/wenn clause; no idioms.
+
+== picture search
+keyword: wall clock | deck: Tarkib | source: auto -> pexels_wall_clock.jpg
+
+== read aloud
+1. edge de-DE-KatjaNeural: Wie spät ist es?. ... Max, wie spät ist es?. ... Entschuldigung, wie spät ist es?
+2. edge de-DE-KatjaNeural: Entschuldigung,. ?
+3. edge de-DE-KatjaNeural: Entschuldigung, wie spät ist es?
+
+== main note in deck "Tarkib"
+tags: Zeit Kommunikation Level::A2
+-- Front
+⏰ Wie spät ist es?
+-- Back
+<div class="card-translation"><span class="level-chip lvl-a2">A2</span> ⏰ What time is it?</div>
+<div class="card-image"><img src="pexels_wall_clock.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇩🇪 Deutsch</div>
+  <div class="sentence casual"><span class="emoji">💬</span>Max, wie spät ist es?</div>
+  <div class="sentence formal"><span class="emoji">🙋</span>Entschuldigung, wie spät ist es?</div>
+</div>
+<div class="explanation">👉 „So fragt man nach der Uhrzeit."</div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">💬</span>Max, what time is it?</div>
+  <div class="sentence formal"><span class="emoji">🙋</span>Excuse me, what time is it?</div>
+</div><br>[sound:tts_de_Wie_spät_ist_es_fac6bc7964.mp3]
+
+== cloze note in deck "Tarkib::Cloze"
+tags: cloze tarkib case_long_phrase Level::A2
+-- Text
+Entschuldigung, {{c1::wie spät ist es::w... sp... i... e...}}?
+-- Translation
+Excuse me, what time is it?
+-- Image
+<img src="pexels_wall_clock.jpg">
+-- FrontAudio
+[sound:cloze_front_Entschuldigung__wie_spät_99191a9ddc.mp3]
+-- BackAudio
+[sound:cloze_back_Entschuldigung__wie_spät_e544a7cf5d.mp3]
+-- GrammarHint
+
+-- SourceWord
+Wie spät ist es?
+-- DeckOrigin
+Tarkib
+
+== media files
+cloze_back_Entschuldigung__wie_spät_e544a7cf5d.mp3 <- audio from edge
+cloze_front_Entschuldigung__wie_spät_99191a9ddc.mp3 <- audio from edge
+pexels_wall_clock.jpg <- picture
+tts_de_Wie_spät_ist_es_fac6bc7964.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "What time is it?",
+  "word": "Wie spät ist es?"
+}
