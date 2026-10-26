@@ -1,5 +1,5 @@
 # Golden card "en_formal_native" (tests/card_scenarios.py)
-# A formal word at Native: casual alternatives on both sides, the Formal tag (not doubled), the separate grammar call, and the Arabic translation read aloud too.
+# A formal word at Native: casual alternatives on both sides, the Formal tag (not doubled), the main call's own pattern kept so no separate grammar call, and the Arabic translation read aloud too.
 # After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
 
 input: nevertheless
@@ -11,17 +11,7 @@ system: en/main_Native [Arabic, en-US-JennyNeural]
 user:
 WORD OR PHRASE TO TEACH: "nevertheless". CONTEXT: Important everyday English. Formal: office, appointment or email scenario. Casual: chat with friends or family (messaging tone). Prefer situations people meet every week: work, shopping, health, travel, home.
 
-== AI call 2: grammar (temperature 0.2, max_tokens 2000)
-system: en/grammar [Arabic]
-user:
-English casual: "It's a bit risky, but we're still gonna do it."
-English formal: "The plan is risky, but we will nevertheless go ahead with it."
-Arabic casual: "الأمر فيه بعض المخاطرة، لكننا سنفعله على أي حال."
-Arabic formal: "الخطة محفوفة بالمخاطر، لكننا سنمضي فيها مع ذلك."
-
-Extract REAL patterns from these sentences. Return ONLY JSON.
-
-== AI call 3: cloze (temperature 0.3, max_tokens 1600)
+== AI call 2: cloze (temperature 0.3, max_tokens 1600)
 system: en/cloze
 user:
 Input: nevertheless

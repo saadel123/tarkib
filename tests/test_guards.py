@@ -115,6 +115,26 @@ class PatternInText(unittest.TestCase):
         self.assertFalse(g._self_referential("Zeit haben", "Zeit"))
 
 
+class ClozeFixGerman(unittest.TestCase):
+    """German's cloze fix: the doubled determiner goes, then an answer in small letters takes the sentence's capital
+    (before, "morgen" was not found in "Morgen gehe ich einkaufen." and the cloze card was lost)."""
+
+    def test_small_letters_take_the_sentences_capital(self):
+        self.assertEqual(g._fix_german_cloze("Morgen gehe ich einkaufen.", "morgen"),
+                         ("Morgen gehe ich einkaufen.", "Morgen"))
+        self.assertEqual(g._fix_german_cloze("Kommst du heute mit?", "kommst"), ("Kommst du heute mit?", "Kommst"))
+
+    def test_the_doubled_determiner_still_goes(self):
+        self.assertEqual(g._fix_german_cloze("Ich suche meine die Brille.", "die Brille"),
+                         ("Ich suche meine Brille.", "Brille"))
+
+    def test_an_answer_found_as_written_or_inside_a_word_stays(self):
+        self.assertEqual(g._fix_german_cloze("Ich warte auf den Bus.", "auf den"), ("Ich warte auf den Bus.", "auf den"))
+        self.assertEqual(g._fix_german_cloze("Damit bin ich einverstanden.", "mit"),
+                         ("Damit bin ich einverstanden.", "mit"))
+        self.assertEqual(g.RULES["de"]["cloze_fix"], g._fix_german_cloze)
+
+
 class ImageKeyword(unittest.TestCase):
     def test_denied_scene_is_replaced_by_the_word(self):
         out = g._clean_image_keyword("friends drinking beer in a bar", "die Freundschaft", "friendship")
@@ -229,6 +249,25 @@ class PatternRank(unittest.TestCase):
         g._validate_grammar_patterns(card)
         self.assertEqual(card["grammar_patterns"], ["die Benachrichtigung bekommen", "die Benachrichtigung erhalten"])
         self.assertEqual(card["grammar_patterns_en"], ["got the notification", "find the notification"])
+
+    def test_translated_patterns_lose_case_markers(self):
+        # Seen live: "warten auf (+Akk)" came back with the English
+        # pattern "wait for (+Acc)". The case stays on the German side only.
+        card = {"word": "warten auf",
+                "example_casual": "Ich warte auf dich, bis du an der leeren Bushaltestelle ankommst.",
+                "example_formal": "Ich warte auf Ihre Rückmeldung bezüglich des Termins.",
+                "grammar_patterns": ["warten auf (+Akk)"], "grammar_patterns_en": ["wait for (+Acc)"]}
+        g._validate_grammar_patterns(card)
+        self.assertEqual(card["grammar_patterns"], ["warten auf (+Akk)"])
+        self.assertEqual(card["grammar_patterns_en"], ["wait for"])
+        for raw, clean in (("to help someone (+Dative)", "to help someone"), ("to give (+Akk, +Dat)", "to give"),
+                           ("Angst haben vor (+Dat.)", "Angst haben vor"), ("to wait for something", "to wait for something"),
+                           ("تنتظر (+Akk)", "تنتظر"), ("for (a period of time)", "for (a period of time)"),
+                           # frame notation, seen live with "das Fahrrad": "nehmen + zu + Dativ" became "take + to + dative"
+                           ("take + to + dative", "take + to"), ("help + Dative case", "help"),
+                           ("give + dat. + acc.", "give"), ("verb + dative object", "verb + dative object"),
+                           ("have + past participle", "have + past participle")):
+            self.assertEqual(g._without_case_markers(raw), clean)
 
 
 class ReviewProposedTests(unittest.TestCase):
@@ -354,6 +393,24 @@ class ReviewProposedTests(unittest.TestCase):
                          {"explanation_de": 'Man sagt "Guten Tag" dazu.', "n": 1})
         self.assertEqual(providers.repair_json('{"a": 1}'), '{"a": 1}')
         self.assertEqual(providers.repair_json('{"a": '), '{"a": ')
+
+    def test_parse_json_turns_unicode_hyphens_into_a_plain_hyphen(self):
+        # A test run: "rendez‑vous" with U+2011 looked right on the card but was not found by Anki's search.
+        got = providers.parse_json('{"a": "Pourriez‑vous fixer un rendez‐vous ?", '
+                                   '"b": ["Verb\\u2011Zweit\\u2011Satz", {"c": "Ver­abredung"}], "n": 2}')
+        self.assertEqual(got, {"a": "Pourriez-vous fixer un rendez-vous ?",
+                               "b": ["Verb-Zweit-Satz", {"c": "Verabredung"}], "n": 2})
+
+    def test_a_word_quoted_in_the_explanation_takes_the_inner_quotes(self):
+        # A test run: the card showed „„obwohl“ leitet einen Gegensatz ein." (doubled mark, plain closing quote)
+        self.assertEqual(g._nest_quotes("„obwohl“ leitet einen Gegensatz ein.", ("‚", "‘")),
+                         "‚obwohl‘ leitet einen Gegensatz ein.")
+        self.assertEqual(g._nest_quotes('"chillen" ist umgangssprachlich.', ("‚", "‘")), "‚chillen‘ ist umgangssprachlich.")
+        self.assertEqual(g._nest_quotes("“Give up” means to stop trying.", ("‘", "’")), "‘Give up’ means to stop trying.")
+        self.assertEqual(g._nest_quotes("«Echar de menos» es sentir tristeza.", ("“", "”")),
+                         "“Echar de menos” es sentir tristeza.")
+        for same in ("You don't give up.", 'Ein " allein bleibt.', "Kein Zitat hier.", ""):
+            self.assertEqual(g._nest_quotes(same, ("‚", "‘")), same)
 
     def test_parse_json_raises_a_provider_error_the_ui_can_explain(self):
         for bad in ("", None, "no json here at all", "[1, 2, 3]", '"just a string"'):

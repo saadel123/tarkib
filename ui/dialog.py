@@ -207,6 +207,13 @@ class AddCardDialog(QDialog):
         layout.addWidget(self.secondary_check)
         self._refresh_secondary()
 
+        # "Use my style": the wishes from Settings, Cards ("Your style"), for every language. Shown only while
+        # there are some; ticked when they first show up, so one card can skip them (see _refresh_style).
+        self._style_text = ""
+        self.style_check = QCheckBox("Use my style")
+        layout.addWidget(self.style_check)
+        self._refresh_style()
+
         # Height the content does not need (the user dragged the window taller) collects here,
         # above the buttons, like in Anki's own dialogs. Without it, it went to the title label,
         # the one widget allowed to grow, which then floated in an empty band.
@@ -313,7 +320,7 @@ class AddCardDialog(QDialog):
             self.banner.hide()
         img = self.cfg.get("image", {}) or {}
         if not any((img.get(k) or "").strip() for k in ("pexels_key", "pixabay_key", "serper_key")):
-            self.info_banner.setText("ℹ No image key yet, so many cards will have no photo. Add a free Pexels or Pixabay key in Settings to get photos.")
+            self.info_banner.setText("ℹ No image key yet, so many cards will have no photo. Add a free Pixabay key in Settings to get photos.")
             self.info_banner.show()
         else:
             self.info_banner.hide()
@@ -512,8 +519,27 @@ class AddCardDialog(QDialog):
         level_now = self._resolve_level(self.deck_combo.currentText().strip())
         if level_now != level_before:
             self._set_level(level_now)
+        self._refresh_style()  # the style wishes may have changed in Settings, Cards
         self._fit_height()     # banners and rows may have gone: give the freed height back
         self.word_edit.setFocus()
+
+    def _refresh_style(self):
+        """Show "Use my style" while Settings, Cards holds style wishes, with them as its tooltip. New or
+        changed wishes tick it; a box the user unticked stays unticked while the wishes stay the same."""
+        text = prompts.clean_style((self.cfg.get("defaults") or {}).get("card_style"))
+        same = bool(text) and text == self._style_text and not self.style_check.isHidden()
+        self._style_text = text
+        if text:
+            self.style_check.setToolTip(text)
+            if not same:
+                self.style_check.setChecked(True)
+            self.style_check.show()
+        else:
+            self.style_check.setChecked(False)
+            self.style_check.hide()
+
+    def _style_for_card(self):
+        return self._style_text if (not self.style_check.isHidden() and self.style_check.isChecked()) else ""
 
     def _refresh_secondary(self):
         """Sync the 'Add <language> translation' checkbox with the card language's saved second
@@ -566,6 +592,7 @@ class AddCardDialog(QDialog):
             "secondary_language": (self.secondary_lang if (self.secondary_check and self.secondary_check.isChecked()) else ""),
             "level": self.level_combo.currentData() or prompts.DEFAULT_LEVEL,
             "language": self._lang,
+            "style": self._style_for_card(),
             "progress": self._progress,
         }
         self._start(word, deck, provider, options)
@@ -640,6 +667,9 @@ class AddCardDialog(QDialog):
                                               ("secondary_warning", "translation")) if meta.get(key)]
             if skipped:
                 msg += ". Note: %s skipped (provider issue, e.g. rate limit)." % " and ".join(skipped)
+                period = max(period, 6000)
+            if meta.get("image_warning"):
+                msg += ". No picture: the picture search found none this time"
                 period = max(period, 6000)
             lw = meta.get("language_warning")
             if lw:

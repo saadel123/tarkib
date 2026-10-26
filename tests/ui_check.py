@@ -30,7 +30,8 @@ PROVIDER = {"id": "groq", "type": "openai_compatible", "name": "Groq",
             "base_url": "https://api.groq.com/openai/v1", "model": "openai/gpt-oss-120b", "api_key": "test-key"}
 CATALOG = [{"ShortName": n, "Locale": n.rsplit("-", 1)[0], "FriendlyName": n.rsplit("-", 1)[1], "Gender": "Female"}
            for n in ("de-DE-KatjaNeural", "de-DE-ConradNeural", "en-US-JennyNeural", "en-US-GuyNeural",
-                     "en-GB-SoniaNeural", "ar-SA-ZariyahNeural", "fr-FR-DeniseNeural")]
+                     "en-GB-SoniaNeural", "ar-SA-ZariyahNeural", "fr-FR-DeniseNeural", "es-ES-ElviraNeural",
+                     "es-MX-DaliaNeural")]
 
 
 class AddonManager:
@@ -250,6 +251,72 @@ class AddWindow(unittest.TestCase):
         self.assertEqual(cfg["defaults"]["learning_language"], "en")
         self.assertNotEqual(cfg["defaults"].get("last_deck"), "Tarkib English")   # 1.1.0's key stays German's
 
+    def test_spanish_uses_english_at_once_and_each_language_keeps_its_deck(self):
+        setup()                                  # German cards in English: Spanish cards may use English too
+        w = self.window()
+        self.assertEqual([w.lang_combo.itemData(i) for i in range(w.lang_combo.count())], ["de", "en", "es"])
+        self.pick_language(w, "es")
+        self.assertEqual((w._lang, w.deck_combo.currentText()), ("es", "Tarkib Spanish"))
+        self.assertEqual(w.lang_combo.currentText(), "🇪🇸 Spanish")
+        self.assertEqual(w.word_edit.placeholderText(), "e.g. darse cuenta")
+        self.assertEqual(w.level_combo.itemText(w.level_combo.findData("Native")), "Native: real spoken Spanish")
+        self.assertTrue(w.lang_banner.isHidden())
+        self.assertTrue(w.add_btn.isEnabled())
+        self.assertEqual(w._settings["translation"], "English")
+        self.assertTrue(w.decks_footer.isHidden())          # the ready-made decks teach German
+        self.pick_language(w, "en")
+        self.assertEqual(w.deck_combo.currentText(), "Tarkib English")
+        self.assertFalse(w.lang_banner.isHidden())          # English cards cannot use English
+        self.pick_language(w, "es")
+        self.assertEqual(w.deck_combo.currentText(), "Tarkib Spanish")
+        self.assertTrue(w.lang_banner.isHidden())
+        self.pick_language(w, "de")
+        self.assertEqual(w.deck_combo.currentText(), "Tarkib")
+
+    def test_a_spanish_card_request_and_its_duplicate_check(self):
+        setup()
+        w = self.window()
+        self.pick_language(w, "es")
+        w.word_edit.setText("la mesa")
+        w._on_add()
+        options = w._pending_run["options"]
+        self.assertEqual((options["language"], w._pending_run["deck"]), ("es", "Tarkib Spanish"))
+        notetypes_find = notetypes.find_main
+        notetypes.find_main = lambda mm: {"name": "Tarkib"}
+        try:
+            w._find_existing("Tarkib Spanish", "la mesa")
+        finally:
+            notetypes.find_main = notetypes_find
+        self.assertIn('"Front:*mesa*"', aqt.mw.col.queries[-1])          # Spanish's article dropped
+        w._on_built({"main": {}, "cloze": None, "media": {}, "meta": {}})
+        cfg = saved()
+        self.assertEqual(cfg["deck_languages"], {"Tarkib Spanish": "es"})
+        self.assertEqual(cfg["defaults"]["last_decks"], {"es": "Tarkib Spanish"})
+        self.assertEqual(cfg["defaults"]["learning_language"], "es")
+
+    def test_use_my_style_shows_only_with_wishes_and_goes_with_the_card(self):
+        setup()
+        w = self.window()
+        self.assertTrue(w.style_check.isHidden())                       # no wishes: no checkbox, nothing sent
+        w.word_edit.setText("der Termin")
+        w._on_add()
+        self.assertEqual(w._pending_run["options"]["style"], "")
+        setup(defaults={"card_style": "Beispiele rund ums Kochen,\nkurze Saetze."})
+        w = self.window()
+        self.assertFalse(w.style_check.isHidden())
+        self.assertTrue(w.style_check.isChecked())
+        self.assertEqual(w.style_check.toolTip(), "Beispiele rund ums Kochen, kurze Saetze.")
+        w.word_edit.setText("der Termin")
+        w._on_add()
+        self.assertEqual(w._pending_run["options"]["style"], "Beispiele rund ums Kochen, kurze Saetze.")
+        w.style_check.setChecked(False)                                 # one card without the style
+        w._sync_from_config()
+        self.assertFalse(w.style_check.isChecked())                     # same wishes: the user's choice stays
+        w._on_add()
+        self.assertEqual(w._pending_run["options"]["style"], "")
+        self.pick_language(w, "es")                                     # every language
+        self.assertFalse(w.style_check.isHidden())
+
     def test_a_refusal_for_no_translation_language_opens_settings_on_languages(self):
         setup()
         w = self.window()
@@ -307,6 +374,68 @@ class SettingsLanguages(unittest.TestCase):
         self.assertEqual(cfg["defaults"]["learning_language"], "en")
         self.assertEqual(cfg["defaults"]["translation_language"], "English")     # German's, untouched
         self.assertEqual(cfg["voices"]["target"], "de-DE-KatjaNeural")
+
+    def test_spanish_in_settings_borrows_english_then_saves_its_own(self):
+        setup()
+        d = self.dialog(initial_language="es")
+        self.assertEqual(d.target_voice_label.text(), "Spanish voice")
+        self.assertEqual(d._voice_selected("target"), "es-ES-ElviraNeural")
+        self.assertEqual(d._translation_value(), "English")             # what the German cards use
+        self.assertEqual(d.translation_lang.findData("Spanish"), -1)    # never the language itself
+        self.assertGreaterEqual(d.translation_lang.findData("German"), 0)
+        self.assertTrue(d.german_extras.isHidden())
+        self.assertEqual(d.level_combo.itemText(d.level_combo.findData("Native")), "Native: real spoken Spanish")
+        self.pick(d._voice_slots["target"]["combo"], "es-MX-DaliaNeural")
+        self.pick(d.translation_lang, "Arabic")
+        self.pick(d.learning_lang, "en")                 # English keeps asking for its own
+        self.assertEqual(d.translation_lang.currentText(), "(choose one)")
+        self.pick(d.learning_lang, "es")
+        self.assertEqual((d._voice_selected("target"), d._translation_value()), ("es-MX-DaliaNeural", "Arabic"))
+        d._save()
+        cfg = saved()
+        self.assertEqual(cfg["languages"]["es"], {"voice": "es-MX-DaliaNeural", "translation": "Arabic",
+                                                  "translation_voice": "", "secondary": "", "secondary_voice": ""})
+        self.assertEqual(cfg["defaults"]["learning_language"], "es")
+        self.assertEqual(cfg["defaults"]["translation_language"], "English")     # German's, untouched
+
+    def test_your_style_is_saved_and_the_window_follows(self):
+        setup()
+        w = dialog.AddCardDialog()
+        self.addCleanup(w.deleteLater)
+        self.assertTrue(w.style_check.isHidden())
+        d = self.dialog(initial_tab="Cards")
+        self.assertEqual(d.style_edit.toPlainText(), "")
+        d.style_edit.setPlainText("  Examples about cooking.  " + "x" * 600)
+        d._save()
+        saved_style = saved()["defaults"]["card_style"]
+        self.assertTrue(saved_style.startswith("Examples about cooking."))
+        self.assertLessEqual(len(saved_style), 500)
+        w._sync_from_config()
+        self.assertFalse(w.style_check.isHidden())
+        self.assertTrue(w.style_check.isChecked())
+
+    def test_speech_speed_is_saved_and_test_plays_the_slower_speed(self):
+        import tempfile
+        tts = settings.tts
+        setup()
+        d = self.dialog(initial_tab="Voice")
+        self.assertEqual([d.tts_speed.itemData(i) for i in range(d.tts_speed.count())], list(tts.SPEEDS))
+        self.assertEqual(d.tts_speed.currentData(), "normal")      # a config saved before speeds existed
+        self.pick(d.tts_speed, "slower_a1_a2")
+        rates, real = [], (tts.synthesize, settings._models_cache_path)
+        tmp = tempfile.mkdtemp()
+        tts.synthesize = lambda service, text, voice, values, timeout=30, rate=1.0: (
+            rates.append(rate) or tts.Clip(b"audio", "mp3", service, voice, rate))
+        settings._models_cache_path = lambda: os.path.join(tmp, "models_cache.json")
+        try:
+            d._test_tts("edge", d.tts_test)
+            Op.runs[-1].op(None)                  # the sample, as the background step would read it
+        finally:
+            tts.synthesize, settings._models_cache_path = real
+        self.assertEqual(rates, [tts.SLOW_RATE])
+        d._save()
+        self.assertEqual(saved()["tts"]["speed"], "slower_a1_a2")
+        self.assertEqual(self.dialog(initial_tab="Voice").tts_speed.currentData(), "slower_a1_a2")
 
     def test_the_add_window_follows_what_settings_saved(self):
         setup()

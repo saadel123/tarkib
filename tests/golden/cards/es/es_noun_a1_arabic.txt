@@ -1,0 +1,101 @@
+# Golden card "es_noun_a1_arabic" (tests/card_scenarios.py)
+# Spanish at A1 with Arabic: the article added to a bare noun, the article in red on the word line (a regular plural is not shown), and a noun cloze with its article.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: mesa
+deck: Tarkib Spanish | level: A1 | cloze: on
+settings: {"defaults": {"translation_language": "Arabic"}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: es/main_A1 [Arabic, es-ES-ElviraNeural]
+user:
+WORD OR PHRASE TO TEACH: "mesa". CONTEXT: Important everyday Spanish. Formal: office, appointment or email scenario (usted). Casual: chat with friends or family (tú, messaging tone). Prefer situations people meet every week: work, shopping, health, travel, home.
+
+== AI call 2: cloze (temperature 0.3, max_tokens 1600)
+system: es/cloze
+user:
+Input: mesa
+Deck: Tarkib Spanish
+Meaning in Arabic: طاولة
+
+
+Classify and generate a NATURAL Spanish cloze sentence. Restructure if needed.
+
+LEVEL A1: use ONLY case "single_word"; a SHORT present-tense sentence (3 to 7 words) with the most common words; no idioms, no clause.
+
+Write "translation" as the FULL sentence translated naturally into Arabic. Use Modern Standard Arabic only, without diacritics.
+
+Use the Spanish of Spain (vosotros, coche, ordenador).
+
+== picture search
+keyword: wooden kitchen table | deck: Tarkib Spanish | source: auto -> pexels_wooden_kitchen_table.jpg
+
+== read aloud
+1. edge es-ES-ElviraNeural: la mesa. ... Pon la taza en la mesa.. ... ¿Puede usted limpiar la mesa?
+2. edge es-ES-ElviraNeural: Es nueva.
+3. edge es-ES-ElviraNeural: La mesa es nueva.
+
+== main note in deck "Tarkib Spanish"
+tags: Casa Level::A1
+-- Front
+🪑 la mesa.
+-- Back
+<div class="card-translation" style="direction:rtl;"><span class="level-chip lvl-a1">A1</span> 🪑 طاولة</div>
+<div class="morph"><span class="g-die">la</span></div>
+<div class="card-image"><img src="pexels_wooden_kitchen_table.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇪🇸 Español</div>
+  <div class="sentence casual"><span class="emoji">☕</span>Pon la taza en la mesa.</div>
+  <div class="sentence formal"><span class="emoji">🧽</span>¿Puede usted limpiar la mesa?</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">poner algo en algo</span> <span class="pattern-badge">¿Puede usted + infinitivo?</span></div>
+<div class="explanation">👉 «Una mesa es un mueble para comer o trabajar.»</div>
+<div class="section arabic">
+  <div class="section-label" style="direction:rtl;text-align:right;">🇸🇦 العربية</div>
+  <div class="sentence casual"><span class="emoji">☕</span>ضع الكوب على الطاولة.</div>
+  <div class="sentence formal"><span class="emoji">🧽</span>هل يمكنك أن تنظف الطاولة؟</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Arabic patterns</div><span class="pattern-badge">يضع شيئا على شيء</span> <span class="pattern-badge">هل يمكنك + فعل؟</span></div><br>[sound:tts_es_la_mesa_8021e56b30.mp3]
+
+== cloze note in deck "Tarkib Spanish::Cloze"
+tags: cloze tarkib_spanish case_single_word Level::A1
+-- Text
+{{c1::La mesa::L... me...}} es nueva.
+-- Translation
+الطاولة جديدة.
+-- Image
+<img src="pexels_wooden_kitchen_table.jpg">
+-- FrontAudio
+[sound:cloze_front_La_mesa_es_nueva_750007bec9.mp3]
+-- BackAudio
+[sound:cloze_back_La_mesa_es_nueva_4479f805cb.mp3]
+-- GrammarHint
+
+-- SourceWord
+la mesa
+-- DeckOrigin
+Tarkib Spanish
+
+== media files
+cloze_back_La_mesa_es_nueva_4479f805cb.mp3 <- audio from edge
+cloze_front_La_mesa_es_nueva_750007bec9.mp3 <- audio from edge
+pexels_wooden_kitchen_table.jpg <- picture
+tts_es_la_mesa_8021e56b30.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "طاولة",
+  "word": "la mesa"
+}

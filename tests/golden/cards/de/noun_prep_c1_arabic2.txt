@@ -12,7 +12,7 @@ system: de/main_C1
 user:
 WORD OR PHRASE TO TEACH: "die Rücksicht". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause.
 
-== AI call 2: secondary (temperature 0.2, max_tokens 600)
+== AI call 2: secondary (temperature 0.2, max_tokens 2000)
 system: de/secondary_Arabic
 user:
 Translate into Arabic.
@@ -58,7 +58,7 @@ tags: Beziehungen Level::C1
   <div class="sentence formal"><span class="emoji">🏨</span>Wir bitten Sie, Rücksicht auf die anderen Gäste zu nehmen.</div>
 </div>
 <div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">Rücksicht nehmen auf (+Akk)</span> <span class="pattern-badge">jemanden bitten, etwas zu tun</span></div>
-<div class="explanation">👉 „Wer Rücksicht nimmt, achtet auf die Gefühle und Bedürfnisse anderer."</div>
+<div class="explanation">👉 „Wer Rücksicht nimmt, achtet auf die Gefühle und Bedürfnisse anderer.“</div>
 <div class="section">
   <div class="section-label">🇬🇧 English</div>
   <div class="sentence casual"><span class="emoji">🏠</span>Please show a bit of consideration for your neighbours.</div>

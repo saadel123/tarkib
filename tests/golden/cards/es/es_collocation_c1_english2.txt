@@ -1,0 +1,120 @@
+# Golden card "es_collocation_c1_english2" (tests/card_scenarios.py)
+# A collocation at C1: the headword restated is dropped, the headword with a placeholder (sobre algo) is kept, English as the second translation with its voice, a cloze of the verb alone.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: tomar una decisión
+deck: Tarkib Spanish | level: C1 | cloze: on
+options: {"secondary_language": "English"}
+settings: {"languages": {"es": {"secondary": "English", "secondary_voice": "en-US-JennyNeural", "translation": "Arabic"}}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: es/main_C1 [Arabic, es-ES-ElviraNeural]
+user:
+WORD OR PHRASE TO TEACH: "tomar una decisión". CONTEXT: Important everyday Spanish. Formal: office, appointment or email scenario (usted). Casual: chat with friends or family (tú, messaging tone). Prefer situations people meet every week: work, shopping, health, travel, home.
+
+== AI call 2: secondary (temperature 0.2, max_tokens 2000)
+system: es/secondary_English
+user:
+Translate into English.
+
+SPANISH WORD: tomar una decisión
+SPANISH CASUAL: Mira, no puedo tomar una decisión sin consultarlo con la almohada.
+SPANISH FORMAL: Solo tras analizar todos los datos, la comisión tomó una decisión.
+ARABIC CASUAL: انظر، لا أستطيع أن أتخذ قرارا قبل أن أفكر في الأمر جيدا.
+ARABIC FORMAL: لم تتخذ اللجنة قرارا إلا بعد تحليل جميع البيانات.
+
+Generate word_translation, casual, formal. Return ONLY JSON.
+
+== AI call 3: cloze (temperature 0.3, max_tokens 1600)
+system: es/cloze
+user:
+Input: tomar una decisión
+Deck: Tarkib Spanish
+Meaning in Arabic: يتخذ قرارا
+
+
+Classify and generate a NATURAL Spanish cloze sentence. Restructure if needed.
+
+Write "translation" as the FULL sentence translated naturally into Arabic. Use Modern Standard Arabic only, without diacritics.
+
+Use the Spanish of Spain (vosotros, coche, ordenador).
+
+== picture search
+keyword: committee meeting around a table | deck: Tarkib Spanish | source: auto -> pexels_committee_meeting_around_a_table.jpg
+
+== read aloud
+1. edge es-ES-ElviraNeural: tomar una decisión. ... Mira, no puedo tomar una decisión sin consultarlo con la almohada.. ... Solo tras analizar todos los datos, la comisión tomó una decisión.
+2. edge en-US-JennyNeural: to make a decision ... Look, I can't make a decision until I've slept on it. ... Only after analyzing all the data did the committee make a decision.
+3. edge es-ES-ElviraNeural: Tenemos que. Una decisión antes del viernes.
+4. edge es-ES-ElviraNeural: Tenemos que tomar una decisión antes del viernes.
+
+== main note in deck "Tarkib Spanish"
+tags: Trabajo Level::C1
+-- Front
+⚖️ tomar una decisión.
+-- Back
+<div class="card-translation" style="direction:rtl;"><span class="level-chip lvl-c1">C1</span> ⚖️ يتخذ قرارا</div>
+<div class="card-image"><img src="pexels_committee_meeting_around_a_table.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇪🇸 Español</div>
+  <div class="sentence casual"><span class="emoji">😴</span>Mira, no puedo tomar una decisión sin consultarlo con la almohada.</div>
+  <div class="sentence formal"><span class="emoji">🏛️</span>Solo tras analizar todos los datos, la comisión tomó una decisión.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">tomar una decisión sobre algo</span> <span class="pattern-badge">consultarlo con la almohada</span></div>
+<div class="explanation">👉 «Tomar una decisión es elegir qué hacer después de pensarlo.»</div>
+<div class="section arabic">
+  <div class="section-label" style="direction:rtl;text-align:right;">🇸🇦 العربية</div>
+  <div class="sentence casual"><span class="emoji">😴</span>انظر، لا أستطيع أن أتخذ قرارا قبل أن أفكر في الأمر جيدا.</div>
+  <div class="sentence formal"><span class="emoji">🏛️</span>لم تتخذ اللجنة قرارا إلا بعد تحليل جميع البيانات.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Arabic patterns</div><span class="pattern-badge">يتخذ قرارا بشأن شيء</span> <span class="pattern-badge">يفكر في الأمر قبل أن يقرر</span></div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">😴</span>Look, I can't make a decision until I've slept on it.</div>
+  <div class="sentence formal"><span class="emoji">🏛️</span>Only after analyzing all the data did the committee make a decision.</div>
+</div>
+<div class="secondary-word" style="direction:ltr;">⚖️ to make a decision</div><br>[sound:tts_es_tomar_una_decisión_1032703064.mp3][sound:tts_sec_tomar_una_decisión_c259eec0c5.mp3]
+
+== cloze note in deck "Tarkib Spanish::Cloze"
+tags: cloze tarkib_spanish case_collocation Level::C1
+-- Text
+Tenemos que {{c1::tomar}} una decisión antes del viernes.
+-- Translation
+يجب أن نتخذ قرارا قبل يوم الجمعة.
+-- Image
+<img src="pexels_committee_meeting_around_a_table.jpg">
+-- FrontAudio
+[sound:cloze_front_Tenemos_que_tomar_una_de_dade1afa52.mp3]
+-- BackAudio
+[sound:cloze_back_Tenemos_que_tomar_una_de_e9e75a160c.mp3]
+-- GrammarHint
+tomar una decisión
+-- SourceWord
+tomar una decisión
+-- DeckOrigin
+Tarkib Spanish
+
+== media files
+cloze_back_Tenemos_que_tomar_una_de_e9e75a160c.mp3 <- audio from edge
+cloze_front_Tenemos_que_tomar_una_de_dade1afa52.mp3 <- audio from edge
+pexels_committee_meeting_around_a_table.jpg <- picture
+tts_es_tomar_una_decisión_1032703064.mp3 <- audio from edge
+tts_sec_tomar_una_decisión_c259eec0c5.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 4,
+    "total": 4,
+    "used": {
+      "edge": 4
+    }
+  },
+  "translation_en": "يتخذ قرارا",
+  "word": "tomar una decisión"
+}

@@ -111,12 +111,16 @@ def _timestamp():
     return datetime.now(timezone.utc).strftime("%a %b %d %Y %H:%M:%S GMT+0000 (Coordinated Universal Time)")
 
 
-def _mkssml(text, voice):
+def _mkssml(text, voice, rate="+0%"):
+    """rate is the prosody rate ("-20%" reads about 20% slower); anything but a signed whole percent
+    is the normal "+0%", so the SSML stays exactly what it was before speeds existed."""
     safe = html.escape(text, quote=False)
+    if not re.match(r"^[+-]\d{1,2}%$", rate or ""):
+        rate = "+0%"
     return (
         "<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='en-US'>"
-        "<voice name='%s'><prosody pitch='+0Hz' rate='+0%%' volume='+0%%'>%s</prosody></voice></speak>"
-        % (voice, safe)
+        "<voice name='%s'><prosody pitch='+0Hz' rate='%s' volume='+0%%'>%s</prosody></voice></speak>"
+        % (voice, rate, safe)
     )
 
 
@@ -295,7 +299,7 @@ class _WS:
             pass
 
 
-def _synthesize_once(text, voice, deadline):
+def _synthesize_once(text, voice, deadline, rate="+0%"):
     qs = "%s?TrustedClientToken=%s&Sec-MS-GEC=%s&Sec-MS-GEC-Version=%s&ConnectionId=%s" % (
         WSS_PATH, TRUSTED_CLIENT_TOKEN, _sec_ms_gec(), SEC_MS_GEC_VERSION, uuid.uuid4().hex)
     ws = _WS(WSS_HOST, qs, deadline)
@@ -308,7 +312,7 @@ def _synthesize_once(text, voice, deadline):
                  "Path:speech.config\r\n\r\n%s" % (ts, cfg)).encode())
         ws.send(("X-RequestId:%s\r\nContent-Type:application/ssml+xml\r\n"
                  "X-Timestamp:%sZ\r\nPath:ssml\r\n\r\n%s"
-                 % (uuid.uuid4().hex, ts, _mkssml(text, voice))).encode())
+                 % (uuid.uuid4().hex, ts, _mkssml(text, voice, rate))).encode())
         audio = bytearray()
         while True:
             opcode, payload = ws.recv_message()
@@ -343,8 +347,9 @@ def _synthesize_once(text, voice, deadline):
         ws.close()
 
 
-def synthesize(text, voice, timeout=REQUEST_TIMEOUT, retries=2):
-    """Return MP3 bytes for `text` in `voice`, or raise EdgeTTSError with a readable reason.
+def synthesize(text, voice, timeout=REQUEST_TIMEOUT, retries=2, rate="+0%"):
+    """Return MP3 bytes for `text` in `voice`, or raise EdgeTTSError with a readable reason. `rate` is
+    the prosody rate ("-20%" for the slower speech speed, tts.ssml_rate).
 
     `timeout` bounds each attempt as a WHOLE (connect, handshake and all audio, see _WS), so a
     server that goes quiet costs at most that long. `retries` is the number of attempts for an
@@ -362,7 +367,7 @@ def synthesize(text, voice, timeout=REQUEST_TIMEOUT, retries=2):
     while True:
         attempts += 1
         try:
-            return _synthesize_once(text, voice, time.monotonic() + timeout)
+            return _synthesize_once(text, voice, time.monotonic() + timeout, rate)
         except EdgeTTSError as e:
             err = e
         except (OSError, ValueError, struct.error) as e:      # DNS, refused, reset, TLS, bad frame

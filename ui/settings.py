@@ -21,7 +21,7 @@ from aqt import mw
 from aqt.qt import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QLineEdit, QComboBox,
     QPushButton, QLabel, QCheckBox, QToolButton, QWidget, QScrollArea, QFrame,
-    QTabWidget, Qt, QTimer, QListWidget, QListWidgetItem, QSizePolicy,
+    QTabWidget, Qt, QTimer, QListWidget, QListWidgetItem, QSizePolicy, QPlainTextEdit,
 )
 from aqt.utils import askUser, qconnect, tooltip, showText
 from aqt.sound import av_player
@@ -79,6 +79,8 @@ KEY_SOURCES = {
 # ── Settings, Voice: who reads the cards aloud (the work is in pipeline/tts.py) ──────────────
 TTS_ITEMS = {"edge": "Microsoft Edge (free, no key)", "azure": "Azure AI Speech", "elevenlabs": "ElevenLabs",
              "openai": "OpenAI", "google": "Google Cloud", "gemini": "Gemini"}
+# The speech speed dropdown, in the order of tts.SPEEDS.
+SPEED_ITEMS = (("normal", "Normal"), ("slower_a1_a2", "Slower at A1 and A2"), ("slower", "Slower at every level"))
 # One short paragraph per service: what it is, what it costs, where the key comes from. Facts
 # checked against each provider's own pages on 2026-10-14.
 TTS_HELP = {
@@ -408,7 +410,8 @@ class SettingsDialog(QDialog):
         form = _new_tab("Images")
         img_intro = QLabel("Optional, to put pictures on your cards. Any one key is enough, and the add-on "
                            "falls back across them. With no key at all it tries free Openverse, which often "
-                           "finds nothing, so add a free Pexels key for photos on most cards.")
+                           "finds nothing, so add a free Pixabay key for photos on most cards. Pexels has "
+                           "paused new keys, but a Pexels key you already have still works.")
         img_intro.setWordWrap(True)
         img_intro.setStyleSheet("font-size: 11px;")
         form.addRow("", img_intro)
@@ -416,7 +419,7 @@ class SettingsDialog(QDialog):
         self._apply_key_echo(self.pexels_edit, "paste your Pexels API key")
         form.addRow("Pexels key", self.pexels_edit)
         self.pixabay_edit = QLineEdit(img.get("pixabay_key", ""))
-        self._apply_key_echo(self.pixabay_edit, "optional, free with generous limits")
+        self._apply_key_echo(self.pixabay_edit, "paste your Pixabay API key (free, at pixabay.com/api/docs)")
         form.addRow("Pixabay key", self.pixabay_edit)
         self.serper_edit = QLineEdit(img.get("serper_key", ""))
         self._apply_key_echo(self.serper_edit, "optional (better IT images)")
@@ -485,6 +488,27 @@ class SettingsDialog(QDialog):
         self.level_hint.setWordWrap(True)
         self.level_hint.setStyleSheet("font-size: 11px;")
         form.addRow("", self.level_hint)
+
+        # "Your style": wishes for every card in every language (topics, names, tone, length), sent with the
+        # card while "Use my style" is ticked in the Tarkib window (prompts.style_main, style_cloze).
+        self.style_edit = QPlainTextEdit()
+        self.style_edit.setPlaceholderText("e.g. Examples about cooking, football and travel. Short sentences. "
+                                           "A friendly tone.")
+        self.style_edit.setPlainText(str(defaults.get("card_style") or ""))
+        self.style_edit.setTabChangesFocus(True)
+        self.style_edit.setFixedHeight(72)
+        # Fixed, not the text box's default Expanding: an expanding row made the form spread every row of the Cards
+        # tab apart in a tall Settings window.
+        self.style_edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        form.addRow("Your style", self.style_edit)
+        self.style_hint = QLabel(
+            "Optional, in any language: the topics, names, tone or length you want in your cards, up to %d "
+            "characters. Tarkib sends these wishes with every card, in every language you learn, while “Use my "
+            "style” is ticked in the Tarkib window. The level and the card’s rules stay as they are."
+            % prompts.STYLE_MAX)
+        self.style_hint.setWordWrap(True)
+        self.style_hint.setStyleSheet("font-size: 11px;")
+        form.addRow("", self.style_hint)
 
         # The German extras: the starter decks (German deck names and themes) and the line about the
         # ready-made decks, which teach German. One box, shown while the Languages tab is on German.
@@ -1103,6 +1127,21 @@ class SettingsDialog(QDialog):
         self.tts_help.setStyleSheet("font-size: 11px;")
         form.addRow("", self.tts_help)
 
+        self.tts_speed = _make_combo()
+        for value, label in SPEED_ITEMS:
+            self.tts_speed.addItem(label, value)
+        i = self.tts_speed.findData(tts.speed(tts_cfg))
+        self.tts_speed.setCurrentIndex(i if i >= 0 else 0)
+        self.tts_speed.setToolTip("How fast the language you learn is read aloud")
+        form.addRow("Speech speed", self.tts_speed)
+        speed_hint = QLabel("Slower means about 20% slower, for the language you learn: the word, its sentences "
+                            "and the cloze card. The translations keep the normal speed. It changes new cards "
+                            "only. Gemini always reads at the normal speed. ▶ Test plays the slower speed when "
+                            "one is picked.")
+        speed_hint.setWordWrap(True)
+        speed_hint.setStyleSheet("font-size: 11px;")
+        form.addRow("", speed_hint)
+
         for s in tts.DEFAULT_ORDER:
             self._add_tts_section(form, s, tts.service_cfg(tts_cfg, s))
 
@@ -1284,7 +1323,9 @@ class SettingsDialog(QDialog):
         out = {"service": self._tts_selected(),
                "order": [self.tts_order.item(i).data(Qt.ItemDataRole.UserRole)
                          for i in range(self.tts_order.count())]
-               if getattr(self, "tts_order", None) is not None else list(tts.DEFAULT_ORDER)}
+               if getattr(self, "tts_order", None) is not None else list(tts.DEFAULT_ORDER),
+               "speed": (self.tts_speed.currentData() or "normal")
+               if getattr(self, "tts_speed", None) is not None else "normal"}
         for service, info in self._tts.items():
             d = {}
             for name, w in info["fields"].items():
@@ -1300,9 +1341,10 @@ class SettingsDialog(QDialog):
 
     def _test_tts(self, service, btn):
         """Read a sample in the language you learn (the one on the Languages tab) with ONE service (no
-        backups) and the values on this tab, saved or not, and play it with Anki's player. A failure shows
-        the service's own reason."""
+        backups) and the values on this tab, saved or not, and play it with Anki's player, at the slower
+        speed when one is picked. A failure shows the service's own reason."""
         values = self._tts_values()
+        rate = tts.speech_rate(values)
         voice = self._voice_selected("target") or languages.get(self._lang)["default_voice"]
         text = audio.sample_text_for_voice(voice)
         tts_to = int((self.cfg.get("timeouts", {}) or {}).get("tts_seconds", 30))
@@ -1312,7 +1354,7 @@ class SettingsDialog(QDialog):
         btn.setText("Testing…")
 
         def op(col):
-            clip = tts.synthesize(service, text, voice, values, timeout=tts_to)
+            clip = tts.synthesize(service, text, voice, values, timeout=tts_to, rate=rate)
             path = os.path.join(folder, "voice_test_%s.%s" % (service, clip.ext))
             with open(path, "wb") as fh:
                 fh.write(clip.data)
@@ -1325,7 +1367,8 @@ class SettingsDialog(QDialog):
         def ok(path):
             done()
             av_player.play_file(path)
-            self._toast("✓ %s works. Playing the sample." % tts.LABELS[service], period=4000)
+            slower = " at the slower speed" if rate != 1.0 and service != "gemini" else ""
+            self._toast("✓ %s works. Playing the sample%s." % (tts.LABELS[service], slower), period=4000)
 
         def fail(e):
             done()
@@ -1629,6 +1672,7 @@ class SettingsDialog(QDialog):
         cfg.setdefault("defaults", {})
         cfg["defaults"]["learning_language"] = self._lang
         cfg["defaults"]["level"] = self.level_combo.currentData() or prompts.DEFAULT_LEVEL
+        cfg["defaults"]["card_style"] = self.style_edit.toPlainText().strip()[:prompts.STYLE_MAX]
         mw.addonManager.writeConfig(__name__, cfg)
         self.cfg = cfg
         self.saved = True

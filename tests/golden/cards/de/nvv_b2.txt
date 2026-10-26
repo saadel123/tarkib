@@ -43,7 +43,7 @@ tags: Arbeit Level::B2
   <div class="sentence formal"><span class="emoji">🏢</span>Der Vorstand wird die Entscheidung nächste Woche treffen.</div>
 </div>
 <div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">müssen + Infinitiv</span></div>
-<div class="explanation">👉 „Man entscheidet sich nach dem Nachdenken für eine Möglichkeit."</div>
+<div class="explanation">👉 „Man entscheidet sich nach dem Nachdenken für eine Möglichkeit.“</div>
 <div class="section">
   <div class="section-label">🇬🇧 English</div>
   <div class="sentence casual"><span class="emoji">🤔</span>We finally have to make a decision today.</div>

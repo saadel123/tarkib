@@ -44,7 +44,7 @@ tags: Arbeit Bildung Level::B1
   <div class="sentence formal"><span class="emoji">📝</span>Sie haben viel Erfahrung mit Kunden 👍</div>
 </div>
 <div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">Erfahrung mit (+Dat)</span> <span class="pattern-badge">Erfahrung haben</span></div>
-<div class="explanation">👉 „Wissen aus der Praxis &amp; aus der Übung."</div>
+<div class="explanation">👉 „Wissen aus der Praxis &amp; aus der Übung.“</div>
 <div class="section">
   <div class="section-label">🇬🇧 English</div>
   <div class="sentence casual"><span class="emoji">💬</span>I have a lot of experience with children &lt;img src=x onerror=alert(1)&gt;</div>

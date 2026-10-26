@@ -43,7 +43,7 @@ tags: Redewendung Gefuehle Level::B2
   <div class="sentence formal"><span class="emoji">💼</span>Wir drücken Ihnen für das Gespräch die Daumen.</div>
 </div>
 <div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">für (+Akk)</span> <span class="pattern-badge">jemandem die Daumen drücken (+Dat)</span></div>
-<div class="explanation">👉 „Man wünscht jemandem Glück für etwas Wichtiges."</div>
+<div class="explanation">👉 „Man wünscht jemandem Glück für etwas Wichtiges.“</div>
 <div class="section">
   <div class="section-label">🇬🇧 English</div>
   <div class="sentence casual"><span class="emoji">📚</span>I'll keep my fingers crossed for you in the exam.</div>

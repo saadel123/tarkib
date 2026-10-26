@@ -44,7 +44,7 @@ tags: Kommunikation Level::A2
   <div class="sentence formal"><span class="emoji">📅</span>Ich rufe Sie morgen früh an.</div>
 </div>
 <div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">jemanden anrufen (+Akk)</span> <span class="pattern-badge">rufe ... an (trennbar)</span></div>
-<div class="explanation">👉 „Man spricht mit jemandem am Telefon."</div>
+<div class="explanation">👉 „Man spricht mit jemandem am Telefon.“</div>
 <div class="section">
   <div class="section-label">🇬🇧 English</div>
   <div class="sentence casual"><span class="emoji">💬</span>Can you call me this evening?</div>

@@ -47,6 +47,9 @@ GERMAN_AI_CSS = """.card {
 .register-hint .arrow { color: #8a94b3; margin: 0 6px; }
 .register-hint .casual-alt { color: #facc15; font-weight: 600; }
 .register-hint .alt-list { color: #e2e6f0; font-style: italic; }
+.card:not(.nightMode):not(.night_mode) .register-hint .formal-mark { color: #dc2626; }
+.card:not(.nightMode):not(.night_mode) .register-hint .casual-alt { color: #b45309; }
+.card:not(.nightMode):not(.night_mode) .register-hint .alt-list { color: #334155; }
 """
 
 CLOZE_FIELDS = ["Text", "Translation", "Image", "FrontAudio", "BackAudio", "GrammarHint", "SourceWord", "DeckOrigin"]
@@ -226,8 +229,9 @@ CLOZE_CSS = """.card { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI
 # pick up the new look on their next card add. The marker is stored inside the note type's own CSS,
 # so it travels with the collection (and across devices via sync). These note types are OURS, so
 # this only ever restyles our own types — never the user's other note types.
-TEMPLATE_VERSION = 9  # v9: the Arabic hint names AnkiDroid's Arabic menu items, not the English ones
-                      # (v5: cloze input tappable + the hint; v4: .arabic-word -> .secondary-word)
+TEMPLATE_VERSION = 10  # v10: the register hint's casual words are readable in light mode (light gray on white before)
+                       # (v9: the Arabic hint names AnkiDroid's Arabic menu items; v5: cloze input tappable + the
+                       # hint; v4: .arabic-word -> .secondary-word)
 _VTAG = "/* german-ai-cards:notetype-v%d */" % TEMPLATE_VERSION
 
 

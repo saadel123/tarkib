@@ -1,0 +1,12 @@
+Input: darse cuenta
+Deck: Tarkib Spanish
+Meaning in French: se rendre compte
+
+
+Classify and generate a NATURAL Spanish cloze sentence. Restructure if needed.
+
+LEVEL B1: use case "single_word", "verb_prep", "ser_estar" or "por_para"; a medium everyday sentence with common words.
+
+Write "translation" as the FULL sentence translated naturally into French.
+
+Use the Latin American Spanish of Mexico (ustedes, carro, computadora, chamarra), never vosotros.

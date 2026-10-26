@@ -25,7 +25,7 @@ from pipeline import languages  # noqa: E402
 
 generate, prompts, tts = cs.generate, cs.prompts, cs.tts
 
-FIELDS = {"code": str, "name": str, "native_name": str, "label": str, "quotes": tuple,
+FIELDS = {"code": str, "name": str, "native_name": str, "label": str, "quotes": tuple, "inner_quotes": tuple,
           "default_voice": str, "headword_prefixes": tuple, "formal_tag": str, "script": str,
           "example_word": str, "default_deck": str, "voice_locales": tuple}
 
@@ -38,6 +38,7 @@ class Registry(unittest.TestCase):
                 self.assertIsInstance(entry[key], kind, (entry["code"], key))
                 self.assertTrue(entry[key], (entry["code"], key))
             self.assertEqual(len(entry["quotes"]), 2, entry["code"])
+            self.assertEqual(len(entry["inner_quotes"]), 2, entry["code"])
 
     def test_codes_are_unique_and_the_default_is_one_of_them(self):
         codes = [e["code"] for e in languages.LANGUAGES]
@@ -96,6 +97,8 @@ class Tables(unittest.TestCase):
                     self.assertIn("single_word", value, code)   # build_card's fallback for an unknown case
                 elif key == "cloze_no_hint":
                     self.assertTrue(set(value) <= set(rules["cloze_cases"]), code)
+                elif key == "grammar_fallback":
+                    self.assertIsInstance(value, bool, code)
                 elif key == "audio_names":
                     self.assertEqual(set(value), {"target", "translation"}, code)
                     self.assertTrue(all(re.match(r"^[a-z_]+$", v) for v in value.values()), code)

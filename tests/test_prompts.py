@@ -64,6 +64,33 @@ def frozen_prompts():
     for lang in ("Arabic", "French"):
         out["en/secondary_%s" % lang] = prompts.secondary_system("en", lang)
     out["en/translation_languages"] = "\n".join(prompts.translation_languages("en"))
+    # The user's style wishes (Settings, Cards): what is added to the user messages, for every language.
+    wish = "Examples about cooking and travel, short sentences, a friendly tone."
+    out["style/main_user_de"] = prompts.main_user("de", "der Termin", "Tarkib", style=wish)
+    out["style/cloze_user_de"] = prompts.cloze_user("de", "der Termin", "Tarkib", "appointment", "B1", "English",
+                                                    style=wish)
+    out["style/main_user_en"] = prompts.main_user("en", "give up", "Tarkib English", style=wish)
+    out["style/main_user_es"] = prompts.main_user("es", "darse cuenta", "Tarkib Spanish", style=wish)
+    out["style/cloze_user_es"] = prompts.cloze_user("es", "darse cuenta", "Tarkib Spanish", "to realize", "B1",
+                                                    "English", "es-ES-ElviraNeural", style=wish)
+    # Spanish: the generic set with Spanish's note. The Spain voice for every level, then the Latin American
+    # variants (the voice decides the variety, like US or UK for English).
+    es, mx = "es-ES-ElviraNeural", "es-MX-DaliaNeural"
+    for lv in prompts.LEVELS:
+        out["es/main_%s" % lv] = prompts.main_system("es", lv, "Arabic", voice=es)
+    out["es/main_B1_English_LatinAmerica"] = prompts.main_system("es", "B1", "English", voice=mx)
+    out["es/main_Native_German_LatinAmerica"] = prompts.main_system("es", "Native", "German", voice=mx)
+    out["es/main_user"] = prompts.main_user("es", "darse cuenta", "Tarkib Spanish", "to realize", "en el trabajo",
+                                            "a person looking at a clock", True, True)
+    out["es/grammar"] = prompts.grammar_system("es", "Arabic")
+    out["es/cloze"] = prompts.cloze_system("es")
+    for lv in ("A1", "A2", "B1", "C1"):
+        out["es/cloze_user_%s" % lv] = prompts.cloze_user("es", "darse cuenta", "Tarkib Spanish", "يدرك", lv, "Arabic", es)
+    out["es/cloze_user_B1_LatinAmerica"] = prompts.cloze_user("es", "darse cuenta", "Tarkib Spanish", "se rendre compte",
+                                                              "B1", "French", mx)
+    for lang in ("Arabic", "French"):
+        out["es/secondary_%s" % lang] = prompts.secondary_system("es", lang)
+    out["es/translation_languages"] = "\n".join(prompts.translation_languages("es"))
     # The generic set with no note at all, for a made-up language (Italian): what a new language gets.
     with cs.MadeUpLanguage():
         out["generic/main_B1"] = prompts.main_system("it", "B1", "English", voice="it-IT-ElsaNeural")
@@ -82,6 +109,27 @@ class FrozenPrompts(unittest.TestCase):
     def test_no_stale_prompt_files(self):
         expected = ["prompts/%s.txt" % name for name in frozen_prompts()]
         self.assertEqual(golden.stale("prompts", expected), [], "frozen prompts nothing produces any more")
+
+    def test_no_style_wishes_change_nothing(self):
+        for lang, word, deck in (("de", "der Termin", "Tarkib"), ("en", "give up", "Tarkib English"),
+                                 ("es", "darse cuenta", "Tarkib Spanish")):
+            plain = prompts.main_user(lang, word, deck, "a meaning", "a scene", "a picture", True, True)
+            for empty in ("", "   ", None, "\n\t"):
+                self.assertEqual(prompts.main_user(lang, word, deck, "a meaning", "a scene", "a picture", True, True,
+                                                   style=empty), plain, (lang, empty))
+            self.assertEqual(prompts.cloze_user(lang, word, deck, "m", "B1", "English", style=""),
+                             prompts.cloze_user(lang, word, deck, "m", "B1", "English"))
+
+    def test_style_wishes_are_cleaned(self):
+        self.assertEqual(prompts.clean_style('  Kurze Saetze,\n\n"freundlich"  '), "Kurze Saetze, 'freundlich'")
+        long = "wort " * 200
+        cleaned = prompts.clean_style(long)
+        self.assertLessEqual(len(cleaned), prompts.STYLE_MAX)
+        self.assertTrue(cleaned.endswith("wort"))
+        block = prompts.style_main("short")
+        self.assertIn("they come before the CONTEXT", block)            # the live card ignored softer wording
+        self.assertIn("Only the hard rules stay above them: the JSON format", block)
+        self.assertEqual(prompts.style_main(""), "")
 
     def test_what_is_empty_on_purpose(self):
         for lv in ("B2", "C1", "Native"):
@@ -113,6 +161,21 @@ class GenericSetIsClean(unittest.TestCase):
             if name.startswith("en/") and name != "en/translation_languages":
                 self.assertNotRegex(text, r"\{[A-Za-z_][A-Za-z0-9_]*\}", name)
                 self.assertNotRegex(text, r"\bGERMAN\b|Denglisch|\bAkk\b|Formell", name)
+
+    def test_spanish_prompts_name_spanish_and_follow_the_voice(self):
+        for name, text in frozen_prompts().items():
+            if not name.startswith("es/") or name == "es/translation_languages":
+                continue
+            self.assertNotRegex(text, r"\{[A-Za-z_][A-Za-z0-9_]*\}", name)
+            self.assertNotRegex(text, r"\bGERMAN\b|Denglisch|\bAkk\b|Formell|phrasal|uncountable|contraction|British|"
+                                      r"American English", name)
+            if "secondary" not in name:
+                self.assertIn("Spanish", text, name)
+            if "LatinAmerica" in name:
+                self.assertIn("never vosotros", text, name)
+                self.assertNotIn("Spanish of Spain", text, name)
+            elif name.startswith(("es/main_", "es/cloze_user")) and name != "es/main_user":
+                self.assertIn("Spanish of Spain", text, name)
 
 
 def _frozen_test(name, text):

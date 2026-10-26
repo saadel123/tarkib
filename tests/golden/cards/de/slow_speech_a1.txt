@@ -1,0 +1,96 @@
+# Golden card "slow_speech_a1" (tests/card_scenarios.py)
+# Speech speed "Slower at A1 and A2" (Settings, Voice) on an A1 card: the word, its sentences and both cloze clips are read slower, the translation at the normal speed.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: morgen
+deck: Tarkib | level: A1 | cloze: on
+settings: {"tts": {"speed": "slower_a1_a2"}, "voices": {"translation": "en-US-AvaMultilingualNeural"}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: de/main_A1
+user:
+WORD OR PHRASE TO TEACH: "morgen". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause.
+
+== AI call 2: cloze (temperature 0.3, max_tokens 1600)
+system: de/cloze
+user:
+Input: morgen
+Deck: Tarkib
+English meaning: tomorrow
+
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+LEVEL A1: use ONLY case "single_word"; a SHORT present-tense sentence (3-7 words) with the most common words; no idioms, no subordinate clause.
+
+== picture search
+keyword: calendar page for tomorrow | deck: Tarkib | source: auto -> pexels_calendar_page_for_tomorrow.jpg
+
+== read aloud
+1. edge de-DE-KatjaNeural at 0.8x speed: morgen. ... Morgen habe ich frei.. ... Haben Sie morgen Zeit?
+2. edge en-US-AvaMultilingualNeural: tomorrow. ... I'm off tomorrow. ... Do you have time tomorrow?
+3. edge de-DE-KatjaNeural at 0.8x speed: Gehe ich einkaufen.
+4. edge de-DE-KatjaNeural at 0.8x speed: Morgen gehe ich einkaufen.
+
+== main note in deck "Tarkib"
+tags: Zeit Level::A1
+-- Front
+🌅 morgen.
+-- Back
+<div class="card-translation"><span class="level-chip lvl-a1">A1</span> 🌅 tomorrow</div>
+<div class="card-image"><img src="pexels_calendar_page_for_tomorrow.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇩🇪 Deutsch</div>
+  <div class="sentence casual"><span class="emoji">😌</span>Morgen habe ich frei.</div>
+  <div class="sentence formal"><span class="emoji">📅</span>Haben Sie morgen Zeit?</div>
+</div>
+<div class="explanation">👉 „Morgen ist der Tag nach heute.“</div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">😌</span>I'm off tomorrow.</div>
+  <div class="sentence formal"><span class="emoji">📅</span>Do you have time tomorrow?</div>
+</div><br>[sound:tts_de_morgen_6449b7c39f.mp3][sound:tts_en_morgen_999612e925.mp3]
+
+== cloze note in deck "Tarkib::Cloze"
+tags: cloze tarkib case_single_word Level::A1
+-- Text
+{{c1::Morgen::Mor...}} gehe ich einkaufen.
+-- Translation
+I'm going shopping tomorrow.
+-- Image
+<img src="pexels_calendar_page_for_tomorrow.jpg">
+-- FrontAudio
+[sound:cloze_front_Morgen_gehe_ich_einkaufe_08ed15aa88.mp3]
+-- BackAudio
+[sound:cloze_back_Morgen_gehe_ich_einkaufe_89d4ef4863.mp3]
+-- GrammarHint
+
+-- SourceWord
+morgen
+-- DeckOrigin
+Tarkib
+
+== media files
+cloze_back_Morgen_gehe_ich_einkaufe_89d4ef4863.mp3 <- audio from edge
+cloze_front_Morgen_gehe_ich_einkaufe_08ed15aa88.mp3 <- audio from edge
+pexels_calendar_page_for_tomorrow.jpg <- picture
+tts_de_morgen_6449b7c39f.mp3 <- audio from edge
+tts_en_morgen_999612e925.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 4,
+    "total": 4,
+    "used": {
+      "edge": 4
+    }
+  },
+  "translation_en": "tomorrow",
+  "word": "morgen"
+}

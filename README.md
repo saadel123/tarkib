@@ -1,6 +1,6 @@
-# Tarkib: AI German and English flashcards for Anki
+# Tarkib: AI German, English and Spanish flashcards for Anki
 
-### One German or English word. A complete, well-structured Anki card.
+### One German, English or Spanish word. A complete, well-structured Anki card.
 
 > A free, open-source Anki add-on that turns one typed word into a full language card: meaning and a natural translation, a related image, memory emojis, audio, a casual and a formal example sentence, and the grammar that actually matters.
 
@@ -10,7 +10,7 @@
 [![Support me on Ko-fi](https://img.shields.io/badge/%E2%99%A5-Support%20me%20on%20Ko--fi-ff5e5b)](https://ko-fi.com/tarkib)
 [![Free A1 German deck](https://img.shields.io/badge/German%20decks-Free%20A1-3f4d99)](https://ko-fi.com/s/ab96fd15d8)
 
-![Tarkib demo: type the German word Schloss with optional hints, click Add, then study the finished card and its typing card in Anki](assets/demo.gif)
+![Tarkib demo: type one word in German, English or Spanish, click Add, and study the finished card with its photo, sentences, grammar and audio](assets/demo.gif)
 
 ## The story
 
@@ -27,8 +27,8 @@ Now I type one word, pick the level (A1 to C1, or Native for real spoken German)
 ![The Tarkib window: type one word, pick the language, a deck and a level, and click Add](assets/tarkib-window.gif)
 
 1. Install it from [AnkiWeb](https://ankiweb.net/shared/info/83323714): in Anki, **Tools → Add-ons → Get Add-ons**, paste the code `83323714` and restart Anki.
-2. Add your free keys in **Settings**: a Groq key writes the cards (free, no credit card), and a Pexels key adds the photos (free, optional). The [setup guide](https://tarkib-anki.pages.dev/docs/addon-install) shows every step with screenshots, about five minutes.
-3. Open Tarkib with **Tools → "Add a card with Tarkib"**, `Ctrl+Shift+G`, or the Tarkib button in the editor, the Decks screen or the top toolbar. Type one word or phrase, pick German or English, a deck and a level, and click **Add**. About 15 to 20 seconds later the card (and the optional cloze companion) is in your collection, with image and audio.
+2. Add your free keys in **Settings**: a Groq key writes the cards (free, no credit card), and a Pixabay key adds the photos (free, optional, but without one many cards get no photo). The [setup guide](https://tarkib-anki.pages.dev/docs/addon-install) shows every step with screenshots, about five minutes.
+3. Open Tarkib with **Tools → "Add a card with Tarkib"**, `Ctrl+Shift+G`, or the Tarkib button in the editor, the Decks screen or the top toolbar. Type one word or phrase, pick German, English or Spanish, a deck and a level, and click **Add**. About 15 to 20 seconds later the card (and the optional cloze companion) is in your collection, with image and audio.
 
 Create on the desktop, study anywhere: the cards are normal Anki notes and media, so they sync and study fully on AnkiDroid and iOS like any other deck. The generator runs on Anki Desktop only (the mobile apps do not run add-ons).
 
@@ -40,25 +40,31 @@ Type one word, get a full card:
 
 - **Meaning and a natural translation**, in your helper language.
 - **A casual and a formal example sentence**, each translated, so you learn when to use the word, not just what it means.
-- **The grammar learners actually trip on:** in German, article, plural, and (from B1) genitive for nouns, the correct past forms of strong verbs, and for verbs the preposition with its case, like `warten auf` with Akkusativ. In English, irregular verbs and plurals, uncountable nouns, and the patterns that come with a word, like `depend on`, `interested in` or `look forward to + -ing`.
+- **The grammar learners actually trip on:** in German, article, plural, and (from B1) genitive for nouns, the correct past forms of strong verbs, and for verbs the preposition with its case, like `warten auf` with Akkusativ. In English, irregular verbs and plurals, uncountable nouns, and the patterns that come with a word, like `depend on`, `interested in` or `look forward to + -ing`. In Spanish, a noun with its article and plural, a verb with its yo form, preterite and participle, irregular ones included (tener, tengo, tuvo, tenido), and patterns like `pensar en`, `tener que + infinitivo` or `es importante que + subjuntivo`.
 - **A real image and a couple of memory emojis** tied to the word, so it has something to hook onto.
 - **Audio in the language you learn**, so you hear how the word and the sentences sound. The translations are read aloud only if you turn on their voices in **Settings, Languages**.
 - **An optional fill-in-the-blank (cloze) companion card**, to practice producing the word, not just recognizing it.
-- **Sentences that match your level:** A1 to C1, plus a "Native" style for real spoken German or English.
+- **Sentences that match your level:** A1 to C1, plus a "Native" style for real spoken German, English or Spanish.
 
-## German and English
+## German, English and Spanish
 
-Pick the language of the card in the **Language** row, above the deck. English cards go to their own deck, "Tarkib English", unless you pick another, and every deck remembers the language of its cards: pick a deck where you made English cards, and the window switches to English. The window opens where you made your last card.
+Pick the language of the card in the **Language** row, above the deck. English cards go to their own deck, "Tarkib English", and Spanish cards to "Tarkib Spanish", unless you pick another, and every deck remembers the language of its cards: pick a deck where you made English cards, and the window switches to English. The window opens where you made your last card.
 
-English cards contrast everyday words and contractions with formal words (get and receive), since English has one "you". They use American spelling, or British spelling when a British voice reads them. In **Settings, Languages**, pick the language you learn first: its voice, its translation language and its second translation are kept separately, so German cards can stay in English while English cards come in Arabic.
+English cards contrast everyday words and contractions with formal words (get and receive), since English has one "you". They use American spelling, or British spelling when a British voice reads them. Spanish cards contrast tú with usted, and use the Spanish of Spain, or Latin American Spanish when a Latin American voice reads them. The cloze card can drill ser and estar, or por and para. In **Settings, Languages**, pick the language you learn first: its voice, its translation language and its second translation are kept separately, so German cards can stay in English while English cards come in Arabic.
 
 ## Translation languages
 
-The translation under the word can be any of **24 languages**. German cards start in English. English cards cannot be translated into English, so their list has German instead: they use your German cards' translation language until you pick their own, and if that is English, the window asks you to pick one. Optionally add a **second language** on every card, for example English plus Arabic for a bilingual learner.
+The translation under the word can be any of **24 languages**. German and Spanish cards start in English. English cards cannot be translated into English, so their list has German instead: they use your German cards' translation language until you pick their own, and if that is English, the window asks you to pick one. Optionally add a **second language** on every card, for example English plus Arabic for a bilingual learner.
 
 Every language has a natural Microsoft voice. The translations stay silent until you pick their voices in **Settings, Languages**. Press **▶** next to a voice to hear a sample sentence before you decide.
 
 The Microsoft Edge voices are free and need no key. If you prefer, **Settings, Voice** lets Azure AI Speech, ElevenLabs, OpenAI, Google Cloud or Gemini read your cards instead, with your own key, and each has a Test button. If your voice service fails, Tarkib tries your other services, then the free Edge voices, and tells you which one read the card.
+
+In **Settings, Voice**, the speech speed can be slower, about 20 percent, at A1 and A2 or at every level. Only the language you learn is slowed, on new cards. The translations keep the normal speed.
+
+## Your style
+
+In **Settings, Cards**, you can write a few wishes in any language: the topics, names, tone or length you want, for example "examples about cooking and travel, short sentences". While **Use my style** is ticked in the Tarkib window, Tarkib sends them with every card, in every language. The level and the card's rules stay as they are.
 
 ## Ready-made German decks (A1 is free)
 

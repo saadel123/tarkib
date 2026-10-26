@@ -45,7 +45,7 @@ tags: Kommunikation Level::B2
   <div class="sentence formal"><span class="emoji">🙋</span>Darf ich Sie kurz unterbrechen?</div>
 </div>
 <div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">jemanden unterbrechen (+Akk)</span></div>
-<div class="explanation">👉 „Wenn man unterbricht, stoppt man ein Gespräch für kurze Zeit."</div>
+<div class="explanation">👉 „Wenn man unterbricht, stoppt man ein Gespräch für kurze Zeit.“</div>
 <div class="section">
   <div class="section-label">🇬🇧 English</div>
   <div class="sentence casual"><span class="emoji">😤</span>He keeps interrupting me when I talk.</div>

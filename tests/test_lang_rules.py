@@ -165,5 +165,43 @@ class StoreLanguageSettings(unittest.TestCase):
                                                   "secondary": "", "secondary_voice": ""})
 
 
+class ThreeLanguages(unittest.TestCase):
+    """German, English and Spanish side by side: each keeps its own deck, last deck and settings."""
+    DECKS = DECKS + ["Tarkib Spanish", "Mis palabras"]
+    read = staticmethod(card_scenarios.generate.language_settings)
+
+    def test_each_default_deck_belongs_to_its_language(self):
+        self.assertEqual([R.deck_language({}, d) for d in ("Tarkib", "Tarkib English", "Tarkib Spanish")],
+                         ["de", "en", "es"])
+        self.assertEqual(R.picker_label("es"), "🇪🇸 Spanish")
+        self.assertEqual(R.start({"defaults": {"learning_language": "es"}}, self.DECKS), ("es", "Tarkib Spanish"))
+
+    def test_switching_between_the_two_new_languages(self):
+        self.assertEqual(R.deck_after_switch({}, "Tarkib English", "es", self.DECKS), "Tarkib Spanish")
+        self.assertEqual(R.deck_after_switch({}, "Tarkib Spanish", "en", self.DECKS), "Tarkib English")
+        self.assertEqual(R.deck_after_switch({}, "Default", "es", self.DECKS), "Default")
+
+    def test_remember_keeps_each_language_apart(self):
+        cfg = {}
+        R.remember(cfg, "Mis palabras", "es")
+        R.remember(cfg, "My words", "en")
+        R.remember(cfg, "Tarkib", "de")
+        self.assertEqual(cfg["defaults"]["last_decks"], {"es": "Mis palabras", "en": "My words", "de": "Tarkib"})
+        self.assertEqual(R.deck_after_switch(cfg, "Tarkib", "es", self.DECKS), "Mis palabras")
+        self.assertEqual(R.deck_after_switch(cfg, "Mis palabras", "en", self.DECKS), "My words")
+        self.assertEqual(R.deck_after_switch(cfg, "My words", "de", self.DECKS), "Tarkib")
+
+    def test_spanish_borrows_english_until_it_has_its_own(self):
+        cfg = {"defaults": {"translation_language": "English"}, "voices": {"target": "de-DE-KatjaNeural"}}
+        self.assertEqual(self.read(cfg, "es")["translation"], "English")      # English learners cannot, Spanish can
+        self.assertEqual(self.read(cfg, "en")["translation"], "")
+        v = {"voice": "es-MX-DaliaNeural", "translation": "Arabic", "translation_voice": "", "secondary": "English",
+             "secondary_voice": "en-US-JennyNeural"}
+        self.assertEqual(R.store_language_settings(cfg, "es", v), [])
+        self.assertEqual(self.read(cfg, "es"), v)
+        self.assertEqual(self.read(cfg, "en")["translation"], "")             # English's own choice is untouched
+        self.assertEqual(cfg["defaults"], {"translation_language": "English"})
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

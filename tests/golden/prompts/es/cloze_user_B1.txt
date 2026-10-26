@@ -1,0 +1,12 @@
+Input: darse cuenta
+Deck: Tarkib Spanish
+Meaning in Arabic: يدرك
+
+
+Classify and generate a NATURAL Spanish cloze sentence. Restructure if needed.
+
+LEVEL B1: use case "single_word", "verb_prep", "ser_estar" or "por_para"; a medium everyday sentence with common words.
+
+Write "translation" as the FULL sentence translated naturally into Arabic. Use Modern Standard Arabic only, without diacritics.
+
+Use the Spanish of Spain (vosotros, coche, ordenador).

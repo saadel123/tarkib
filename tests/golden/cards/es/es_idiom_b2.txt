@@ -1,0 +1,98 @@
+# Golden card "es_idiom_b2" (tests/card_scenarios.py)
+# An idiom at B2: the idiom restated is dropped, the idiom with a person (a alguien) is kept, estar + gerundio ranked after it, two cloze blanks with hints.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: tomar el pelo
+deck: Tarkib Spanish | level: B2 | cloze: on
+settings: {"defaults": {"translation_language": "Arabic"}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: es/main_B2 [Arabic, es-ES-ElviraNeural]
+user:
+WORD OR PHRASE TO TEACH: "tomar el pelo". CONTEXT: Important everyday Spanish. Formal: office, appointment or email scenario (usted). Casual: chat with friends or family (tú, messaging tone). Prefer situations people meet every week: work, shopping, health, travel, home.
+
+== AI call 2: cloze (temperature 0.3, max_tokens 1600)
+system: es/cloze
+user:
+Input: tomar el pelo
+Deck: Tarkib Spanish
+Meaning in Arabic: يمزح مع شخص
+
+
+Classify and generate a NATURAL Spanish cloze sentence. Restructure if needed.
+
+Write "translation" as the FULL sentence translated naturally into Arabic. Use Modern Standard Arabic only, without diacritics.
+
+Use the Spanish of Spain (vosotros, coche, ordenador).
+
+== picture search
+keyword: friends laughing together | deck: Tarkib Spanish | source: auto -> pexels_friends_laughing_together.jpg
+
+== read aloud
+1. edge es-ES-ElviraNeural: tomar el pelo. ... ¿Me estás tomando el pelo?. ... Le aseguro que no le estoy tomando el pelo.
+2. edge es-ES-ElviraNeural: No te creo, me estás. El. .
+3. edge es-ES-ElviraNeural: No te creo, me estás tomando el pelo.
+
+== main note in deck "Tarkib Spanish"
+tags: Comunicación Level::B2
+-- Front
+😄 tomar el pelo.
+-- Back
+<div class="card-translation" style="direction:rtl;"><span class="level-chip lvl-b2">B2</span> 😄 يمزح مع شخص</div>
+<div class="card-image"><img src="pexels_friends_laughing_together.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇪🇸 Español</div>
+  <div class="sentence casual"><span class="emoji">😂</span>¿Me estás tomando el pelo?</div>
+  <div class="sentence formal"><span class="emoji">🤝</span>Le aseguro que no le estoy tomando el pelo.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">tomar el pelo a alguien</span> <span class="pattern-badge">estar + gerundio</span></div>
+<div class="explanation">👉 «Tomar el pelo a alguien es engañarlo en broma.»</div>
+<div class="section arabic">
+  <div class="section-label" style="direction:rtl;text-align:right;">🇸🇦 العربية</div>
+  <div class="sentence casual"><span class="emoji">😂</span>هل تمزح معي؟</div>
+  <div class="sentence formal"><span class="emoji">🤝</span>أؤكد لك أنني لا أمزح معك.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Arabic patterns</div><span class="pattern-badge">يمزح مع شخص</span> <span class="pattern-badge">فعل مستمر</span></div><br>[sound:tts_es_tomar_el_pelo_4fb0c2d656.mp3]
+
+== cloze note in deck "Tarkib Spanish::Cloze"
+tags: cloze tarkib_spanish case_idiom Level::B2
+-- Text
+No te creo, me estás {{c1::tomando::tom...}} el {{c1::pelo::p...}}.
+-- Translation
+لا أصدقك، أنت تمزح معي.
+-- Image
+<img src="pexels_friends_laughing_together.jpg">
+-- FrontAudio
+[sound:cloze_front_No_te_creo__me_estás_tom_d7797d788f.mp3]
+-- BackAudio
+[sound:cloze_back_No_te_creo__me_estás_tom_b52753c986.mp3]
+-- GrammarHint
+tomar el pelo: engañar en broma
+-- SourceWord
+tomar el pelo
+-- DeckOrigin
+Tarkib Spanish
+
+== media files
+cloze_back_No_te_creo__me_estás_tom_b52753c986.mp3 <- audio from edge
+cloze_front_No_te_creo__me_estás_tom_d7797d788f.mp3 <- audio from edge
+pexels_friends_laughing_together.jpg <- picture
+tts_es_tomar_el_pelo_4fb0c2d656.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "يمزح مع شخص",
+  "word": "tomar el pelo"
+}

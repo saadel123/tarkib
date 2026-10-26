@@ -46,7 +46,7 @@ tags: Haushalt Level::A1
   <div class="sentence casual"><span class="emoji">👀</span>Siehst du den Tisch dort?</div>
   <div class="sentence formal"><span class="emoji">🍽️</span>Möchten Sie diesen Tisch?</div>
 </div>
-<div class="explanation">👉 „Auf einem Tisch isst oder arbeitet man."</div>
+<div class="explanation">👉 „Auf einem Tisch isst oder arbeitet man.“</div>
 <div class="section arabic">
   <div class="section-label" style="direction:rtl;text-align:right;">🇸🇦 العربية</div>
   <div class="sentence casual"><span class="emoji">👀</span>هل ترى الطاولة هناك؟</div>

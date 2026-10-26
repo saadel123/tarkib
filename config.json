@@ -21,6 +21,7 @@
   },
   "tts": {
     "service": "edge",
+    "speed": "normal",
     "order": [
       "azure",
       "elevenlabs",
@@ -54,6 +55,7 @@
     }
   },
   "defaults": {
+    "card_style": "",
     "learning_language": "de",
     "translation_language": "English",
     "secondary_translation_language": "",

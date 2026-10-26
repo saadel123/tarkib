@@ -12,7 +12,7 @@ system: de/main_C1
 user:
 WORD OR PHRASE TO TEACH: "gegebenenfalls". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause.
 
-== AI call 2: secondary (temperature 0.2, max_tokens 600)
+== AI call 2: secondary (temperature 0.2, max_tokens 2000)
 system: de/secondary_French
 user:
 Translate into French.
@@ -58,7 +58,7 @@ tags: Arbeit Formell Level::C1
   <div class="sentence formal"><span class="emoji">📨</span>Gegebenenfalls senden wir Ihnen die Unterlagen noch einmal zu.</div>
 </div>
 <div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">jemandem etwas zusenden (+Dat, +Akk)</span></div>
-<div class="explanation">👉 „Das Wort gehört zur Behörden- und Geschäftssprache, im Alltag sagt man lieber falls nötig."</div>
+<div class="explanation">👉 „Das Wort gehört zur Behörden- und Geschäftssprache, im Alltag sagt man lieber falls nötig.“</div>
 <div class="section">
   <div class="section-label">🇬🇧 English</div>
 <div class="register-hint"><span class="formal-mark">"if necessary" (Formal)</span> <span class="arrow">→</span> <span class="casual-alt">Casual:</span> <span class="alt-list">if need be · if we have to</span></div>
@@ -67,7 +67,7 @@ tags: Arbeit Formell Level::C1
 </div>
 <div class="patterns-box"><div class="patterns-label">💡 English patterns</div><span class="pattern-badge">to send something to someone</span></div>
 <div class="section">
-  <div class="section-label">French</div>
+  <div class="section-label">🇫🇷 Français</div>
   <div class="sentence casual"><span class="emoji">💬</span>Si besoin, je t'envoie les affaires encore une fois.</div>
   <div class="sentence formal"><span class="emoji">📨</span>Le cas échéant, nous vous renverrons les documents.</div>
 </div>

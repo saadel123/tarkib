@@ -1,0 +1,112 @@
+# Golden card "es_formal_native" (tests/card_scenarios.py)
+# A formal word at Native: casual alternatives, the Formal tag, the separate grammar call because the main call's one pattern was a whole sentence (dropped there and in the grammar call's answer), and the borrowed Arabic translation read aloud with the borrowed voice.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: no obstante
+deck: Tarkib Spanish | level: Native | cloze: on
+settings: {"defaults": {"translation_language": "Arabic"}, "voices": {"translation": "ar-SA-ZariyahNeural"}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: es/main_Native [Arabic, es-ES-ElviraNeural]
+user:
+WORD OR PHRASE TO TEACH: "no obstante". CONTEXT: Important everyday Spanish. Formal: office, appointment or email scenario (usted). Casual: chat with friends or family (tú, messaging tone). Prefer situations people meet every week: work, shopping, health, travel, home.
+
+== AI call 2: grammar (temperature 0.2, max_tokens 2000)
+system: es/grammar [Arabic]
+user:
+Spanish casual: "Es arriesgado, pero aun así lo vamos a hacer."
+Spanish formal: "Es un plan arriesgado y, no obstante, lo vamos a intentar."
+Arabic casual: "الأمر فيه مخاطرة، لكننا سنفعله على أي حال."
+Arabic formal: "إنها خطة محفوفة بالمخاطر، ومع ذلك سنحاول تنفيذها."
+
+Extract REAL patterns from these sentences. Return ONLY JSON.
+
+== AI call 3: cloze (temperature 0.3, max_tokens 1600)
+system: es/cloze
+user:
+Input: no obstante
+Deck: Tarkib Spanish
+Meaning in Arabic: ومع ذلك
+
+
+Classify and generate a NATURAL Spanish cloze sentence. Restructure if needed.
+
+Write "translation" as the FULL sentence translated naturally into Arabic. Use Modern Standard Arabic only, without diacritics.
+
+Use the Spanish of Spain (vosotros, coche, ordenador).
+
+== picture search
+keyword: team deciding to go ahead with a plan | deck: Tarkib Spanish | source: auto -> pexels_team_deciding_to_go_ahead_with_a_plan.jpg
+
+== read aloud
+1. edge es-ES-ElviraNeural: no obstante. ... Es arriesgado, pero aun así lo vamos a hacer.. ... Es un plan arriesgado y, no obstante, lo vamos a intentar.
+2. edge ar-SA-ZariyahNeural: ومع ذلك. ... الأمر فيه مخاطرة، لكننا سنفعله على أي حال. ... إنها خطة محفوفة بالمخاطر، ومع ذلك سنحاول تنفيذها.
+3. edge es-ES-ElviraNeural: Llovía mucho y,. , salimos a pasear.
+4. edge es-ES-ElviraNeural: Llovía mucho y, no obstante, salimos a pasear.
+
+== main note in deck "Tarkib Spanish"
+tags: Comunicación Formal Level::Native
+-- Front
+⚖️ no obstante.
+-- Back
+<div class="card-translation" style="direction:rtl;"><span class="level-chip lvl-native">Native</span> ⚖️ ومع ذلك</div>
+<div class="card-image"><img src="pexels_team_deciding_to_go_ahead_with_a_plan.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇪🇸 Español</div>
+<div class="register-hint"><span class="formal-mark">«no obstante» (Formal)</span> <span class="arrow">→</span> <span class="casual-alt">En el día a día:</span> <span class="alt-list">pero · aun así</span></div>
+  <div class="sentence casual"><span class="emoji">🤷</span>Es arriesgado, pero aun así lo vamos a hacer.</div>
+  <div class="sentence formal"><span class="emoji">📊</span>Es un plan arriesgado y, no obstante, lo vamos a intentar.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">ir a + infinitivo</span></div>
+<div class="explanation">👉 «Palabra formal para decir que algo pasa a pesar de lo anterior. En el día a día se dice aun así.»</div>
+<div class="section arabic">
+  <div class="section-label" style="direction:rtl;text-align:right;">🇸🇦 العربية</div>
+<div class="register-hint"><span class="formal-mark">"ومع ذلك" (Formal)</span> <span class="arrow">→</span> <span class="casual-alt">Casual:</span> <span class="alt-list">لكن · رغم ذلك</span></div>
+  <div class="sentence casual"><span class="emoji">🤷</span>الأمر فيه مخاطرة، لكننا سنفعله على أي حال.</div>
+  <div class="sentence formal"><span class="emoji">📊</span>إنها خطة محفوفة بالمخاطر، ومع ذلك سنحاول تنفيذها.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Arabic patterns</div><span class="pattern-badge">سوف + فعل</span></div><br>[sound:tts_es_no_obstante_450e3d9c0a.mp3][sound:tts_tr_no_obstante_16d573c3a0.mp3]
+
+== cloze note in deck "Tarkib Spanish::Cloze"
+tags: cloze tarkib_spanish case_single_word Level::Native
+-- Text
+Llovía mucho y, {{c1::no obstante::n... obs...}}, salimos a pasear.
+-- Translation
+كانت تمطر كثيرا، ومع ذلك خرجنا للتنزه.
+-- Image
+<img src="pexels_team_deciding_to_go_ahead_with_a_plan.jpg">
+-- FrontAudio
+[sound:cloze_front_Llovía_mucho_y__no_obsta_c918a58ff8.mp3]
+-- BackAudio
+[sound:cloze_back_Llovía_mucho_y__no_obsta_67356c33e1.mp3]
+-- GrammarHint
+no obstante = aun así (formal)
+-- SourceWord
+no obstante
+-- DeckOrigin
+Tarkib Spanish
+
+== media files
+cloze_back_Llovía_mucho_y__no_obsta_67356c33e1.mp3 <- audio from edge
+cloze_front_Llovía_mucho_y__no_obsta_c918a58ff8.mp3 <- audio from edge
+pexels_team_deciding_to_go_ahead_with_a_plan.jpg <- picture
+tts_es_no_obstante_450e3d9c0a.mp3 <- audio from edge
+tts_tr_no_obstante_16d573c3a0.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 4,
+    "total": 4,
+    "used": {
+      "edge": 4
+    }
+  },
+  "translation_en": "ومع ذلك",
+  "word": "no obstante"
+}

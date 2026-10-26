@@ -1,0 +1,26 @@
+# Golden card "es_not_spanish_b1" (tests/card_scenarios.py)
+# An English word typed as Spanish: two calls agree it is not Spanish, so the card is refused with the suggestion the AI made.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: thanks
+deck: Tarkib Spanish | level: B1 | cloze: on
+settings: {"defaults": {"translation_language": "Arabic"}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: es/main_B1 [Arabic, es-ES-ElviraNeural]
+user:
+WORD OR PHRASE TO TEACH: "thanks". CONTEXT: Important everyday Spanish. Formal: office, appointment or email scenario (usted). Casual: chat with friends or family (tú, messaging tone). Prefer situations people meet every week: work, shopping, health, travel, home.
+
+== AI call 2: main (temperature 0.4, max_tokens 3000)
+system: es/main_B1 [Arabic, es-ES-ElviraNeural]
+user:
+WORD OR PHRASE TO TEACH: "thanks". CONTEXT: Important everyday Spanish. Formal: office, appointment or email scenario (usted). Casual: chat with friends or family (tú, messaging tone). Prefer situations people meet every week: work, shopping, health, travel, home. STRICT REQUIREMENT: the "word" field MUST be exactly "thanks".
+
+== picture search
+none
+
+== read aloud
+nothing
+
+== refused
+RuntimeError: not spanish: "thanks"; suggestion "gracias"

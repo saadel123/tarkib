@@ -3,7 +3,47 @@
 All notable changes to **Tarkib** are listed here, newest first.
 Versions follow [SemVer](https://semver.org/).
 
-## [Unreleased]
+## [1.3.0]
+
+- **Spanish cards.** Pick Spanish in the Language row: the card gets a casual sentence with tú and a
+  formal one with usted, the patterns Spanish learners need (pensar en, tener que + infinitivo, es
+  importante que + subjuntivo), a noun with its article and plural, a verb with its yo form,
+  preterite and participle, irregular ones included, Spanish audio and the optional cloze card,
+  which can also drill ser and estar, or por and para. Spanish cards go to the deck "Tarkib Spanish"
+  unless you pick another, with the same levels, A1 to C1 and Native.
+- **The Spanish of Spain or of Latin America.** Spanish cards use the Spanish of Spain, or Latin
+  American Spanish when a Latin American voice reads them (Settings, Languages, Spanish voice). A
+  Mexican, Argentine, Colombian or US voice gets the everyday words of its country.
+- **Your style.** In Settings, Cards, write a few wishes in any language: the topics, names, tone
+  or length you want. While "Use my style" is ticked in the Tarkib window, they go with every card.
+  The level and the card's rules stay as they are.
+- **Speech speed.** In Settings, Voice, the language you learn can be read about 20 percent slower,
+  at A1 and A2 or at every level. The translations keep the normal speed.
+- **Photos with a Pixabay key.** Pexels has paused new keys, so Settings and the Tarkib window now
+  suggest a free Pixabay key. A Pexels key you already have keeps working.
+- The second translation could go missing on some cards, because its step ran out of room with the
+  default AI model. It has enough room now.
+- When Microsoft Edge is your only voice service and answers slowly once, the next clips ask again.
+  Before, one slow answer left the rest of the card without audio.
+- Cards made one after another no longer get the same photo when their picture searches are alike.
+- When the picture search finds nothing, Tarkib tries once more and then says the card has no
+  picture. Before, the picture was missing without a word.
+- A cloze card for a fixed phrase with a small word inside it now blanks the whole phrase, not just
+  the small word.
+- Special hyphens from the AI are written as a normal hyphen, so Anki's search finds words like
+  "rendez-vous".
+- On a Native card for a slang word, the formal sentence is now a polite everyday sentence, not a
+  formal letter that nobody would write with slang in it.
+- A word quoted inside the explanation no longer doubles the opening quote, and German explanations
+  close with the German closing quote.
+- The casual words in a formal word's hint were hard to read in Anki's light mode. They are dark
+  now. Your note types refresh once by themselves.
+- A German cloze card whose answer is written in small letters but starts the sentence ("morgen" in
+  "Morgen gehe ich einkaufen.") is no longer lost.
+- The translated grammar patterns no longer carry case markers like "(+Acc)": the case stays on the
+  German pattern.
+- The second translation's heading shows its flag and its own name, like the first.
+- The messages about a wrong key now name the "Test keys" button by its real name.
 
 ## [1.2.0]
 
@@ -124,6 +164,7 @@ On AnkiWeb: [83323714](https://ankiweb.net/shared/info/83323714) (Tools, Add-ons
   top toolbar.
 - Works with Anki 23.10 and newer. Pure Python, nothing to install.
 
+[1.3.0]: https://github.com/saadel123/tarkib/releases/tag/v1.3.0
 [1.2.0]: https://github.com/saadel123/tarkib/releases/tag/v1.2.0
 [1.1.0]: https://github.com/saadel123/tarkib/releases/tag/v1.1.0
 [1.0.2]: https://github.com/saadel123/tarkib/releases/tag/v1.0.2

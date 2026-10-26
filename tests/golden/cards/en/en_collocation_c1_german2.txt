@@ -12,7 +12,7 @@ system: en/main_C1 [Arabic, en-US-JennyNeural]
 user:
 WORD OR PHRASE TO TEACH: "make a decision". CONTEXT: Important everyday English. Formal: office, appointment or email scenario. Casual: chat with friends or family (messaging tone). Prefer situations people meet every week: work, shopping, health, travel, home.
 
-== AI call 2: secondary (temperature 0.2, max_tokens 600)
+== AI call 2: secondary (temperature 0.2, max_tokens 2000)
 system: en/secondary_German
 user:
 Translate into German.
@@ -69,7 +69,7 @@ tags: Work Level::C1
 </div>
 <div class="patterns-box"><div class="patterns-label">💡 Arabic patterns</div><span class="pattern-badge">يفكر في الأمر قبل أن يقرر</span> <span class="pattern-badge">لم ... إلا بعد، مع تقديم الفعل للتوكيد</span></div>
 <div class="section">
-  <div class="section-label">German</div>
+  <div class="section-label">🇩🇪 Deutsch</div>
   <div class="sentence casual"><span class="emoji">😴</span>Ehrlich gesagt kann ich mich erst entscheiden, wenn ich eine Nacht darüber geschlafen habe.</div>
   <div class="sentence formal"><span class="emoji">🏛️</span>Erst nach Prüfung aller Beweise traf der Ausschuss eine Entscheidung.</div>
 </div>

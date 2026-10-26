@@ -5,7 +5,7 @@ translation language is Arabic; any other language uses a generic translation pr
 """
 import functools
 
-from . import english, languages
+from . import english, languages, spanish
 
 _RANKED = ('verb+preposition+case ("warten auf (+Akk)"), noun/adjective+preposition+case ("Angst vor (+Dat)"), a verb with a case you cannot guess ("helfen (+Dat)", "jemandem etwas geben (+Dat, +Akk)"), noun+verb collocations ("eine Entscheidung treffen"), a verb that opens a clause ("mitteilen, dass"), zu-infinitive frames ("um ... zu"), reflexive/separable verbs, then level structures (Perfekt, Konjunktiv, Passiv, weak nouns)')
 
@@ -51,6 +51,7 @@ SYSTEM_MAIN = (
     '(6) explanation_de must note the word is Behörden-/Geschäftssprache and casual speakers prefer the alternatives. '
     '(7) Add "Formell" to tags. '
     '# IF register == "neutral" or "casual": casual_alternatives = []. example_casual uses the actual word. No "Formell" tag. '
+    '# IF register == "casual": example_formal still uses the word, but as a polite everyday Sie-sentence (to a neighbour, or a colleague you do not know well), never a business email, a letter or an official request: nobody writes Umgangssprache there. For this word it replaces the FORMAL style below. '
     '# If input is a phrase (>2 words), BOTH examples use that exact phrase. NEVER substitute synonyms — the card teaches THAT word/phrase. '
     '# CASUAL = 25-40 working German, 2026. 5-12 words. Contractions (hab, machs, gibts, ins, aufm, is). '
     'Modal particles (halt, mal, eben, doch, eh, einfach, echt): use AT MOST ONE per sentence, and only where it sounds natural — zero is fine. A native speaker aged 20-40 uses these sparingly for flow, NOT as decoration. '
@@ -474,7 +475,7 @@ def _main_system_de(level, helper, scenario, voice=""):
     return system_main_for_level(level) + translation_override(helper) + (SYSTEM_LOANWORDS_EXPANDED if scenario else "")
 
 
-def _main_user_de(word, deck, meaning, scenario, image_keyword, strict, exact_word):
+def _main_user_de(word, deck, meaning, scenario, image_keyword, strict, exact_word, voice=""):
     # Label the input explicitly: a bare greeting like "Guten Tag!" or "Danke" was read by the model
     # as the user talking to it ("which word do you want?") instead of as the phrase to teach.
     u = 'WORD OR PHRASE TO TEACH: "%s". %s' % (word, deck_context_de(deck, "main"))
@@ -531,7 +532,7 @@ def _cloze_user_de(word, deck, meaning, level, helper, voice=""):
 # neutral here ("translation", "explanation"): a key named explanation_de would pull the model toward
 # German. read_answer() maps them back to the card's historical keys in ONE place (_GENERIC_KEYS).
 
-NOTES = {"en": english.NOTE}
+NOTES = {"en": english.NOTE, "es": spanish.NOTE}
 
 _GENERIC_KEYS = {
     "main": {"translation": "translation_en", "casual_alternatives_translation": "casual_alternatives_en",
@@ -607,6 +608,8 @@ _DEFAULT_NOTE = {
     },
     "contexts_cloze": {"Default": ""},
     "variety_line": None,
+    "main_variety_line": None,  # a function of the voice: the variety again at the end of the main user message
+    "arabic_address": "",       # added to the Arabic translation rule (Spanish: usted is one person)
 }
 
 
@@ -690,7 +693,7 @@ def _generic_main_system(entry, note, level, helper, scenario, voice):
     standard = n["standard"](voice) if callable(n["standard"]) else n["standard"]
     msa = (" Use Modern Standard Arabic (MSA, Fusha) ONLY, never any dialect, and no diacritics. Address one person in "
            "the singular, also in the formal sentence: Arabic shows politeness with words, never with the plural."
-           if _is_arabic(helper) else "")
+           + n["arabic_address"] if _is_arabic(helper) else "")
     tags = n["tags"] if leveled else n["tags_native"]
     parts = [
         "You create {language} Anki flashcards for a learner at a given CEFR level. " if leveled
@@ -718,6 +721,9 @@ def _generic_main_system(entry, note, level, helper, scenario, voice):
             '(5) example_formal keeps the formal word. (6) The explanation says that the word is formal or official '
             'language and that casual speakers prefer the alternatives. (7) Add "{formal_tag}" to tags. ',
             '# IF register == "neutral" or "casual": casual_alternatives = [] and example_casual uses the word itself. ',
+            '# IF register == "casual": example_formal still uses the word, but as a polite everyday sentence (the polite '
+            'way to say it to a neighbour, or to a colleague you do not know well), never a work email, a letter or an '
+            'official request: nobody writes slang there. For this word it replaces the formal style below. ',
             '# TWO EXAMPLES: ' + n["register_pair"],
             '# If the input is a phrase of more than 2 words, BOTH examples use that exact phrase. NEVER substitute '
             'synonyms: the card teaches THAT word or phrase. ',
@@ -794,7 +800,7 @@ def _generic_context(note, deck, kind):
     return table.get("Default", "")
 
 
-def _generic_main_user(entry, note, word, deck, meaning, scenario, image_keyword, strict, exact_word):
+def _generic_main_user(entry, note, word, deck, meaning, scenario, image_keyword, strict, exact_word, voice=""):
     u = 'WORD OR PHRASE TO TEACH: "%s". %s' % (word, _fill(_generic_context(note, deck, "main"), language=entry["name"]))
     u += _hint_lines(meaning, scenario, image_keyword)
     if strict:
@@ -802,6 +808,9 @@ def _generic_main_user(entry, note, word, deck, meaning, scenario, image_keyword
     if exact_word:
         u += (' The user confirmed this spelling. Do NOT correct it, even if it looks misspelled: '
               'teach "%s" exactly as written.' % word)
+    n = _merged(note)
+    if n["main_variety_line"]:
+        u += n["main_variety_line"](voice)
     return u
 
 
@@ -965,6 +974,7 @@ PROMPTS = {
         "read_answer": _read_answer_de,              # (kind, answer) -> the answer with the card's keys
     },
     "en": generic_prompts("en"),
+    "es": generic_prompts("es"),
 }
 
 
@@ -992,8 +1002,47 @@ def main_system(lang, level, helper, scenario=False, voice=""):
     return PROMPTS[lang]["main"](level, helper, bool(scenario), voice)
 
 
-def main_user(lang, word, deck, meaning="", scenario="", image_keyword="", strict=False, exact_word=False):
-    return PROMPTS[lang]["main_user"](word, deck, meaning, scenario, image_keyword, strict, exact_word)
+# ── The user's style wishes (Settings, Cards, "Your style"; every learning language) ──────────────
+# Added to the MAIN and the cloze user messages when "Use my style" is ticked in the Tarkib window. Empty
+# wishes add nothing, so every prompt stays byte for byte as before (the frozen prompts prove it). No extra
+# AI call: about 100 tokens more on a card of about 4,500.
+STYLE_MAX = 500
+
+
+def clean_style(text):
+    """The style wishes as they go into a prompt: one line, double quotes made single (they sit inside
+    quotes), at most STYLE_MAX characters, cut at a word."""
+    t = " ".join(str(text or "").split()).replace('"', "'")
+    if len(t) > STYLE_MAX:
+        t = t[:STYLE_MAX].rsplit(" ", 1)[0]
+    return t
+
+
+def style_main(style):
+    s = clean_style(style).rstrip(" .;,")      # the block ends the quote with its own period
+    if not s:
+        return ""
+    return (' STYLE WISHES FROM THE USER (may be written in any language; interpret them): "%s". Follow these wishes '
+            'in BOTH example sentences and the explanation: they come before the CONTEXT and its usual scenarios (topics, '
+            'situations, names, tone, length). Only the hard rules stay above them: the JSON format, the level and its '
+            'limits, the content and picture rules, the translation language and the language of the card. Leave out a '
+            'wish only if it would break one of those.' % s)
+
+
+def style_cloze(style):
+    s = clean_style(style).rstrip(" .;,")
+    if not s:
+        return ""
+    return ('\n\nSTYLE WISHES FROM THE USER (may be written in any language): "%s". Follow them for the sentence: '
+            'they come before the deck context. Only the answer rules, the level and the content rules stay above them.' % s)
+
+
+def main_user(lang, word, deck, meaning="", scenario="", image_keyword="", strict=False, exact_word=False, style="",
+              voice=""):
+    """style: the user's style wishes when "Use my style" is ticked (any language), else "". voice: the voice
+    that reads the language (a Latin American Spanish voice names its country here too)."""
+    return (PROMPTS[lang]["main_user"](word, deck, meaning, scenario, image_keyword, strict, exact_word, voice)
+            + style_main(style))
 
 
 def grammar_system(lang, helper=""):
@@ -1017,9 +1066,9 @@ def cloze_system(lang):
     return PROMPTS[lang]["cloze"]()
 
 
-def cloze_user(lang, word, deck, meaning, level, helper, voice=""):
-    """meaning: the word's meaning in the helper language, as the MAIN call gave it."""
-    return PROMPTS[lang]["cloze_user"](word, deck, meaning, level, helper, voice)
+def cloze_user(lang, word, deck, meaning, level, helper, voice="", style=""):
+    """meaning: the word's meaning in the helper language, as the MAIN call gave it. style: as for main_user."""
+    return PROMPTS[lang]["cloze_user"](word, deck, meaning, level, helper, voice) + style_cloze(style)
 
 
 def read_answer(lang, kind, data):

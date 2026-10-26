@@ -49,7 +49,7 @@ tags: Technik Level::B1
   <div class="sentence formal"><span class="emoji">🔕</span>Bitte schalten Sie Ihr Handy aus.</div>
 </div>
 <div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">etwas ausschalten (+Akk)</span></div>
-<div class="explanation">👉 „Ein Handy ist ein kleines Telefon für unterwegs."</div>
+<div class="explanation">👉 „Ein Handy ist ein kleines Telefon für unterwegs.“</div>
 <div class="section">
   <div class="section-label">🇬🇧 English</div>
   <div class="sentence casual"><span class="emoji">🔋</span>My phone is dead again.</div>

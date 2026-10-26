@@ -1,0 +1,14 @@
+Input: darse cuenta
+Deck: Tarkib Spanish
+Meaning in English: to realize
+
+
+Classify and generate a NATURAL Spanish cloze sentence. Restructure if needed.
+
+LEVEL B1: use case "single_word", "verb_prep", "ser_estar" or "por_para"; a medium everyday sentence with common words.
+
+Write "translation" as the FULL sentence translated naturally into English.
+
+Use the Spanish of Spain (vosotros, coche, ordenador).
+
+STYLE WISHES FROM THE USER (may be written in any language): "Examples about cooking and travel, short sentences, a friendly tone". Follow them for the sentence: they come before the deck context. Only the answer rules, the level and the content rules stay above them.

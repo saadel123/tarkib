@@ -98,9 +98,18 @@ GEMINI_VOICES = ["Zephyr", "Puck", "Charon", "Kore", "Fenrir", "Leda", "Orus", "
                  "Pulcherrima", "Achird", "Zubenelgenubi", "Vindemiatrix", "Sadachbia",
                  "Sadaltager", "Sulafat"]
 
+# Speech speed (config["tts"]["speed"]): the language you learn can be read slower, for every
+# level or only at A1 and A2. The translations always keep the normal speed. 0.8 = about 20% slower:
+# clearly slower for a beginner, still natural (Edge and Azure "-20%"; ElevenLabs takes 0.7 to 1.2,
+# OpenAI 0.25 to 4, Google 0.25 to 2). Gemini has no speed control and reads at normal speed.
+SPEEDS = ("normal", "slower_a1_a2", "slower")
+SLOW_RATE = 0.8
+SLOW_LEVELS = ("A1", "A2")
+
 # One clip of audio. voice names exactly what spoke (model/voice for the services that have
-# both), so generate.py can hash it into the filename: same text, service and voice = same file.
-Clip = namedtuple("Clip", "data ext service voice")
+# both) and rate how fast (1.0 unless the service slowed it down), so generate.py can hash them
+# into the filename: same text, service, voice and speed = same file.
+Clip = namedtuple("Clip", "data ext service voice rate", defaults=(1.0,))
 
 
 class TTSError(Exception):
@@ -174,6 +183,35 @@ def backup_order(tts_cfg):
     return out
 
 
+def speed(tts_cfg):
+    """The speech speed setting: "normal" (the default, also for a missing or odd value),
+    "slower_a1_a2" or "slower"."""
+    s = _as_dict(tts_cfg).get("speed")
+    s = s.strip().lower() if isinstance(s, str) else ""
+    return s if s in SPEEDS else "normal"
+
+
+def speech_rate(tts_cfg, level=None):
+    """How fast the language you learn is read: SLOW_RATE or 1.0. `level` is the card's level; None
+    means a sample in Settings, which plays the slower speed whenever one is picked."""
+    s = speed(tts_cfg)
+    if s == "slower" or (s == "slower_a1_a2" and (level is None or level in SLOW_LEVELS)):
+        return SLOW_RATE
+    return 1.0
+
+
+def _rate(value):
+    """A rate an adapter can send: a number from 0.5 to 2, anything else is the normal 1.0."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0.5 <= value <= 2:
+        return 1.0
+    return float(value)
+
+
+def ssml_rate(rate):
+    """1.0 -> "+0%", 0.8 -> "-20%": the prosody rate of Edge's and Azure's SSML."""
+    return "%+d%%" % round((_rate(rate) - 1.0) * 100)
+
+
 def chain(tts_cfg):
     """The services one clip may try, in order: the chosen one (even when it is not set up, so the
     user hears why it was skipped), then the backups that are set up, then Edge."""
@@ -198,22 +236,29 @@ class Speaker:
         # read (Edge's 1007 for a retired voice, Google for a language it does not serve). Skipped
         # for later clips in that voice, while the service still reads the other voices.
         self.refused = set()
+        # Services that timed out once while no backup was left. A slow first answer (Edge once took 6 s on a cold
+        # connection) used to cost every later clip of the card; now the next clip
+        # asks once more, and a second timeout skips the service.
+        self.timed_out = set()
         self.failures = []          # TTSError, one per distinct (service, message)
         self.used = {}              # service -> clips it read
 
-    def speak(self, text, role_voice):
-        """A Clip from the first service that works, or the last TTSError when none did."""
+    def speak(self, text, role_voice, rate=1.0):
+        """A Clip from the first service that works, or the last TTSError when none did. rate is the
+        speech speed (speech_rate): 1.0, or SLOW_RATE for the language you learn when it is slowed."""
         last = None
         for service in self.order:
             if service in self.dead or (service, role_voice) in self.refused:
                 continue
             try:
-                clip = synthesize(service, text, role_voice, self.cfg, self.timeout)
+                clip = synthesize(service, text, role_voice, self.cfg, self.timeout, rate=rate)
             except TTSError as e:
                 last = e
                 self._note(e)
                 if e.kind == "bad_request":
                     self.refused.add((service, role_voice))
+                elif e.kind == "timeout" and service not in self.timed_out and self._last_alive(service):
+                    self.timed_out.add(service)
                 elif e.kind not in _SOFT_KINDS and not (e.kind in ("rate_limit", "server")
                                                         and self._last_alive(service)):
                     self.dead.add(service)
@@ -279,10 +324,11 @@ def audio_note(a):
     return "", "", False
 
 
-def synthesize(service, text, role_voice, tts_cfg, timeout=30):
+def synthesize(service, text, role_voice, tts_cfg, timeout=30, rate=1.0):
     """One service, no fallback (the Settings Test buttons call this directly). Returns a Clip or
     raises TTSError. role_voice is the Edge/Azure voice of the role (German, translation or second
-    language): Edge and Azure speak with it, the others take its language from it."""
+    language): Edge and Azure speak with it, the others take its language from it. rate below 1.0
+    reads slower where the service can (every one but Gemini); 1.0 sends the request of 1.2.0."""
     text = " ".join((text or "").split())
     if not text:
         raise TTSError(service, "bad_request", "There was no text to read aloud")
@@ -294,7 +340,7 @@ def synthesize(service, text, role_voice, tts_cfg, timeout=30):
             raise TTSError(service, "config", "%s is not set up: add its %s in Settings, Voice"
                            % (LABELS[service], _FIELD_NAMES.get(k, k)))
     _check_key(service, sc.get("key"))
-    return _ADAPTERS[service](text, role_voice or DEFAULT_GERMAN_VOICE, sc, timeout)
+    return _ADAPTERS[service](text, role_voice or DEFAULT_GERMAN_VOICE, sc, timeout, rate=_rate(rate))
 
 
 def _check_key(service, key):
@@ -537,13 +583,14 @@ def pcm_to_wav(pcm, rate=24000, channels=1, width=2):
 
 
 # ── the services ───────────────────────────────────────────────────────────────────────────
-def _edge(text, role_voice, sc, timeout):
+def _edge(text, role_voice, sc, timeout, rate=1.0):
     # Edge answers a short clip in about a second, so it never waits longer than its own cap.
     try:
-        data = audio.synthesize(text, role_voice, timeout=min(float(timeout), audio.REQUEST_TIMEOUT))
+        data = audio.synthesize(text, role_voice, timeout=min(float(timeout), audio.REQUEST_TIMEOUT),
+                                rate=ssml_rate(rate))
     except audio.EdgeTTSError as e:
         raise TTSError("edge", e.kind, str(e), e.status)
-    return Clip(data, "mp3", "edge", role_voice)
+    return Clip(data, "mp3", "edge", role_voice, rate)
 
 
 def azure_region(value):
@@ -552,24 +599,31 @@ def azure_region(value):
     return re.sub(r"[^a-z0-9]", "", (value or "").lower())
 
 
-def _azure(text, role_voice, sc, timeout):
+def _azure(text, role_voice, sc, timeout, rate=1.0):
     region = azure_region(sc["region"])
     if not region:
         raise TTSError("azure", "config", "Azure AI Speech is not set up: add its region in Settings, Voice")
+    body = html.escape(text, quote=False)
+    if rate != 1.0:
+        body = "<prosody rate='%s'>%s</prosody>" % (ssml_rate(rate), body)
     ssml = ("<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='%s'>"
             "<voice name='%s'>%s</voice></speak>"
-            % (_locale(role_voice) or "de-DE", html.escape(role_voice, quote=True),
-               html.escape(text, quote=False)))
+            % (_locale(role_voice) or "de-DE", html.escape(role_voice, quote=True), body))
     ctype, data = _request("azure", "https://%s.tts.speech.microsoft.com/cognitiveservices/v1" % region,
                            {"Ocp-Apim-Subscription-Key": sc["key"], "Content-Type": "application/ssml+xml",
                             "X-Microsoft-OutputFormat": audio.OUTPUT_FORMAT},
                            ssml.encode("utf-8"), timeout, sc["key"])
-    return Clip(_audio_bytes("azure", ctype, data), "mp3", "azure", role_voice)
+    return Clip(_audio_bytes("azure", ctype, data), "mp3", "azure", role_voice, rate)
 
 
-def _elevenlabs(text, role_voice, sc, timeout):
+def _elevenlabs(text, role_voice, sc, timeout, rate=1.0):
     model = sc.get("model") or DEFAULTS["elevenlabs"]["model"]
     body = {"text": text, "model_id": model}
+    if rate != 1.0:
+        # Every model and voice takes a speed from 0.7 to 1.2. Sent only when slowed, so a
+        # normal request keeps the voice's own stored settings exactly as before.
+        rate = max(0.7, min(1.2, rate))
+        body["voice_settings"] = {"speed": rate}
     # language_code (ISO 639-1) pins the language; multilingual_v2 does not take it and detects
     # the language itself. Other models ignore a code they do not support.
     if model != "eleven_multilingual_v2":
@@ -580,16 +634,18 @@ def _elevenlabs(text, role_voice, sc, timeout):
     ctype, data = _request("elevenlabs", url, {"xi-api-key": sc["key"], "Content-Type": "application/json",
                                                "Accept": "audio/mpeg"},
                            json.dumps(body).encode("utf-8"), timeout, sc["key"])
-    return Clip(_audio_bytes("elevenlabs", ctype, data), "mp3", "elevenlabs", "%s/%s" % (model, sc["voice"]))
+    return Clip(_audio_bytes("elevenlabs", ctype, data), "mp3", "elevenlabs", "%s/%s" % (model, sc["voice"]), rate)
 
 
-def _openai(text, role_voice, sc, timeout):
+def _openai(text, role_voice, sc, timeout, rate=1.0):
     model = sc.get("model") or DEFAULTS["openai"]["model"]
     voice = sc.get("voice") or DEFAULTS["openai"]["voice"]
     if model.startswith("tts-1") and voice not in _OPENAI_TTS1_VOICES:
         raise TTSError("openai", "config", "OpenAI: the voice %s needs the model gpt-4o-mini-tts, pick it "
                        "in Settings, Voice" % voice)
     body = {"model": model, "input": text, "voice": voice, "response_format": "mp3"}
+    if rate != 1.0:
+        body["speed"] = rate                     # 0.25 to 4, every model
     if not model.startswith("tts-1"):
         # gpt-4o-mini-tts takes a style instruction; naming the language keeps a lone German
         # word from being read with an English accent.
@@ -598,7 +654,7 @@ def _openai(text, role_voice, sc, timeout):
     ctype, data = _request("openai", "https://api.openai.com/v1/audio/speech",
                            {"Authorization": "Bearer " + sc["key"], "Content-Type": "application/json"},
                            json.dumps(body).encode("utf-8"), timeout, sc["key"])
-    return Clip(_audio_bytes("openai", ctype, data), "mp3", "openai", "%s/%s" % (model, voice))
+    return Clip(_audio_bytes("openai", ctype, data), "mp3", "openai", "%s/%s" % (model, voice), rate)
 
 
 # Google serves fewer regional variants than Edge has voices for (es-AR, fr-BE, de-AT ...), and
@@ -622,7 +678,7 @@ def _google_locale(locale):
     return _GOOGLE_LOCALES.get(locale) or _GOOGLE_LOCALES.get(locale.split("-")[0]) or locale
 
 
-def _google(text, role_voice, sc, timeout):
+def _google(text, role_voice, sc, timeout, rate=1.0):
     if _language(role_voice) in _GOOGLE_UNSERVED:
         raise TTSError("google", "bad_request", "Google Cloud has no %s voice"
                        % _GOOGLE_UNSERVED[_language(role_voice)])
@@ -644,7 +700,10 @@ def _google(text, role_voice, sc, timeout):
     # Any other German voice: Google picks its default voice for the translation's language.
 
     def ask(v):
-        body = {"input": {"text": text}, "voice": v, "audioConfig": {"audioEncoding": "MP3"}}
+        config = {"audioEncoding": "MP3"}
+        if rate != 1.0:
+            config["speakingRate"] = rate        # 0.25 to 2, Chirp 3 HD included
+        body = {"input": {"text": text}, "voice": v, "audioConfig": config}
         _, data = _request("google", "https://texttospeech.googleapis.com/v1/text:synthesize",
                            {"X-Goog-Api-Key": sc["key"], "Content-Type": "application/json; charset=utf-8"},
                            json.dumps(body).encode("utf-8"), timeout, sc["key"])
@@ -658,10 +717,12 @@ def _google(text, role_voice, sc, timeout):
         # That language has no Chirp 3 HD voice (or not this speaker): let Google pick its default.
         voice = {"languageCode": lang}
         audio_data = ask(voice)
-    return Clip(audio_data, "mp3", "google", voice.get("name") or lang)
+    return Clip(audio_data, "mp3", "google", voice.get("name") or lang, rate)
 
 
-def _gemini(text, role_voice, sc, timeout):
+def _gemini(text, role_voice, sc, timeout, rate=1.0):
+    # No speed control: the 3.8 models read their input word for word, so a "slowly" in the text
+    # would be read aloud. The clip keeps rate 1.0, so its filename is that of a normal clip.
     model = sc.get("model") or DEFAULTS["gemini"]["model"]
     voice = sc.get("voice") or DEFAULTS["gemini"]["voice"]
     # The text alone: the 3.8 models read their input word for word as a transcript, so an
@@ -742,6 +803,11 @@ def google_voices(key, language_code="de-DE", timeout=20):
 
 
 def audio_tag(text, clip):
-    """Deterministic filename part: the same text, service and voice always give the same name, so
-    re-adding a card reuses its file, and different speech never takes another clip's name."""
-    return hashlib.sha1(("%s|%s|%s" % (clip.service, clip.voice, text or "")).encode("utf-8")).hexdigest()[:10]
+    """Deterministic filename part: the same text, service, voice and speed always give the same name,
+    so re-adding a card reuses its file, and different speech never takes another clip's name. A clip
+    at the normal speed hashes exactly as before speeds existed."""
+    key = "%s|%s|%s" % (clip.service, clip.voice, text or "")
+    rate = getattr(clip, "rate", 1.0)
+    if rate != 1.0:
+        key += "|rate=%s" % rate
+    return hashlib.sha1(key.encode("utf-8")).hexdigest()[:10]

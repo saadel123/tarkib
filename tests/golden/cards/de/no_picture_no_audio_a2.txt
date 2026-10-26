@@ -24,6 +24,7 @@ LEVEL A2: prefer case "single_word"; a short sentence (present or Perfekt), comm
 
 == picture search
 keyword: glasses on a table | deck: Tarkib | source: auto -> nothing found
+keyword: glasses on a table | deck: Tarkib | source: auto -> nothing found
 
 == read aloud
 1. edge de-DE-KatjaNeural FAILED: die Brille. ... Wo ist deine Brille?. ... Bitte setzen Sie Ihre Brille auf.
@@ -42,7 +43,7 @@ tags: Gesundheit Level::A2
   <div class="sentence formal"><span class="emoji">📖</span>Bitte setzen Sie Ihre Brille auf.</div>
 </div>
 <div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">die Brille aufsetzen (+Akk)</span></div>
-<div class="explanation">👉 „Mit einer Brille sieht man besser."</div>
+<div class="explanation">👉 „Mit einer Brille sieht man besser.“</div>
 <div class="section">
   <div class="section-label">🇬🇧 English</div>
   <div class="sentence casual"><span class="emoji">🔎</span>Where are your glasses?</div>
@@ -86,6 +87,7 @@ none
     "total": 3,
     "used": {}
   },
+  "image_warning": "no picture found for \"glasses on a table\"",
   "translation_en": "glasses",
   "word": "die Brille"
 }

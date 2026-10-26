@@ -1,0 +1,101 @@
+# Golden card "es_irregular_verb_a2_german" (tests/card_scenarios.py)
+# An irregular verb at A2 with German as the translation language: the four forms on the word line, the card's own verb in a frame first (tener que + infinitivo, ahead of a preposition frame), and a beginner letter hint.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: tener
+deck: Tarkib Spanish | level: A2 | cloze: on
+settings: {"defaults": {"translation_language": "German"}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: es/main_A2 [German, es-ES-ElviraNeural]
+user:
+WORD OR PHRASE TO TEACH: "tener". CONTEXT: Important everyday Spanish. Formal: office, appointment or email scenario (usted). Casual: chat with friends or family (tú, messaging tone). Prefer situations people meet every week: work, shopping, health, travel, home.
+
+== AI call 2: cloze (temperature 0.3, max_tokens 1600)
+system: es/cloze
+user:
+Input: tener
+Deck: Tarkib Spanish
+Meaning in German: haben
+
+
+Classify and generate a NATURAL Spanish cloze sentence. Restructure if needed.
+
+LEVEL A2: prefer case "single_word"; a short sentence (present or a common past tense), common words, at most one porque, cuando or si clause; no idioms.
+
+Write "translation" as the FULL sentence translated naturally into German.
+
+Use the Spanish of Spain (vosotros, coche, ordenador).
+
+== picture search
+keyword: person working late at a desk | deck: Tarkib Spanish | source: auto -> pexels_person_working_late_at_a_desk.jpg
+
+== read aloud
+1. edge es-ES-ElviraNeural: tener. ... Ayer tuve que trabajar hasta tarde.. ... ¿Tiene usted un momento, por favor?
+2. edge es-ES-ElviraNeural: Mi hermana. Dos hijos.
+3. edge es-ES-ElviraNeural: Mi hermana tiene dos hijos.
+
+== main note in deck "Tarkib Spanish"
+tags: Cotidiano Level::A2
+-- Front
+⏱️ tener.
+-- Back
+<div class="card-translation"><span class="level-chip lvl-a2">A2</span> ⏱️ haben</div>
+<div class="morph">tener · yo tengo · él tuvo · tenido</div>
+<div class="card-image"><img src="pexels_person_working_late_at_a_desk.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇪🇸 Español</div>
+  <div class="sentence casual"><span class="emoji">💼</span>Ayer tuve que trabajar hasta tarde.</div>
+  <div class="sentence formal"><span class="emoji">🙋</span>¿Tiene usted un momento, por favor?</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">tener que + infinitivo</span> <span class="pattern-badge">hasta tarde</span></div>
+<div class="explanation">👉 «Tener es cuando algo es tuyo.»</div>
+<div class="section">
+  <div class="section-label">🇩🇪 Deutsch</div>
+  <div class="sentence casual"><span class="emoji">💼</span>Gestern musste ich bis spät arbeiten.</div>
+  <div class="sentence formal"><span class="emoji">🙋</span>Haben Sie bitte einen Moment Zeit?</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 German patterns</div><span class="pattern-badge">müssen + Infinitiv</span> <span class="pattern-badge">bis spät</span></div><br>[sound:tts_es_tener_4045f1838a.mp3]
+
+== cloze note in deck "Tarkib Spanish::Cloze"
+tags: cloze tarkib_spanish case_single_word Level::A2
+-- Text
+Mi hermana {{c1::tiene::ti...}} dos hijos.
+-- Translation
+Meine Schwester hat zwei Kinder.
+-- Image
+<img src="pexels_person_working_late_at_a_desk.jpg">
+-- FrontAudio
+[sound:cloze_front_Mi_hermana_tiene_dos_hij_54d077cf02.mp3]
+-- BackAudio
+[sound:cloze_back_Mi_hermana_tiene_dos_hij_fb613e80e1.mp3]
+-- GrammarHint
+
+-- SourceWord
+tener
+-- DeckOrigin
+Tarkib Spanish
+
+== media files
+cloze_back_Mi_hermana_tiene_dos_hij_fb613e80e1.mp3 <- audio from edge
+cloze_front_Mi_hermana_tiene_dos_hij_54d077cf02.mp3 <- audio from edge
+pexels_person_working_late_at_a_desk.jpg <- picture
+tts_es_tener_4045f1838a.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "haben",
+  "word": "tener"
+}

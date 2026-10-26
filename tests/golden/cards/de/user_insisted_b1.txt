@@ -45,7 +45,7 @@ tags: Essen Level::B1
   <div class="sentence formal"><span class="emoji">🧺</span>Ich hätte gern vier Schrippen, bitte.</div>
 </div>
 <div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">jemandem etwas holen (+Dat, +Akk)</span></div>
-<div class="explanation">👉 „In Berlin sagt man Schrippe für ein Brötchen."</div>
+<div class="explanation">👉 „In Berlin sagt man Schrippe für ein Brötchen.“</div>
 <div class="section">
   <div class="section-label">🇬🇧 English</div>
   <div class="sentence casual"><span class="emoji">🥐</span>Can you get me two bread rolls from the bakery?</div>

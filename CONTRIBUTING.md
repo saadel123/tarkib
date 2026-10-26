@@ -54,6 +54,7 @@ tarkib/                 (the repository root)
     languages.py        the learning languages: one registry, every per-language table is keyed by it
     prompts.py          ALL prompts, CEFR levels, translation languages   <- most contributions land here
     english.py          English as a learning language: its prompt pieces (NOTE) and checks (CHECKS)
+    spanish.py          Spanish as a learning language: its prompt pieces (NOTE) and checks (CHECKS)
     generate.py         builds a card: LLM calls, guards, HTML, image and audio
     providers.py        OpenAI-compatible and Anthropic clients (urllib), friendly error messages
     images.py           Pexels, Serper, Pixabay and keyless Openverse, as a fallback chain

@@ -1,0 +1,64 @@
+# Golden card "es_hints_no_cloze_b1" (tests/card_scenarios.py)
+# Meaning, scenario and picture hints (the scenario in Spanish), a second translation equal to the learning language (skipped with a warning), and no cloze card.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: el plazo
+deck: Tarkib Spanish | level: B1 | cloze: off
+options: {"image_keyword": "calendar", "meaning": "time limit at work", "scenario": "proyecto en la oficina", "secondary_language": "Spanish"}
+settings: {"defaults": {"translation_language": "Arabic"}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: es/main_B1 [Arabic, es-ES-ElviraNeural]
+user:
+WORD OR PHRASE TO TEACH: "el plazo". CONTEXT: Important everyday Spanish. Formal: office, appointment or email scenario (usted). Casual: chat with friends or family (tú, messaging tone). Prefer situations people meet every week: work, shopping, health, travel, home. MEANING DISAMBIGUATION: the user wants the specific meaning "time limit at work" (may be written in any language; interpret it). Generate the card focused on THIS sense only. EXAMPLE SCENARIO HINT: "proyecto en la oficina" (may be written in any language; interpret it). Use it as the setting for both example sentences; the deck rules still apply. IMAGE HINT: the user wants the picture to show "calendar" (may be written in any language). Set imageKeyword to a SAFE, wholesome ENGLISH image search term for THIS, following the image rules.
+
+== picture search
+keyword: calendar | deck: Tarkib Spanish | source: auto -> pexels_calendar.jpg
+
+== read aloud
+1. edge es-ES-ElviraNeural: el plazo. ... El plazo del proyecto es el viernes, ¿no?. ... Por favor, entregue el informe dentro del plazo.
+
+== main note in deck "Tarkib Spanish"
+tags: Trabajo Level::B1
+-- Front
+⏳ el plazo.
+-- Back
+<div class="card-translation" style="direction:rtl;"><span class="level-chip lvl-b1">B1</span> ⏳ الموعد النهائي</div>
+<div class="morph"><span class="g-der">el</span></div>
+<div class="card-image"><img src="pexels_calendar.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇪🇸 Español</div>
+  <div class="sentence casual"><span class="emoji">📅</span>El plazo del proyecto es el viernes, ¿no?</div>
+  <div class="sentence formal"><span class="emoji">📝</span>Por favor, entregue el informe dentro del plazo.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">el plazo de algo</span> <span class="pattern-badge">dentro del plazo</span></div>
+<div class="explanation">👉 «El plazo es el tiempo que tienes para terminar algo.»</div>
+<div class="section arabic">
+  <div class="section-label" style="direction:rtl;text-align:right;">🇸🇦 العربية</div>
+  <div class="sentence casual"><span class="emoji">📅</span>الموعد النهائي للمشروع يوم الجمعة، أليس كذلك؟</div>
+  <div class="sentence formal"><span class="emoji">📝</span>يرجى تسليم التقرير ضمن المهلة المحددة.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Arabic patterns</div><span class="pattern-badge">الموعد النهائي لشيء</span> <span class="pattern-badge">ضمن المهلة</span></div><br>[sound:tts_es_el_plazo_3524f48b5d.mp3]
+
+== media files
+pexels_calendar.jpg <- picture
+tts_es_el_plazo_3524f48b5d.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 1,
+    "total": 1,
+    "used": {
+      "edge": 1
+    }
+  },
+  "language_warning": "translation language \"Spanish\" is the language the cards teach, the second translation was skipped",
+  "translation_en": "الموعد النهائي",
+  "word": "el plazo"
+}

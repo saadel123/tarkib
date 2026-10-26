@@ -13,6 +13,7 @@ failure (no key, no match, network) — the image is always optional.
 """
 import hashlib
 import json
+import logging
 import re
 import time
 import urllib.parse
@@ -26,6 +27,15 @@ PIXABAY_URL = "https://pixabay.com/api/"
 OPENVERSE_URL = "https://api.openverse.org/v1/images/"
 UA = {"User-Agent": "Tarkib/1.0"}
 _IT_DECK = re.compile(r"\bIT\b")  # word-boundary so "Fitness"/"Politik"/"Mitarbeiter" don't match
+# Anki's add-on log (Anki2/logs/addons/<folder>/), like the voice services': a card without a picture says why there.
+log = logging.getLogger("addon." + __name__.split(".")[0])
+log.addHandler(logging.NullHandler())
+
+
+def _log_failure(provider, e):
+    # Only the error's type and HTTP status: Pixabay's request URL carries the key, and an error's text can quote it.
+    code = getattr(e, "code", None)
+    log.warning("picture: %s failed (%s%s)", provider, e.__class__.__name__, (", HTTP %s" % code) if code else "")
 
 
 def _safe_name(keyword):
@@ -109,7 +119,8 @@ def fetch_pexels(keyword, api_key, timeout=15, exclude=None):
             src = ph.get("src", {})
             urls.append(src.get("medium") or src.get("original"))
         return _pick(urls, keyword, timeout, exclude)
-    except Exception:
+    except Exception as e:
+        _log_failure("Pexels", e)
         return None
 
 
@@ -122,7 +133,8 @@ def fetch_serper(keyword, api_key, timeout=15, exclude=None):
                                      headers={"X-API-KEY": api_key, "Content-Type": "application/json", **UA})
         data = json.loads(open_url(req, timeout).read())
         return _pick([i.get("imageUrl") for i in data.get("images", [])], keyword, timeout, exclude)
-    except Exception:
+    except Exception as e:
+        _log_failure("Serper", e)
         return None
 
 
@@ -135,7 +147,8 @@ def fetch_pixabay(keyword, api_key, timeout=15, exclude=None):
         data = json.loads(urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=timeout).read())
         urls = [h.get("webformatURL") or h.get("largeImageURL") for h in data.get("hits", [])]
         return _pick(urls, keyword, timeout, exclude)
-    except Exception:
+    except Exception as e:
+        _log_failure("Pixabay", e)
         return None
 
 
@@ -166,7 +179,8 @@ def fetch_openverse(keyword, timeout=15, exclude=None):
         if got:
             _OPENVERSE_DOWN_UNTIL = 0.0
         return got
-    except Exception:
+    except Exception as e:
+        _log_failure("Openverse", e)
         _OPENVERSE_DOWN_UNTIL = time.time() + 600
         return None
 

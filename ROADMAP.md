@@ -12,9 +12,9 @@ Where Tarkib is going. These are plans, not promises, and there are no dates.
 - **Batch mode.** Paste a list of words and review the cards one by one: keep, regenerate or skip.
 - **"Don't confuse with".** An optional line for word pairs learners mix up, such as legen and
   liegen, or kennen and wissen.
-- **More learning languages.** Tarkib makes German and English cards. Each new language gets its
-  own level rules, patterns and checks, written from the mistakes its learners make, and help from
-  native speakers is very welcome (see [CONTRIBUTING.md](CONTRIBUTING.md)).
+- **More learning languages.** Tarkib makes German, English and Spanish cards. Each new language
+  gets its own level rules, patterns and checks, written from the mistakes its learners make, and
+  help from native speakers is very welcome (see [CONTRIBUTING.md](CONTRIBUTING.md)).
 
 ## Principles
 

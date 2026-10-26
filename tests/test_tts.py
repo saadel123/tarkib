@@ -584,7 +584,7 @@ class Gemini(unittest.TestCase):
 class FakeAdapters:
     """Replaces the service adapters: script maps service -> list of results (Clip data or TTSError)."""
     def __init__(self, **script):
-        self.script, self.calls = script, []
+        self.script, self.calls, self.rates = script, [], []
 
     def __enter__(self):
         self._saved = dict(tts._ADAPTERS)
@@ -597,12 +597,13 @@ class FakeAdapters:
         tts._ADAPTERS.update(self._saved)
 
     def _make(self, service):
-        def adapter(text, role_voice, sc, timeout):
+        def adapter(text, role_voice, sc, timeout, rate=1.0):
             self.calls.append(service)
+            self.rates.append(rate)
             out = self.script[service].pop(0) if self.script.get(service) else b"audio-" + service.encode()
             if isinstance(out, Exception):
                 raise out
-            return tts.Clip(out, "mp3", service, role_voice)
+            return tts.Clip(out, "mp3", service, role_voice, rate)
         return adapter
 
 
@@ -703,6 +704,36 @@ class Chain(unittest.TestCase):
         self.assertEqual(got, ["edge", None, "edge", "edge"])
         self.assertEqual(fa.calls, ["edge"] * 4)
 
+    def test_edge_alone_gets_one_more_try_after_a_timeout(self):
+        # A test run: one slow Edge answer cost "bring up" all three clips and "la mano" three of four.
+        slow = tts.TTSError("edge", "timeout", "Microsoft Edge did not answer in time")
+        with FakeAdapters(edge=[slow, b"ok", b"ok"]) as fa:
+            sp = tts.Speaker({})
+            got = []
+            for i in range(3):
+                try:
+                    got.append(sp.speak("clip %d" % i, "de-DE-KatjaNeural").service)
+                except tts.TTSError:
+                    got.append(None)
+        self.assertEqual(got, [None, "edge", "edge"])
+        self.assertEqual(fa.calls, ["edge"] * 3)
+
+    def test_edge_alone_is_skipped_after_a_second_timeout(self):
+        slow = tts.TTSError("edge", "timeout", "Microsoft Edge did not answer in time")
+        with FakeAdapters(edge=[slow, slow]) as fa:
+            sp = tts.Speaker({})
+            for i in range(4):
+                with self.assertRaises(tts.TTSError):
+                    sp.speak("clip %d" % i, "de-DE-KatjaNeural")
+        self.assertEqual(fa.calls, ["edge"] * 2)       # two waits at most, never one per clip
+
+    def test_a_timeout_with_a_backup_left_moves_on_to_the_backup(self):
+        slow = tts.TTSError("openai", "timeout", "OpenAI did not answer in time")
+        with FakeAdapters(openai=[slow]) as fa:
+            sp = tts.Speaker({"service": "openai", "openai": {"key": "k"}})
+            self.assertEqual([sp.speak(str(i), "de-DE-KatjaNeural").service for i in range(3)], ["edge"] * 3)
+        self.assertEqual(fa.calls.count("openai"), 1)
+
     def test_a_rate_limit_with_a_backup_left_moves_on_to_the_backup(self):
         busy = tts.TTSError("openai", "rate_limit", "OpenAI is busy or rate limited (HTTP 429)", 429)
         with FakeAdapters(openai=[busy]) as fa:
@@ -750,6 +781,106 @@ class AudioNote(unittest.TestCase):
         self.assertEqual(tts.audio_note({"ok": 0, "total": 2})[0], "No audio, because the voice service did not answer")
 
 
+# ── speech speed ───────────────────────────────────────────────────────────────────────────
+class Speed(unittest.TestCase):
+    """Settings, Voice, Speech speed: the language you learn read about 20% slower, at every level or
+    at A1 and A2. A normal request is byte for byte the request of 1.2.0."""
+
+    def test_the_setting_and_the_rate_of_each_level(self):
+        for value in (None, {}, {"speed": "fast"}, {"speed": 0.8}, {"speed": ["slower"]}, "slower"):
+            self.assertEqual(tts.speed(value), "normal", value)
+        self.assertEqual(tts.speed({"speed": " Slower "}), "slower")
+        beginners, always = {"speed": "slower_a1_a2"}, {"speed": "slower"}
+        for level in ("A1", "A2"):
+            self.assertEqual(tts.speech_rate(beginners, level), tts.SLOW_RATE)
+        for level in ("B1", "B2", "C1", "Native"):
+            self.assertEqual(tts.speech_rate(beginners, level), 1.0)
+            self.assertEqual(tts.speech_rate(always, level), tts.SLOW_RATE)
+            self.assertEqual(tts.speech_rate({}, level), 1.0)
+        # A sample in Settings (no level) plays the slower speed whenever one is picked.
+        self.assertEqual(tts.speech_rate(beginners), tts.SLOW_RATE)
+        self.assertEqual(tts.speech_rate({"speed": "normal"}), 1.0)
+        self.assertEqual(tts.SLOW_RATE, 0.8)
+
+    def test_ssml_rate(self):
+        self.assertEqual((tts.ssml_rate(1.0), tts.ssml_rate(0.8)), ("+0%", "-20%"))
+        for odd in ("0.8", None, True, 9, 0.1):
+            self.assertEqual(tts.ssml_rate(odd), "+0%", odd)
+
+    def test_edge_ssml_carries_the_rate_and_a_normal_one_is_unchanged(self):
+        self.assertEqual(audio._mkssml("Hallo", "de-DE-KatjaNeural"),
+                         "<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='en-US'>"
+                         "<voice name='de-DE-KatjaNeural'><prosody pitch='+0Hz' rate='+0%' volume='+0%'>Hallo"
+                         "</prosody></voice></speak>")
+        self.assertIn("rate='-20%'", audio._mkssml("Hallo", "de-DE-KatjaNeural", "-20%"))
+        self.assertIn("rate='+0%'", audio._mkssml("Hallo", "v", "'/><x a='"))   # only a signed percent
+        seen, real = [], audio._mkssml
+        audio._mkssml = lambda text, voice, rate="+0%": seen.append(rate) or real(text, voice, rate)
+        try:
+            with FakeEdge([_audio_answer(), _audio_answer()]):
+                slow = tts.synthesize("edge", "Hallo.", "de-DE-KatjaNeural", {}, rate=0.8)
+                normal = tts.synthesize("edge", "Hallo.", "de-DE-KatjaNeural", {})
+        finally:
+            audio._mkssml = real
+        self.assertEqual(seen, ["-20%", "+0%"])
+        self.assertEqual((slow.rate, normal.rate), (0.8, 1.0))
+
+    def test_azure_wraps_the_text_in_a_prosody_rate(self):
+        with FakeHTTP(MP3, MP3) as h:
+            clip = tts.synthesize("azure", "Tom & Jerry", "de-DE-KatjaNeural",
+                                  cfg("azure", key="k", region="westeurope"), rate=0.8)
+            slow = h.last()[2].decode()
+            tts.synthesize("azure", "Tom & Jerry", "de-DE-KatjaNeural", cfg("azure", key="k", region="westeurope"))
+            normal = h.last()[2].decode()
+        self.assertIn("<voice name='de-DE-KatjaNeural'><prosody rate='-20%'>Tom &amp; Jerry</prosody></voice>", slow)
+        self.assertIn("<voice name='de-DE-KatjaNeural'>Tom &amp; Jerry</voice>", normal)
+        self.assertEqual(clip.rate, 0.8)
+
+    def test_elevenlabs_openai_and_google_take_their_own_speed_field(self):
+        google = (200, json.dumps({"audioContent": base64.b64encode(b"\xff\xf3audio").decode()}).encode(),
+                  "application/json")
+        cases = (("elevenlabs", cfg("elevenlabs", key="k", voice="v"), MP3,
+                  lambda b: b.get("voice_settings"), {"speed": 0.8}),
+                 ("openai", cfg("openai", key="k"), MP3, lambda b: b.get("speed"), 0.8),
+                 ("openai", cfg("openai", key="k", model="tts-1", voice="nova"), MP3, lambda b: b.get("speed"), 0.8),
+                 ("google", cfg("google", key="k"), google, lambda b: b["audioConfig"].get("speakingRate"), 0.8))
+        for service, c, answer, field, slow_value in cases:
+            with FakeHTTP(answer, answer) as h:
+                clip = tts.synthesize(service, "Hallo", "de-DE-KatjaNeural", c, rate=0.8)
+                slow = json.loads(h.last()[2])
+                tts.synthesize(service, "Hallo", "de-DE-KatjaNeural", c)
+                normal = json.loads(h.last()[2])
+            self.assertEqual(field(slow), slow_value, service)
+            self.assertIsNone(field(normal), service)          # nothing new in a normal request
+            self.assertEqual(clip.rate, 0.8, service)
+        self.assertEqual(normal["audioConfig"], {"audioEncoding": "MP3"})
+
+    def test_gemini_has_no_speed_and_its_clip_says_normal(self):
+        answer = Gemini()._answer(_wav(b"\x01\x00" * 50))
+        with FakeHTTP(answer, answer) as h:
+            clip = tts.synthesize("gemini", "Hallo", "de-DE-KatjaNeural", cfg("gemini", key="k"), rate=0.8)
+            slow = h.last()[2]
+            tts.synthesize("gemini", "Hallo", "de-DE-KatjaNeural", cfg("gemini", key="k"))
+        self.assertEqual(slow, h.last()[2])
+        self.assertEqual(clip.rate, 1.0)
+
+    def test_a_backup_reads_at_the_same_speed(self):
+        err = tts.TTSError("azure", "auth", "Azure AI Speech did not accept the key", 401)
+        with FakeAdapters(azure=[err]) as fa:
+            clip = tts.Speaker(dict(SET_UP, service="azure", order=["openai"])).speak("Hallo", "de-DE-KatjaNeural", 0.8)
+        self.assertEqual((fa.calls, fa.rates, clip.service, clip.rate), (["azure", "openai"], [0.8, 0.8], "openai", 0.8))
+
+    def test_a_slower_clip_gets_its_own_filename_and_a_normal_one_keeps_its_old_name(self):
+        import hashlib
+        normal = tts.Clip(b"", "mp3", "edge", "de-DE-KatjaNeural")
+        self.assertEqual(tts.audio_tag("Hallo", normal),
+                         hashlib.sha1(b"edge|de-DE-KatjaNeural|Hallo").hexdigest()[:10])
+        self.assertEqual(tts.audio_tag("Hallo", tts.Clip(b"", "mp3", "edge", "de-DE-KatjaNeural", 1.0)),
+                         tts.audio_tag("Hallo", normal))
+        self.assertNotEqual(tts.audio_tag("Hallo", tts.Clip(b"", "mp3", "edge", "de-DE-KatjaNeural", 0.8)),
+                            tts.audio_tag("Hallo", normal))
+
+
 # ── filenames and WAV ──────────────────────────────────────────────────────────────────────
 class Filenames(unittest.TestCase):
     def test_same_text_service_and_voice_same_name_else_different(self):
@@ -782,7 +913,7 @@ class BuildCardAudio(unittest.TestCase):
     CLOZE = {"case": "single_word", "sentence": "Wir besuchen das Schloss am Sonntag.", "answer": "Schloss",
              "translation_en": "We visit the castle on Sunday.", "grammar_hint": "", "idiom_meaning_de": ""}
 
-    def _run(self, tts_cfg, edge_script=(), translation_voice=""):
+    def _run(self, tts_cfg, edge_script=(), translation_voice="", level="B1"):
         calls = []
 
         def fake_json(provider, system, user, **kw):
@@ -796,7 +927,7 @@ class BuildCardAudio(unittest.TestCase):
                 bundle = generate.build_card(
                     {"voices": {"target": "de-DE-KatjaNeural", "translation": translation_voice}, "tts": tts_cfg},
                     {"type": "openai_compatible", "model": "m", "api_key": "k"}, "Tarkib", "das Schloss",
-                    {"generate_cloze": True, "level": "B1"})
+                    {"generate_cloze": True, "level": level})
         finally:
             providers.complete_json, generate.images.fetch_image = saved
         return bundle, fa
@@ -820,6 +951,24 @@ class BuildCardAudio(unittest.TestCase):
         self.assertEqual(fa.calls, ["edge"])                 # the dead service is not asked again
         self.assertFalse([k for k in bundle["media"] if k.startswith(("TTS", "CLOZE"))])
         self.assertIn("HTTP 403", a["failures"][0])
+
+    def test_the_language_you_learn_is_read_slower_and_the_translation_is_not(self):
+        voice = "en-US-AvaMultilingualNeural"
+        slow, normal = tts.SLOW_RATE, 1.0
+        # Clips in order: the word and its sentences, the translation, the cloze front and back.
+        for speed, level, rates in (("slower_a1_a2", "A1", [slow, normal, slow, slow]),
+                                    ("slower_a1_a2", "B1", [normal] * 4),
+                                    ("slower", "C1", [slow, normal, slow, slow]),
+                                    ("normal", "A1", [normal] * 4)):
+            bundle, fa = self._run({"speed": speed}, translation_voice=voice, level=level)
+            self.assertEqual(fa.rates, rates, (speed, level))
+            self.assertEqual(bundle["meta"]["audio"]["ok"], 4)
+        names = lambda b: {k: v[0] for k, v in b["media"].items()}
+        slow_names = names(self._run({"speed": "slower"}, translation_voice=voice)[0])
+        normal_names = names(self._run({}, translation_voice=voice)[0])
+        self.assertEqual(slow_names["TTS_EN"], normal_names["TTS_EN"])
+        for token in ("TTS_DE", "CLOZE_FRONT", "CLOZE_BACK"):
+            self.assertNotEqual(slow_names[token], normal_names[token], token)
 
 
 if __name__ == "__main__":

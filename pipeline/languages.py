@@ -27,8 +27,10 @@ LANGUAGES = (
         "native_name": "Deutsch",
         # the heading of the card's section in this language
         "label": "🇩🇪 Deutsch",
-        # the quotes around the explanation, which is written in this language
-        "quotes": ("„", '"'),
+        # the quotes around the explanation, which is written in this language, and the pair a word quoted
+        # inside it takes
+        "quotes": ("„", "“"),
+        "inner_quotes": ("‚", "‘"),
         # the free Edge voice that reads this language until the learner picks one
         "default_voice": "de-DE-KatjaNeural",
         # words dropped from the front of a headword before the AI's word is compared with the typed one
@@ -51,6 +53,7 @@ LANGUAGES = (
         "native_name": "English",
         "label": "🇬🇧 English",
         "quotes": ("“", "”"),
+        "inner_quotes": ("‘", "’"),
         # US by default: the spelling follows the voice (a British voice gets British English)
         "default_voice": "en-US-JennyNeural",
         "headword_prefixes": ("the", "a", "an", "to"),
@@ -59,6 +62,22 @@ LANGUAGES = (
         "example_word": "give up",
         "default_deck": "Tarkib English",
         "voice_locales": ("en-US", "en-GB"),
+    },
+    {
+        "code": "es",
+        "name": "Spanish",
+        "native_name": "Español",
+        "label": "🇪🇸 Español",
+        "quotes": ("«", "»"),
+        "inner_quotes": ("“", "”"),
+        # the Spanish of Spain by default: the variety follows the voice (a Latin American voice gets Latin American Spanish)
+        "default_voice": "es-ES-ElviraNeural",
+        "headword_prefixes": ("el", "la", "los", "las", "un", "una"),
+        "formal_tag": "Formal",
+        "script": "LATIN",
+        "example_word": "darse cuenta",
+        "default_deck": "Tarkib Spanish",
+        "voice_locales": ("es-ES", "es-MX", "es-US", "es-AR", "es-CO"),
     },
 )
 

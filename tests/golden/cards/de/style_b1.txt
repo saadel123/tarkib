@@ -1,0 +1,99 @@
+# Golden card "style_b1" (tests/card_scenarios.py)
+# The user's style wishes (Settings, Cards) ticked in the Tarkib window: they go into the main and the cloze request, nothing else changes.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: der Termin
+deck: Tarkib | level: B1 | cloze: on
+options: {"style": "Beispiele rund ums Kochen, kurze Saetze, ein freundlicher Ton."}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: de/main_B1
+user:
+WORD OR PHRASE TO TEACH: "der Termin". CONTEXT: Important everyday German for someone living in Germany. Formal: office/appointment/email scenario. Casual: chat with friends/family (WhatsApp tone). Prefer scenarios a foreigner meets weekly: Arzttermin, Wohnungssuche, Behördengang, Einkaufen, Arbeit, Feierabend zu Hause. STYLE WISHES FROM THE USER (may be written in any language; interpret them): "Beispiele rund ums Kochen, kurze Saetze, ein freundlicher Ton". Follow these wishes in BOTH example sentences and the explanation: they come before the CONTEXT and its usual scenarios (topics, situations, names, tone, length). Only the hard rules stay above them: the JSON format, the level and its limits, the content and picture rules, the translation language and the language of the card. Leave out a wish only if it would break one of those.
+
+== AI call 2: cloze (temperature 0.3, max_tokens 1600)
+system: de/cloze
+user:
+Input: der Termin
+Deck: Tarkib
+English meaning: appointment
+
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+LEVEL B1: use case "single_word", "noun_prep" or "verb_prep_article"; a medium everyday sentence with common words.
+
+STYLE WISHES FROM THE USER (may be written in any language): "Beispiele rund ums Kochen, kurze Saetze, ein freundlicher Ton". Follow them for the sentence: they come before the deck context. Only the answer rules, the level and the content rules stay above them.
+
+== picture search
+keyword: calendar with a cooking class marked | deck: Tarkib | source: auto -> pexels_calendar_with_a_cooking_class_marked.jpg
+
+== read aloud
+1. edge de-DE-KatjaNeural: der Termin. ... Hast du morgen einen Termin beim Kochkurs?. ... Könnten wir den Termin für das Kochseminar verschieben?
+2. edge de-DE-KatjaNeural: Für den Kochkurs habe ich verschoben.
+3. edge de-DE-KatjaNeural: Den Termin für den Kochkurs habe ich verschoben.
+
+== main note in deck "Tarkib"
+tags: Alltag Level::B1
+-- Front
+📅 der Termin.
+-- Back
+<div class="card-translation"><span class="level-chip lvl-b1">B1</span> 📅 appointment</div>
+<div class="morph"><span class="g-der">der</span> · Pl. die Termine · Gen. des Termins</div>
+<div class="card-image"><img src="pexels_calendar_with_a_cooking_class_marked.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇩🇪 Deutsch</div>
+  <div class="sentence casual"><span class="emoji">🍳</span>Hast du morgen einen Termin beim Kochkurs?</div>
+  <div class="sentence formal"><span class="emoji">🗓️</span>Könnten wir den Termin für das Kochseminar verschieben?</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">einen Termin haben</span> <span class="pattern-badge">einen Termin verschieben</span></div>
+<div class="explanation">👉 „Ein Termin ist eine feste Zeit für ein Treffen.“</div>
+<div class="section">
+  <div class="section-label">🇬🇧 English</div>
+  <div class="sentence casual"><span class="emoji">🍳</span>Do you have an appointment at the cooking class tomorrow?</div>
+  <div class="sentence formal"><span class="emoji">🗓️</span>Could we move the appointment for the cooking seminar?</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 English patterns</div><span class="pattern-badge">to have an appointment</span> <span class="pattern-badge">to move an appointment</span></div><br>[sound:tts_de_der_Termin_4f84a68526.mp3]
+
+== cloze note in deck "Tarkib::Cloze"
+tags: cloze tarkib case_single_word Level::B1
+-- Text
+{{c1::Den Termin::D... Ter...}} für den Kochkurs habe ich verschoben.
+-- Translation
+I moved the appointment for the cooking class.
+-- Image
+<img src="pexels_calendar_with_a_cooking_class_marked.jpg">
+-- FrontAudio
+[sound:cloze_front_Den_Termin_für_den_Kochk_e5de04b694.mp3]
+-- BackAudio
+[sound:cloze_back_Den_Termin_für_den_Kochk_e0399a607f.mp3]
+-- GrammarHint
+
+-- SourceWord
+der Termin
+-- DeckOrigin
+Tarkib
+
+== media files
+cloze_back_Den_Termin_für_den_Kochk_e0399a607f.mp3 <- audio from edge
+cloze_front_Den_Termin_für_den_Kochk_e5de04b694.mp3 <- audio from edge
+pexels_calendar_with_a_cooking_class_marked.jpg <- picture
+tts_de_der_Termin_4f84a68526.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "appointment",
+  "word": "der Termin"
+}

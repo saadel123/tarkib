@@ -1,0 +1,98 @@
+# Golden card "es_latam_voice_b2" (tests/card_scenarios.py)
+# A Latin American voice at B2: Latin American Spanish in the prompts, French as the translation language, two verb + preposition patterns kept.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: darse cuenta
+deck: Tarkib Spanish | level: B2 | cloze: on
+settings: {"languages": {"es": {"translation": "French", "voice": "es-MX-DaliaNeural"}}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: es/main_B2 [French, es-MX-DaliaNeural]
+user:
+WORD OR PHRASE TO TEACH: "darse cuenta". CONTEXT: Important everyday Spanish. Formal: office, appointment or email scenario (usted). Casual: chat with friends or family (tú, messaging tone). Prefer situations people meet every week: work, shopping, health, travel, home. Use the Latin American Spanish of Mexico (ustedes, carro, computadora, chamarra), never vosotros.
+
+== AI call 2: cloze (temperature 0.3, max_tokens 1600)
+system: es/cloze
+user:
+Input: darse cuenta
+Deck: Tarkib Spanish
+Meaning in French: se rendre compte
+
+
+Classify and generate a NATURAL Spanish cloze sentence. Restructure if needed.
+
+Write "translation" as the FULL sentence translated naturally into French.
+
+Use the Latin American Spanish of Mexico (ustedes, carro, computadora, chamarra), never vosotros.
+
+== picture search
+keyword: person looking at a clock surprised | deck: Tarkib Spanish | source: auto -> pexels_person_looking_at_a_clock_surprised.jpg
+
+== read aloud
+1. edge es-MX-DaliaNeural: darse cuenta. ... Ni me di cuenta de que ya era tarde.. ... Usted se dará cuenta de la diferencia enseguida.
+2. edge es-MX-DaliaNeural: No me di. Del error.
+3. edge es-MX-DaliaNeural: No me di cuenta del error.
+
+== main note in deck "Tarkib Spanish"
+tags: Comunicación Level::B2
+-- Front
+⏰ darse cuenta.
+-- Back
+<div class="card-translation"><span class="level-chip lvl-b2">B2</span> ⏰ se rendre compte</div>
+<div class="card-image"><img src="pexels_person_looking_at_a_clock_surprised.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇪🇸 Español</div>
+  <div class="sentence casual"><span class="emoji">🌙</span>Ni me di cuenta de que ya era tarde.</div>
+  <div class="sentence formal"><span class="emoji">🔍</span>Usted se dará cuenta de la diferencia enseguida.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">darse cuenta de algo</span> <span class="pattern-badge">darse cuenta de que + indicativo</span></div>
+<div class="explanation">👉 «Darse cuenta es entender algo de repente.»</div>
+<div class="section">
+  <div class="section-label">🇫🇷 Français</div>
+  <div class="sentence casual"><span class="emoji">🌙</span>Je ne me suis même pas rendu compte qu'il était déjà tard.</div>
+  <div class="sentence formal"><span class="emoji">🔍</span>Vous remarquerez tout de suite la différence.</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 French patterns</div><span class="pattern-badge">se rendre compte de quelque chose</span> <span class="pattern-badge">se rendre compte que + indicatif</span></div><br>[sound:tts_es_darse_cuenta_d35e64d66f.mp3]
+
+== cloze note in deck "Tarkib Spanish::Cloze"
+tags: cloze tarkib_spanish case_single_word Level::B2
+-- Text
+No me di {{c1::cuenta::cue...}} del error.
+-- Translation
+Je ne me suis pas rendu compte de l'erreur.
+-- Image
+<img src="pexels_person_looking_at_a_clock_surprised.jpg">
+-- FrontAudio
+[sound:cloze_front_No_me_di_cuenta_del_erro_f886a5b388.mp3]
+-- BackAudio
+[sound:cloze_back_No_me_di_cuenta_del_erro_824d53c0ce.mp3]
+-- GrammarHint
+
+-- SourceWord
+darse cuenta
+-- DeckOrigin
+Tarkib Spanish
+
+== media files
+cloze_back_No_me_di_cuenta_del_erro_824d53c0ce.mp3 <- audio from edge
+cloze_front_No_me_di_cuenta_del_erro_f886a5b388.mp3 <- audio from edge
+pexels_person_looking_at_a_clock_surprised.jpg <- picture
+tts_es_darse_cuenta_d35e64d66f.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "se rendre compte",
+  "word": "darse cuenta"
+}

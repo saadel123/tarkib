@@ -1,0 +1,10 @@
+Input: der Termin
+Deck: Tarkib
+English meaning: appointment
+
+
+Classify and generate a NATURAL German cloze sentence. Restructure if needed.
+
+LEVEL B1: use case "single_word", "noun_prep" or "verb_prep_article"; a medium everyday sentence with common words.
+
+STYLE WISHES FROM THE USER (may be written in any language): "Examples about cooking and travel, short sentences, a friendly tone". Follow them for the sentence: they come before the deck context. Only the answer rules, the level and the content rules stay above them.

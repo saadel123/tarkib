@@ -1,0 +1,101 @@
+# Golden card "es_verb_prep_b1" (tests/card_scenarios.py)
+# A verb with its preposition at B1: ranked before a structure, the stem-changing verb on the word line, and a cloze of the preposition alone, without a letter hint.
+# After a change you meant: UPDATE_GOLDEN=1 python3 tests/test_cards.py, then read the git diff.
+
+input: pensar en
+deck: Tarkib Spanish | level: B1 | cloze: on
+settings: {"defaults": {"translation_language": "Arabic"}}
+
+== AI call 1: main (temperature 0.4, max_tokens 3000)
+system: es/main_B1 [Arabic, es-ES-ElviraNeural]
+user:
+WORD OR PHRASE TO TEACH: "pensar en". CONTEXT: Important everyday Spanish. Formal: office, appointment or email scenario (usted). Casual: chat with friends or family (tú, messaging tone). Prefer situations people meet every week: work, shopping, health, travel, home.
+
+== AI call 2: cloze (temperature 0.3, max_tokens 1600)
+system: es/cloze
+user:
+Input: pensar en
+Deck: Tarkib Spanish
+Meaning in Arabic: يفكر في
+
+
+Classify and generate a NATURAL Spanish cloze sentence. Restructure if needed.
+
+LEVEL B1: use case "single_word", "verb_prep", "ser_estar" or "por_para"; a medium everyday sentence with common words.
+
+Write "translation" as the FULL sentence translated naturally into Arabic. Use Modern Standard Arabic only, without diacritics.
+
+Use the Spanish of Spain (vosotros, coche, ordenador).
+
+== picture search
+keyword: person thinking at a window | deck: Tarkib Spanish | source: auto -> pexels_person_thinking_at_a_window.jpg
+
+== read aloud
+1. edge es-ES-ElviraNeural: pensar en. ... Últimamente pienso mucho en mis padres.. ... ¿Ha pensado usted en nuestra propuesta?
+2. edge es-ES-ElviraNeural: Siempre pienso. Ti cuando llueve.
+3. edge es-ES-ElviraNeural: Siempre pienso en ti cuando llueve.
+
+== main note in deck "Tarkib Spanish"
+tags: Sentimientos Level::B1
+-- Front
+💭 pensar en.
+-- Back
+<div class="card-translation" style="direction:rtl;"><span class="level-chip lvl-b1">B1</span> 💭 يفكر في</div>
+<div class="morph">pensar · yo pienso · él pensó · pensado</div>
+<div class="card-image"><img src="pexels_person_thinking_at_a_window.jpg" style="max-width:280px;border-radius:8px;"></div>
+<div class="section">
+  <div class="section-label">🇪🇸 Español</div>
+  <div class="sentence casual"><span class="emoji">👨‍👩‍👦</span>Últimamente pienso mucho en mis padres.</div>
+  <div class="sentence formal"><span class="emoji">📄</span>¿Ha pensado usted en nuestra propuesta?</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">pensar en algo</span> <span class="pattern-badge">haber + participio</span></div>
+<div class="explanation">👉 «Pensar en algo es tenerlo en la cabeza.»</div>
+<div class="section arabic">
+  <div class="section-label" style="direction:rtl;text-align:right;">🇸🇦 العربية</div>
+  <div class="sentence casual"><span class="emoji">👨‍👩‍👦</span>أفكر كثيرا في والدي مؤخرا.</div>
+  <div class="sentence formal"><span class="emoji">📄</span>هل فكرت في اقتراحنا؟</div>
+</div>
+<div class="patterns-box"><div class="patterns-label">💡 Arabic patterns</div><span class="pattern-badge">يفكر في شيء</span> <span class="pattern-badge">الفعل المساعد + اسم المفعول</span></div><br>[sound:tts_es_pensar_en_64763626b8.mp3]
+
+== cloze note in deck "Tarkib Spanish::Cloze"
+tags: cloze tarkib_spanish case_verb_prep Level::B1
+-- Text
+Siempre pienso {{c1::en}} ti cuando llueve.
+-- Translation
+أفكر فيك دائما عندما تمطر.
+-- Image
+<img src="pexels_person_thinking_at_a_window.jpg">
+-- FrontAudio
+[sound:cloze_front_Siempre_pienso_en_ti_cua_ce98953763.mp3]
+-- BackAudio
+[sound:cloze_back_Siempre_pienso_en_ti_cua_65972b45cd.mp3]
+-- GrammarHint
+pensar en algo
+-- SourceWord
+pensar en
+-- DeckOrigin
+Tarkib Spanish
+
+== media files
+cloze_back_Siempre_pienso_en_ti_cua_65972b45cd.mp3 <- audio from edge
+cloze_front_Siempre_pienso_en_ti_cua_ce98953763.mp3 <- audio from edge
+pexels_person_thinking_at_a_window.jpg <- picture
+tts_es_pensar_en_64763626b8.mp3 <- audio from edge
+
+== for the dialog (bundle meta)
+{
+  "audio": {
+    "backup": null,
+    "backups": [],
+    "category": null,
+    "chosen": "edge",
+    "failures": [],
+    "ok": 3,
+    "total": 3,
+    "used": {
+      "edge": 3
+    }
+  },
+  "translation_en": "يفكر في",
+  "word": "pensar en"
+}

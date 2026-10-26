@@ -258,7 +258,22 @@ def parse_json(text):
         raise ProviderError("could not parse provider JSON: %s" % e)
     if not isinstance(obj, dict):
         raise ProviderError("could not parse provider JSON: expected an object, got %s" % type(obj).__name__)
-    return obj
+    return _plain_hyphens(obj)
+
+
+# gpt-oss writes a non-breaking hyphen (U+2011) now and then: "rendez‑vous", "Verb‑Zweit‑Satz". It looks like "-" on the card, but Anki's search for "rendez-vous" no longer finds it. The Unicode
+# hyphen (U+2010) is the same trap; a soft hyphen (U+00AD) is invisible and only splits a word for search.
+_HYPHENS = {0x2010: "-", 0x2011: "-", 0x00AD: None}
+
+
+def _plain_hyphens(value):
+    if isinstance(value, str):
+        return value.translate(_HYPHENS)
+    if isinstance(value, list):
+        return [_plain_hyphens(v) for v in value]
+    if isinstance(value, dict):
+        return {k: _plain_hyphens(v) for k, v in value.items()}
+    return value
 
 
 def complete_json(provider, system, user, temperature=0.4, max_tokens=1000, timeout=DEFAULT_TIMEOUT,
@@ -429,12 +444,12 @@ def friendly_error(exc, model=None):
         if code == 401:
             return ("API key not accepted",
                     "Your API key was rejected (401). It may be wrong, expired, or revoked.\n\n"
-                    "Open Settings, paste a valid key, and click “Test key”." + said, "settings")
+                    "Open Settings, paste a valid key, and click “Test keys”." + said, "settings")
         if code == 403:
             return ("Access blocked",
                     "The provider refused the request (403). Your key may not be allowed to use %s, "
                     "or the provider blocked it.\n\n"
-                    "Try “Test key” in Settings, or choose a different model or provider." % mq
+                    "Try “Test keys” in Settings, or choose a different model or provider." % mq
                     + said, "settings")
         if code == 404:
             return ("Model not found",
@@ -462,7 +477,7 @@ def friendly_error(exc, model=None):
         return ("Can't reach the provider",
                 "There was no connection to the provider.\n\n"
                 "• Check your internet connection.\n"
-                "• Check the Base URL in Settings (“Test key” confirms it works).", "retry")
+                "• Check the Base URL in Settings (“Test keys” confirms it works).", "retry")
 
     text = (str(exc) or "").strip()
     low = text.lower()

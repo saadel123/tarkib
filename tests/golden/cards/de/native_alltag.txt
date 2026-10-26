@@ -55,7 +55,7 @@ tags: Umgangssprache Alltag Level::Native
   <div class="sentence formal"><span class="emoji">💼</span>Ehrlich gesagt habe ich heute keinen Bock auf die Besprechung.</div>
 </div>
 <div class="patterns-box"><div class="patterns-label">💡 Grammar patterns</div><span class="pattern-badge">Bock auf etwas haben (+Akk)</span></div>
-<div class="explanation">👉 „Umgangssprachlich für Lust auf etwas haben."</div>
+<div class="explanation">👉 „Umgangssprachlich für Lust auf etwas haben.“</div>
 <div class="section">
   <div class="section-label">🇬🇧 English</div>
   <div class="sentence casual"><span class="emoji">🎬</span>Do you feel like going to the cinema tonight?</div>

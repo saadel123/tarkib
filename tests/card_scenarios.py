@@ -120,6 +120,25 @@ ANRUFEN = card(
     grammar_patterns_en=["separable verb: the prefix goes to the end", "to call someone"],
     morphology=verb("ruft an", "rief an", "hat angerufen", True))
 
+TERMIN_STYLE = card(
+    emoji="📅", word="der Termin", translation_en="appointment",
+    example_casual="Hast du morgen einen Termin beim Kochkurs?",
+    example_formal="Könnten wir den Termin für das Kochseminar verschieben?",
+    example_casual_en="Do you have an appointment at the cooking class tomorrow?",
+    example_formal_en="Could we move the appointment for the cooking seminar?",
+    explanation_de="Ein Termin ist eine feste Zeit für ein Treffen.", tags=["Alltag"],
+    imageKeyword="calendar with a cooking class marked", emoji_formal="🗓️", emoji_casual="🍳",
+    grammar_patterns=["einen Termin haben", "einen Termin verschieben"],
+    grammar_patterns_en=["to have an appointment", "to move an appointment"],
+    morphology=noun("der", "die Termine", "des Termins"))
+
+MORGEN = card(
+    emoji="🌅", word="morgen", translation_en="tomorrow",
+    example_casual="Morgen habe ich frei.", example_formal="Haben Sie morgen Zeit?",
+    example_casual_en="I'm off tomorrow.", example_formal_en="Do you have time tomorrow?",
+    explanation_de="Morgen ist der Tag nach heute.", tags=["Zeit"], imageKeyword="calendar page for tomorrow",
+    emoji_formal="📅", emoji_casual="😌", morphology=OTHER)
+
 TISCH_AR = card(
     emoji="🪑", word="der Tisch", translation_en="طاوِلة",
     example_casual="Siehst du den Tisch dort?",
@@ -533,6 +552,28 @@ SCENARIOS = [
         [("main", SCHRIPPE),
          ("cloze", cloze("single_word", "Ich kaufe zwei Schrippen.", "Schrippen", "I'm buying two bread rolls."))],
         options={"exact_word": True, "force_input": True}),
+    Scenario(
+        "style_b1", "The user's style wishes (Settings, Cards) ticked in the Tarkib window: they go into the main "
+        "and the cloze request, nothing else changes.",
+        "der Termin",
+        [("main", TERMIN_STYLE),
+         ("cloze", cloze("single_word", "Den Termin für den Kochkurs habe ich verschoben.", "Termin",
+                         "I moved the appointment for the cooking class."))],
+        options={"style": "Beispiele rund ums Kochen, kurze Saetze, ein freundlicher Ton."}),
+    Scenario(
+        "cloze_capital_a1", "The cloze answer written in small letters while the sentence starts with it: the blank "
+        "takes the sentence's capital (before, the cloze card was lost).",
+        "morgen",
+        [("main", MORGEN),
+         ("cloze", cloze("single_word", "Morgen gehe ich einkaufen.", "morgen", "I'm going shopping tomorrow."))],
+        level="A1"),
+    Scenario(
+        "slow_speech_a1", "Speech speed \"Slower at A1 and A2\" (Settings, Voice) on an A1 card: the word, its "
+        "sentences and both cloze clips are read slower, the translation at the normal speed.",
+        "morgen",
+        [("main", MORGEN),
+         ("cloze", cloze("single_word", "Morgen gehe ich einkaufen.", "Morgen", "I'm going shopping tomorrow."))],
+        level="A1", settings={"tts": {"speed": "slower_a1_a2"}, "voices": {"translation": "en-US-AvaMultilingualNeural"}}),
 ]
 
 # ── English (the generic set: neutral JSON keys) ─────────────────────────────────────────────
@@ -751,12 +792,9 @@ EN_SCENARIOS = [
         deck="Tarkib English", settings=ARABIC, language="en"),
     Scenario(
         "en_formal_native", "A formal word at Native: casual alternatives on both sides, the Formal tag (not doubled), "
-        "the separate grammar call, and the Arabic translation read aloud too.",
+        "the main call's own pattern kept so no separate grammar call, and the Arabic translation read aloud too.",
         "nevertheless",
         [("main", NEVERTHELESS),
-         ("grammar", {"grammar_patterns": ["go ahead with something", "It's a bit risky, but we're still gonna do it."],
-                      "grammar_patterns_translation": ["يمضي قدما في شيء ما",
-                                                       "الأمر فيه بعض المخاطرة، لكننا سنفعله على أي حال."]}),
          ("cloze", en_cloze("single_word", "It was raining, but we nevertheless went for a walk.", "nevertheless",
                             "كانت السماء تمطر، لكننا مع ذلك خرجنا في نزهة.", hint="nevertheless = but still (formal)"))],
         level="Native", deck="Tarkib English", language="en",
@@ -819,6 +857,286 @@ EN_SCENARIOS = [
 ]
 
 SCENARIOS += EN_SCENARIOS
+
+
+# ── Spanish (the generic set with Spanish's note and checks) ─────────────────────────────────
+es_card, es_cloze = en_card, en_cloze      # the same neutral keys
+
+
+def es_noun(article, gender, noun, plural):
+    return {"pos": "noun", "article": article, "gender": gender, "noun": noun, "plural": plural}
+
+
+def es_verb(infinitive, yo, preterite, participle):
+    return {"pos": "verb", "infinitive": infinitive, "yo": yo, "preterite": preterite, "participle": participle}
+
+
+MESA = es_card(
+    emoji="🪑", word="la mesa", translation="طاولة",
+    example_casual="Pon la taza en la mesa.",
+    example_formal="¿Puede usted limpiar la mesa?",
+    example_casual_translation="ضع الكوب على الطاولة.",
+    example_formal_translation="هل يمكنك أن تنظف الطاولة؟",
+    explanation="Una mesa es un mueble para comer o trabajar.",
+    tags=["Casa"], imageKeyword="wooden kitchen table", emoji_formal="🧽", emoji_casual="☕",
+    grammar_patterns=["poner algo en algo", "¿Puede usted + infinitivo?"],
+    grammar_patterns_translation=["يضع شيئا على شيء", "هل يمكنك + فعل؟"],
+    morphology=es_noun("la", "f", "mesa", "las mesas"))
+
+PENSAR_EN = es_card(
+    emoji="💭", word="pensar en", translation="يفكر في",
+    example_casual="Últimamente pienso mucho en mis padres.",
+    example_formal="¿Ha pensado usted en nuestra propuesta?",
+    example_casual_translation="أفكر كثيرا في والدي مؤخرا.",
+    example_formal_translation="هل فكرت في اقتراحنا؟",
+    explanation="Pensar en algo es tenerlo en la cabeza.",
+    tags=["Sentimientos"], imageKeyword="person thinking at a window", emoji_formal="📄", emoji_casual="👨‍👩‍👦",
+    grammar_patterns=["haber + participio", "pensar en algo"],
+    grammar_patterns_translation=["الفعل المساعد + اسم المفعول", "يفكر في شيء"],
+    morphology=es_verb("pensar", "pienso", "pensó", "pensado"))
+
+TENER = es_card(
+    emoji="⏱️", word="tener", translation="haben",
+    example_casual="Ayer tuve que trabajar hasta tarde.",
+    example_formal="¿Tiene usted un momento, por favor?",
+    example_casual_translation="Gestern musste ich bis spät arbeiten.",
+    example_formal_translation="Haben Sie bitte einen Moment Zeit?",
+    explanation="Tener es cuando algo es tuyo.",
+    tags=["Cotidiano"], imageKeyword="person working late at a desk", emoji_formal="🙋", emoji_casual="💼",
+    grammar_patterns=["tener que + infinitivo", "hasta tarde"],
+    grammar_patterns_translation=["müssen + Infinitiv", "bis spät"],
+    morphology=es_verb("tener", "tengo", "tuvo", "tenido"))
+
+# A regularized irregular verb on purpose: the word line must show the right forms.
+HACER_REGULARIZED = es_card(
+    emoji="🍳", word="hacer", translation="يفعل",
+    example_casual="Hoy hago yo la cena.",
+    example_formal="¿Qué hace usted los fines de semana?",
+    example_casual_translation="اليوم أنا من يعد العشاء.",
+    example_formal_translation="ماذا تفعل في عطلات نهاية الأسبوع؟",
+    explanation="Hacer es crear algo o ocuparse de algo.",
+    tags=["Cotidiano"], imageKeyword="person cooking dinner", emoji_formal="📅", emoji_casual="🍲",
+    grammar_patterns=["hacer la cena", "los fines de semana"],
+    grammar_patterns_translation=["يعد العشاء", "في عطلات نهاية الأسبوع"],
+    morphology=es_verb("hacer", "hago", "hací", "hacido"))
+
+ESTAR_CANSADO = es_card(
+    emoji="😴", word="estar cansado", translation="to be tired",
+    example_casual="Estoy cansado de esperar el autobús.",
+    example_formal="¿Está usted cansado después del viaje?",
+    example_casual_translation="I'm tired of waiting for the bus.",
+    example_formal_translation="Are you tired after the trip?",
+    explanation="Estar cansado es necesitar descansar.",
+    tags=["Sentimientos"], imageKeyword="tired person waiting at a bus stop", emoji_formal="✈️", emoji_casual="🚌",
+    grammar_patterns=["después de algo", "estar cansado de + infinitivo"],
+    grammar_patterns_translation=["after something", "to be tired of + -ing"],
+    morphology={"pos": "other"})
+
+DARSE_CUENTA = es_card(
+    emoji="⏰", word="darse cuenta", translation="se rendre compte",
+    example_casual="Ni me di cuenta de que ya era tarde.",
+    example_formal="Usted se dará cuenta de la diferencia enseguida.",
+    example_casual_translation="Je ne me suis même pas rendu compte qu'il était déjà tard.",
+    example_formal_translation="Vous remarquerez tout de suite la différence.",
+    explanation="Darse cuenta es entender algo de repente.",
+    tags=["Comunicación"], imageKeyword="person looking at a clock surprised", emoji_formal="🔍", emoji_casual="🌙",
+    grammar_patterns=["darse cuenta de algo", "darse cuenta de que + indicativo"],
+    grammar_patterns_translation=["se rendre compte de quelque chose", "se rendre compte que + indicatif"],
+    morphology={"pos": "other"})
+
+NO_OBSTANTE = es_card(
+    emoji="⚖️", word="no obstante", translation="ومع ذلك", register="formal",
+    casual_alternatives=["pero", "aun así"], casual_alternatives_translation=["لكن", "رغم ذلك"],
+    example_formal="Es un plan arriesgado y, no obstante, lo vamos a intentar.",
+    example_casual="Es arriesgado, pero aun así lo vamos a hacer.",
+    example_formal_translation="إنها خطة محفوفة بالمخاطر، ومع ذلك سنحاول تنفيذها.",
+    example_casual_translation="الأمر فيه مخاطرة، لكننا سنفعله على أي حال.",
+    explanation="Palabra formal para decir que algo pasa a pesar de lo anterior. En el día a día se dice aun así.",
+    tags=["Comunicación", "Formal"], imageKeyword="team deciding to go ahead with a plan", emoji_formal="📊",
+    emoji_casual="🤷", grammar_patterns=["Es arriesgado, pero aun así lo vamos a hacer."],
+    grammar_patterns_translation=["الأمر فيه مخاطرة، لكننا سنفعله على أي حال."], morphology={"pos": "other"})
+
+TOMAR_UNA_DECISION = es_card(
+    emoji="⚖️", word="tomar una decisión", translation="يتخذ قرارا",
+    example_casual="Mira, no puedo tomar una decisión sin consultarlo con la almohada.",
+    example_formal="Solo tras analizar todos los datos, la comisión tomó una decisión.",
+    example_casual_translation="انظر، لا أستطيع أن أتخذ قرارا قبل أن أفكر في الأمر جيدا.",
+    example_formal_translation="لم تتخذ اللجنة قرارا إلا بعد تحليل جميع البيانات.",
+    explanation="Tomar una decisión es elegir qué hacer después de pensarlo.",
+    tags=["Trabajo"], imageKeyword="committee meeting around a table", emoji_formal="🏛️", emoji_casual="😴",
+    grammar_patterns=["tomar una decisión", "consultarlo con la almohada", "tomar una decisión sobre algo"],
+    grammar_patterns_translation=["يتخذ قرارا", "يفكر في الأمر قبل أن يقرر", "يتخذ قرارا بشأن شيء"],
+    morphology={"pos": "other"})
+
+TOMAR_EL_PELO = es_card(
+    emoji="😄", word="tomar el pelo", translation="يمزح مع شخص",
+    example_casual="¿Me estás tomando el pelo?",
+    example_formal="Le aseguro que no le estoy tomando el pelo.",
+    example_casual_translation="هل تمزح معي؟",
+    example_formal_translation="أؤكد لك أنني لا أمزح معك.",
+    explanation="Tomar el pelo a alguien es engañarlo en broma.",
+    tags=["Comunicación"], imageKeyword="friends laughing together", emoji_formal="🤝", emoji_casual="😂",
+    grammar_patterns=["tomar el pelo (modismo)", "tomar el pelo a alguien", "estar + gerundio"],
+    grammar_patterns_translation=["يمزح (تعبير اصطلاحي)", "يمزح مع شخص", "فعل مستمر"],
+    morphology={"pos": "other"})
+
+CITA = dict(
+    emoji="🩺", word="la cita", translation="موعد",
+    example_formal="Por favor, llame si necesita cancelar su cita.",
+    example_casual_translation="لدي موعد مع الطبيب صباح الغد.",
+    example_formal_translation="يرجى الاتصال إذا كنت بحاجة إلى إلغاء موعدك.",
+    explanation="Una cita es una hora fija para ver a alguien, por ejemplo al médico.",
+    tags=["Salud"], imageKeyword="calendar with appointment reminder", emoji_formal="📞", emoji_casual="🗓️",
+    grammar_patterns=["tener una cita con alguien", "cancelar una cita"],
+    grammar_patterns_translation=["لديه موعد مع شخص", "يلغي موعدا"],
+    morphology=es_noun("la", "f", "cita", "las citas"))
+
+GRACIAS_NOT_SPANISH = es_card(
+    emoji="🙏", word="thanks", translation="شكرا",
+    example_casual="Gracias por tu ayuda.", example_formal="Muchas gracias por su apoyo.",
+    example_casual_translation="شكرا على مساعدتك.", example_formal_translation="شكرا جزيلا على دعمك.",
+    explanation="Se dice gracias cuando alguien te ayuda.", tags=["Comunicación"],
+    imageKeyword="person saying thank you", emoji_formal="🤝", emoji_casual="😊", morphology={"pos": "other"},
+    input_in_language=False, input_suggestion="gracias")
+
+PLAZO = es_card(
+    emoji="⏳", word="el plazo", translation="الموعد النهائي",
+    example_casual="El plazo del proyecto es el viernes, ¿no?",
+    example_formal="Por favor, entregue el informe dentro del plazo.",
+    example_casual_translation="الموعد النهائي للمشروع يوم الجمعة، أليس كذلك؟",
+    example_formal_translation="يرجى تسليم التقرير ضمن المهلة المحددة.",
+    explanation="El plazo es el tiempo que tienes para terminar algo.",
+    tags=["Trabajo"], imageKeyword="calendar", emoji_formal="📝", emoji_casual="📅",
+    grammar_patterns=["dentro del plazo", "el plazo de algo"],
+    grammar_patterns_translation=["ضمن المهلة", "الموعد النهائي لشيء"],
+    morphology=es_noun("el", "m", "plazo", "los plazos"))
+
+AGUA = es_card(
+    emoji="💧", word="agua", translation="ماء",
+    example_casual="¿Me das un vaso de agua?",
+    example_formal="¿Podría traerme agua, por favor?",
+    example_casual_translation="هل تعطيني كوبا من الماء؟",
+    example_formal_translation="هل يمكنك أن تحضر لي ماء من فضلك؟",
+    explanation="El agua es lo que bebemos cuando tenemos sed.",
+    tags=["Comida"], imageKeyword="glass of water on a table", emoji_formal="🙏", emoji_casual="🥛",
+    grammar_patterns=["un vaso de algo", "¿Podría + infinitivo?"],
+    grammar_patterns_translation=["كوب من شيء", "هل يمكنك + فعل؟"],
+    morphology=es_noun("el", "f", "agua", "las aguas"))
+
+ES_SCENARIOS = [
+    Scenario(
+        "es_noun_a1_arabic", "Spanish at A1 with Arabic: the article added to a bare noun, the article in red on the "
+        "word line (a regular plural is not shown), and a noun cloze with its article.",
+        "mesa", [("main", MESA),
+                 ("cloze", es_cloze("single_word", "La mesa es nueva.", "La mesa", "الطاولة جديدة."))],
+        level="A1", deck="Tarkib Spanish", settings=ARABIC, language="es"),
+    Scenario(
+        "es_verb_prep_b1", "A verb with its preposition at B1: ranked before a structure, the stem-changing verb on the "
+        "word line, and a cloze of the preposition alone, without a letter hint.",
+        "pensar en", [("main", PENSAR_EN),
+                      ("cloze", es_cloze("verb_prep", "Siempre pienso en ti cuando llueve.", "en",
+                                         "أفكر فيك دائما عندما تمطر.", hint="pensar en algo"))],
+        deck="Tarkib Spanish", settings=ARABIC, language="es"),
+    Scenario(
+        "es_irregular_verb_a2_german", "An irregular verb at A2 with German as the translation language: the four forms "
+        "on the word line, the card's own verb in a frame first (tener que + infinitivo, ahead of a preposition "
+        "frame), and a beginner letter hint.",
+        "tener", [("main", TENER),
+                  ("cloze", es_cloze("single_word", "Mi hermana tiene dos hijos.", "tiene",
+                                     "Meine Schwester hat zwei Kinder."))],
+        level="A2", deck="Tarkib Spanish", settings={"defaults": {"translation_language": "German"}}, language="es"),
+    Scenario(
+        "es_regularized_verb_a2", "The AI regularized an irregular verb (hací, hacido): the word line shows the right "
+        "forms from the table.",
+        "hacer", [("main", HACER_REGULARIZED),
+                  ("cloze", es_cloze("single_word", "Mi madre hace pan los domingos.", "hace",
+                                     "تصنع أمي الخبز أيام الأحد."))],
+        level="A2", deck="Tarkib Spanish", settings=ARABIC, language="es"),
+    Scenario(
+        "es_ser_estar_default", "Spanish with the default settings: the German cards' English is borrowed as the "
+        "translation language, ser or estar ranked, and a cloze of the estar form alone, without a hint, its answer "
+        "written in small letters at the start of the sentence (it takes the sentence's capital).",
+        "estar cansado", [("main", ESTAR_CANSADO),
+                          ("cloze", es_cloze("ser_estar", "Está muy cansado después del viaje.", "está",
+                                             "He is very tired after the trip.", hint="estar + adjetivo"))],
+        deck="Tarkib Spanish", language="es"),
+    Scenario(
+        "es_latam_voice_b2", "A Latin American voice at B2: Latin American Spanish in the prompts, French as the "
+        "translation language, two verb + preposition patterns kept.",
+        "darse cuenta", [("main", DARSE_CUENTA),
+                         ("cloze", es_cloze("single_word", "No me di cuenta del error.", "cuenta",
+                                            "Je ne me suis pas rendu compte de l'erreur."))],
+        level="B2", deck="Tarkib Spanish", language="es",
+        settings={"languages": {"es": {"voice": "es-MX-DaliaNeural", "translation": "French"}}}),
+    Scenario(
+        "es_formal_native", "A formal word at Native: casual alternatives, the Formal tag, the separate grammar call "
+        "because the main call's one pattern was a whole sentence (dropped there and in the grammar call's answer), and "
+        "the borrowed Arabic translation read aloud with the borrowed voice.",
+        "no obstante",
+        [("main", NO_OBSTANTE),
+         ("grammar", {"grammar_patterns": ["ir a + infinitivo", "Es arriesgado, pero aun así lo vamos a hacer."],
+                      "grammar_patterns_translation": ["سوف + فعل", "الأمر فيه مخاطرة، لكننا سنفعله على أي حال."]}),
+         ("cloze", es_cloze("single_word", "Llovía mucho y, no obstante, salimos a pasear.", "no obstante",
+                            "كانت تمطر كثيرا، ومع ذلك خرجنا للتنزه.", hint="no obstante = aun así (formal)"))],
+        level="Native", deck="Tarkib Spanish", language="es",
+        settings={"defaults": {"translation_language": "Arabic"}, "voices": {"translation": "ar-SA-ZariyahNeural"}}),
+    Scenario(
+        "es_collocation_c1_english2", "A collocation at C1: the headword restated is dropped, the headword with a "
+        "placeholder (sobre algo) is kept, English as the second translation with its voice, a cloze of the verb alone.",
+        "tomar una decisión",
+        [("main", TOMAR_UNA_DECISION),
+         ("secondary", {"word_translation": "to make a decision",
+                        "casual": "Look, I can't make a decision until I've slept on it.",
+                        "formal": "Only after analyzing all the data did the committee make a decision."}),
+         ("cloze", es_cloze("collocation", "Tenemos que tomar una decisión antes del viernes.", "tomar",
+                            "يجب أن نتخذ قرارا قبل يوم الجمعة.", hint="tomar una decisión"))],
+        level="C1", deck="Tarkib Spanish", language="es", options={"secondary_language": "English"},
+        settings={"languages": {"es": {"translation": "Arabic", "secondary": "English",
+                                       "secondary_voice": "en-US-JennyNeural"}}}),
+    Scenario(
+        "es_idiom_b2", "An idiom at B2: the idiom restated is dropped, the idiom with a person (a alguien) is kept, "
+        "estar + gerundio ranked after it, two cloze blanks with hints.",
+        "tomar el pelo",
+        [("main", TOMAR_EL_PELO),
+         ("cloze", es_cloze("idiom", "No te creo, me estás tomando el pelo.", "tomando, pelo",
+                            "لا أصدقك، أنت تمزح معي.", hint="tomar el pelo: engañar en broma"))],
+        level="B2", deck="Tarkib Spanish", settings=ARABIC, language="es"),
+    Scenario(
+        "es_leak_retry_b1", "An English word in a Spanish sentence at B1: one strict retry, and the clean card is used.",
+        "la cita",
+        [("main", es_card(example_casual="Mañana tengo una cita con the médico.", **CITA)),
+         ("main", es_card(example_casual="Mañana tengo una cita con el médico.", **CITA)),
+         ("cloze", es_cloze("single_word", "Tengo una cita a las diez.", "una cita", "لدي موعد في العاشرة."))],
+        deck="Tarkib Spanish", settings=ARABIC, language="es"),
+    Scenario(
+        "es_not_spanish_b1", "An English word typed as Spanish: two calls agree it is not Spanish, so the card is "
+        "refused with the suggestion the AI made.",
+        "thanks", [("main", GRACIAS_NOT_SPANISH), ("main", GRACIAS_NOT_SPANISH)],
+        deck="Tarkib Spanish", settings=ARABIC, language="es"),
+    Scenario(
+        "es_hints_no_cloze_b1", "Meaning, scenario and picture hints (the scenario in Spanish), a second translation "
+        "equal to the learning language (skipped with a warning), and no cloze card.",
+        "el plazo", [("main", PLAZO)],
+        deck="Tarkib Spanish", settings=ARABIC, language="es", cloze=False,
+        options={"meaning": "time limit at work", "scenario": "proyecto en la oficina", "image_keyword": "calendar",
+                 "secondary_language": "Spanish"}),
+    Scenario(
+        "es_style_b1", "Style wishes on a Spanish card: the same block in the generic main and cloze requests.",
+        "pensar en", [("main", PENSAR_EN),
+                      ("cloze", es_cloze("verb_prep", "Siempre pienso en ti cuando cocino.", "en",
+                                         "أفكر فيك دائما عندما أطبخ.", hint="pensar en algo"))],
+        deck="Tarkib Spanish", settings=ARABIC, language="es",
+        options={"style": "Examples about cooking, short sentences."}),
+    Scenario(
+        "es_feminine_el_a2", "A feminine noun that takes el, typed bare and kept bare by the model: the card shows "
+        "el agua (the word line's article in front), the article in red with the plural las aguas, and the noun cloze "
+        "given its article from the sentence.",
+        "agua", [("main", AGUA),
+                    ("cloze", es_cloze("single_word", "El agua está muy fría.", "agua", "الماء بارد جدا."))],
+        level="A2", deck="Tarkib Spanish", settings=ARABIC, language="es"),
+]
+
+SCENARIOS += ES_SCENARIOS
 
 BY_NAME = {s.name: s for s in SCENARIOS}
 assert len(BY_NAME) == len(SCENARIOS), "two scenarios share a name"
@@ -975,13 +1293,15 @@ def run(s):
     script = {k: list(v) for k, v in s.voices.items()}
 
     def adapter_for(service):
-        def adapter(text, role_voice, sc, timeout):
+        def adapter(text, role_voice, sc, timeout, rate=1.0):
             out = script[service].pop(0) if script.get(service) else None
             speech.append({"service": service, "voice": role_voice, "text": text,
                            "failed": isinstance(out, BaseException)})
+            if rate != 1.0:
+                speech[-1]["rate"] = rate             # only a slowed clip says so: older goldens stay
             if isinstance(out, BaseException):
                 raise out
-            return tts.Clip(b"audio from " + service.encode(), "mp3", service, role_voice)
+            return tts.Clip(b"audio from " + service.encode(), "mp3", service, role_voice, rate)
         return adapter
 
     saved = (providers.complete_json, generate.images.fetch_image, dict(tts._ADAPTERS),
@@ -991,6 +1311,7 @@ def run(s):
     try:
         providers.complete_json = fake_json
         generate.images.fetch_image = fake_picture
+        generate._PICTURE_RETRY_PAUSE = 0
         for service in tts.SERVICES:
             tts._ADAPTERS[service] = adapter_for(service)
         anki_io.ensure_notetypes = lambda col: None
@@ -1013,6 +1334,8 @@ def run(s):
          anki_io.check_cloze_notetype, anki_io.find_main, anki_io.find_cloze) = saved
         tts._ADAPTERS.clear()
         tts._ADAPTERS.update(adapters)
+        generate._PICTURE_RETRY_PAUSE = 1.0
+        generate._USED_PICTURES.clear()
     if answers:
         violations.append("%d scripted AI answer(s) never asked for: %s"
                           % (len(answers), ", ".join(k for k, _ in answers)))
@@ -1058,7 +1381,8 @@ def golden_text(s, r):
     if not r["speech"]:
         w("nothing")
     for i, sp in enumerate(r["speech"], 1):
-        w("%d. %s %s%s: %s" % (i, sp["service"], sp["voice"], " FAILED" if sp["failed"] else "", sp["text"]))
+        w("%d. %s %s%s%s: %s" % (i, sp["service"], sp["voice"], " at %sx speed" % sp["rate"] if "rate" in sp else "",
+                                 " FAILED" if sp["failed"] else "", sp["text"]))
     if r["error"]:
         w("")
         w("== refused")
@@ -1086,6 +1410,7 @@ def golden_text(s, r):
 
 # ── a made-up language, the way a new one would be added ─────────────────────────────────────
 ITALIAN = {"code": "it", "name": "Italian", "native_name": "Italiano", "label": "🇮🇹 Italiano", "quotes": ("«", "»"),
+           "inner_quotes": ("“", "”"),
            "default_voice": "it-IT-ElsaNeural",
            "headword_prefixes": ("il", "lo", "la", "i", "gli", "le", "un", "uno", "una"),
            "formal_tag": "Formale", "script": "LATIN", "example_word": "il tavolo",
