@@ -38,7 +38,7 @@ keyword: friends going to the cinema | deck: Deutsch::Alltagsdeutsch | source: a
 
 == read aloud
 1. edge de-DE-KatjaNeural: Bock haben. ... Hast du Bock auf Kino heute Abend?. ... Ehrlich gesagt habe ich heute keinen Bock auf die Besprechung.
-2. edge en-US-AvaMultilingualNeural: to feel like doing something. ... Do you feel like going to the cinema tonight? ... To be honest, I really don't feel like the meeting today.
+2. edge en-US-AvaMultilingualNeural: to feel like. doing something. ... Do you feel like going to the cinema tonight? ... To be honest, I really don't feel like the meeting today.
 3. edge de-DE-KatjaNeural: Ich. Heute echt keinen Bock.
 4. edge de-DE-KatjaNeural: Ich habe heute echt keinen Bock.
 
@@ -61,7 +61,7 @@ tags: Umgangssprache Alltag Level::Native
   <div class="sentence casual"><span class="emoji">🎬</span>Do you feel like going to the cinema tonight?</div>
   <div class="sentence formal"><span class="emoji">💼</span>To be honest, I really don't feel like the meeting today.</div>
 </div>
-<div class="patterns-box"><div class="patterns-label">💡 English patterns</div><span class="pattern-badge">to feel like something</span></div><br>[sound:tts_de_Bock_haben_e66c633b4d.mp3][sound:tts_en_Bock_haben_014889e876.mp3]
+<div class="patterns-box"><div class="patterns-label">💡 English patterns</div><span class="pattern-badge">to feel like something</span></div><br>[sound:tts_de_Bock_haben_e66c633b4d.mp3][sound:tts_en_Bock_haben_5f6b089476.mp3]
 
 == cloze note in deck "Deutsch::Alltagsdeutsch::Cloze"
 tags: cloze alltagsdeutsch case_nvv Level::Native
@@ -87,7 +87,7 @@ cloze_back_Ich_habe_heute_echt_kein_8c8c0c90b1.mp3 <- audio from edge
 cloze_front_Ich_habe_heute_echt_kein_76c65ad861.mp3 <- audio from edge
 pexels_friends_going_to_the_cinema.jpg <- picture
 tts_de_Bock_haben_e66c633b4d.mp3 <- audio from edge
-tts_en_Bock_haben_014889e876.mp3 <- audio from edge
+tts_en_Bock_haben_5f6b089476.mp3 <- audio from edge
 
 == for the dialog (bundle meta)
 {

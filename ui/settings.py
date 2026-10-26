@@ -164,16 +164,6 @@ def _cfg():
     return mw.addonManager.getConfig(__name__) or {}
 
 
-def _addon_version():
-    """human_version from manifest.json (so bug reports can name the version); '?' if unreadable."""
-    try:
-        p = os.path.join(os.path.dirname(os.path.dirname(__file__)), "manifest.json")
-        with open(p, "r", encoding="utf-8") as f:
-            return str(json.load(f).get("human_version") or "?")
-    except Exception:
-        return "?"
-
-
 def _key_err_reason(e):
     """A short, plain reason a key test failed — for the combined report / save warning."""
     if isinstance(e, urllib.error.HTTPError):
@@ -266,7 +256,9 @@ def _store_voices_cache(voices):
 class SettingsDialog(QDialog):
     def __init__(self, parent=None, initial_tab=None, initial_language=None):
         super().__init__(parent)
-        self.setWindowTitle("Tarkib Settings (v%s)" % _addon_version())
+        # No version in the title: the guide's pictures and videos would go stale with every bugfix release.
+        # The version is in the Support link's tooltip and in the details of an unexpected error.
+        self.setWindowTitle("Tarkib Settings")
         self.setMinimumWidth(540)
         self.cfg = _cfg()
         # The learning language the Languages tab shows: the Add window's (initial_language), else the

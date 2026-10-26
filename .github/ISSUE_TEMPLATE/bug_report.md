@@ -29,7 +29,7 @@ The add-on shows a *copyable* error dialog. Paste its full text here.
 **Environment**
 - Anki version (Help → About):
 - Operating system:
-- Add-on version:
+- Add-on version (hover over “Support this add-on” at the bottom of the Tarkib window):
 
 **Note**
 Images and audio are *optional* and can fail without breaking the card. If only the image or audio

@@ -26,7 +26,7 @@ LEVEL B1: use case "single_word", "noun_prep" or "verb_prep_article"; a medium e
 keyword: die Erfahrung | deck: Tarkib | source: auto -> pexels_die_erfahrung.jpg
 
 == read aloud
-1. edge de-DE-KatjaNeural: die Erfahrung. ... Ich habe <script>alert1</script> viel Erfahrung mit Kindern.. ... Sie haben viel Erfahrung mit Kunden 👍
+1. edge de-DE-KatjaNeural: die Erfahrung. ... Ich habe <script>alert. 1. </script> viel Erfahrung mit Kindern. ... Sie haben viel Erfahrung mit Kunden 👍
 2. edge de-DE-KatjaNeural: Sie hat viel. Im Beruf.
 3. edge de-DE-KatjaNeural: Sie hat viel Erfahrung im Beruf.
 
@@ -50,7 +50,7 @@ tags: Arbeit Bildung Level::B1
   <div class="sentence casual"><span class="emoji">💬</span>I have a lot of experience with children &lt;img src=x onerror=alert(1)&gt;</div>
   <div class="sentence formal"><span class="emoji">📝</span>You have a lot of experience with customers.</div>
 </div>
-<div class="patterns-box"><div class="patterns-label">💡 English patterns</div><span class="pattern-badge">experience with</span> <span class="pattern-badge">to have experience</span></div><br>[sound:tts_de_die_Erfahrung_7fd4a9fc42.mp3]
+<div class="patterns-box"><div class="patterns-label">💡 English patterns</div><span class="pattern-badge">experience with</span> <span class="pattern-badge">to have experience</span></div><br>[sound:tts_de_die_Erfahrung_84df4326f8.mp3]
 
 == cloze note in deck "Tarkib::Cloze"
 tags: cloze tarkib case_single_word Level::B1
@@ -75,7 +75,7 @@ Tarkib
 cloze_back_Sie_hat_viel_Erfahrung_i_ed6715821e.mp3 <- audio from edge
 cloze_front_Sie_hat_viel_Erfahrung_i_165139ffc1.mp3 <- audio from edge
 pexels_die_erfahrung.jpg <- picture
-tts_de_die_Erfahrung_7fd4a9fc42.mp3 <- audio from edge
+tts_de_die_Erfahrung_84df4326f8.mp3 <- audio from edge
 
 == for the dialog (bundle meta)
 {

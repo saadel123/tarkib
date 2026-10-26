@@ -1208,8 +1208,26 @@ def _audio_name(prefix, label, text, clip):
     return "%s_%s_%s.%s" % (prefix, _safe(label), tts.audio_tag(text, clip), clip.ext)
 
 
+# What a voice reads. A grammar marker in brackets is left out ("arbeiten an (+Dat)", "(+Akk=Person)", "(D)"):
+# read aloud it was "plus Dat". Any other part in brackets gets a full stop before it and after it, so the voice
+# stops, reads it, and goes on: "Czech (relating to Czechia, its people, or its language)" was one breathless
+# sentence while the brackets were only dropped. A period is the stop every voice makes (about a second with
+# the Microsoft voices, in any language and before a small letter too); a comma, a colon or "..." made
+# 0.1 to 0.2 seconds.
+_TTS_MARKER = re.compile(r"\s*[(\[]\s*(?:\+[^()\[\]]*|[ADGN]|DE|Akk|Dat|Gen|Nom)\.?\s*[)\]]")
+_TTS_ASIDE = re.compile(r"\s*(?:\(\s*([^()\[\]]+?)\s*\)|\[\s*([^()\[\]]+?)\s*\])\s*([.,;:!?]*)")
+
+
 def _clean_tts(t):
-    return re.sub(r"\s+", " ", re.sub(r"[()\[\]]", "", t or "")).strip()
+    if not re.search(r"[()\[\]]", t or ""):
+        return re.sub(r"\s+", " ", t or "").strip()             # no brackets: the text as it always was
+    t = _TTS_MARKER.sub("", t)
+    t = _TTS_ASIDE.sub(lambda m: ". %s%s " % (m.group(1) or m.group(2), m.group(3) or "."), t)
+    t = re.sub(r"[()\[\]]", "", t)                          # a bracket without its pair
+    t = re.sub(r"\.{4,}", "...", t)
+    t = re.sub(r"(?<!\.)([.,;:!?])\s*\.(?!\.)", r"\1", t)  # the mark that was there before the aside stays
+    t = re.sub(r"^[\s.]*(?=\w)", "", t)
+    return re.sub(r"\s+", " ", t).strip()
 
 
 # ── orchestration ─────────────────────────────────────────────────────────────────────────

@@ -347,6 +347,17 @@ class SettingsLanguages(unittest.TestCase):
         self.assertEqual(d._translation_value(), "English")
         self.assertFalse(d.german_extras.isHidden())
 
+    def test_the_title_has_no_version_and_the_support_link_has_it(self):
+        # a version in the title made the guide's pictures stale with every bugfix release
+        setup()
+        d = self.dialog()
+        self.assertEqual(d.windowTitle(), "Tarkib Settings")
+        with open(os.path.join(ROOT, "manifest.json"), encoding="utf-8") as f:
+            version = json.load(f)["human_version"]
+        from aqt.qt import QLabel
+        tips = [w.toolTip() for w in d.findChildren(QLabel) if "Support this add-on" in w.text()]
+        self.assertTrue(tips and tips[0].endswith("Tarkib " + version), tips)
+
     def test_english_from_the_add_window_then_back_and_forth_then_save(self):
         setup()
         d = self.dialog(initial_language="en")

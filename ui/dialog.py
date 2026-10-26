@@ -18,7 +18,7 @@ from aqt.operations import QueryOp, CollectionOp
 from .. import anki_io
 from ..pipeline import generate, languages, providers, prompts, tts
 from . import lang_rules
-from .support import (support_link, decks_footer_link, note_card_added_and_maybe_thank,
+from .support import (addon_version, support_link, decks_footer_link, note_card_added_and_maybe_thank,
                       decks_imported, DECKS_URL, DECKS_LANGUAGE)
 from .promo_rules import hint_should_show
 
@@ -750,5 +750,5 @@ class AddCardDialog(QDialog):
         # Unexpected — friendly headline + the copyable traceback for a bug report.
         tb = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__)) \
             if isinstance(exc, BaseException) else str(exc)
-        showText("Tarkib: %s\n\n%s\n\n(Full details to copy if you report this:)\n%s"
-                 % (title, body, tb), parent=self, copyBtn=True)
+        showText("Tarkib: %s\n\n%s\n\n(Full details to copy if you report this:)\nTarkib %s\n%s"
+                 % (title, body, addon_version(), tb), parent=self, copyBtn=True)

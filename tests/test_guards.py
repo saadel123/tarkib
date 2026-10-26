@@ -401,6 +401,21 @@ class ReviewProposedTests(unittest.TestCase):
         self.assertEqual(got, {"a": "Pourriez-vous fixer un rendez-vous ?",
                                "b": ["Verb-Zweit-Satz", {"c": "Verabredung"}], "n": 2})
 
+    def test_a_part_in_brackets_is_read_after_a_stop_and_a_grammar_marker_not_at_all(self):
+        # "Czech (relating to Czechia, its people, or its language)" was read as one sentence; a period is the stop
+        # every voice makes (about a second with Edge), "..." or a comma only 0.1 to 0.2 seconds
+        self.assertEqual(g._clean_tts("Czech (relating to Czechia, its people, or its language). ... She is Czech."),
+                         "Czech. relating to Czechia, its people, or its language. ... She is Czech.")
+        self.assertEqual(g._clean_tts("to apply (for a job) today"), "to apply. for a job. today")
+        self.assertEqual(g._clean_tts("a word (aside), more"), "a word. aside, more")
+        self.assertEqual(g._clean_tts("(formal) a word"), "formal. a word")
+        # read aloud, "(+Dat)" was "plus Dat"
+        self.assertEqual(g._clean_tts("arbeiten an (+Dat). ... Ich arbeite daran."), "arbeiten an. ... Ich arbeite daran.")
+        self.assertEqual(g._clean_tts("diskutieren mit (+Dat=Person) über (+Akk) (D)"), "diskutieren mit über")
+        for same in ("Plain sentence. ... Two.", "Hallo, ... wie geht's?", ""):
+            self.assertEqual(g._clean_tts(same), same)
+        self.assertEqual(g._clean_tts("an odd ( bracket ]"), "an odd bracket")
+
     def test_a_word_quoted_in_the_explanation_takes_the_inner_quotes(self):
         # A test run: the card showed „„obwohl“ leitet einen Gegensatz ein." (doubled mark, plain closing quote)
         self.assertEqual(g._nest_quotes("„obwohl“ leitet einen Gegensatz ein.", ("‚", "‘")),

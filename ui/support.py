@@ -5,6 +5,9 @@ decks text in Settings. When they show is decided in ui/promo_rules.py. The add-
 free: these are quiet pointers with a permanent opt-out, and they must NEVER block or break
 card-adding.
 """
+import json
+import os
+
 from aqt import mw
 from aqt.qt import QLabel, QMessageBox, QCheckBox
 from aqt.utils import openLink
@@ -33,11 +36,23 @@ def decks_imported():
         return False
 
 
+def addon_version():
+    """human_version from manifest.json, for bug reports; '?' if unreadable. Shown in the Support link's tooltip
+    and an unexpected error's details, never in a window title (the guide's pictures would go stale)."""
+    try:
+        p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "manifest.json")
+        with open(p, "r", encoding="utf-8") as f:
+            return str(json.load(f).get("human_version") or "?")
+    except Exception:
+        return "?"
+
+
 def support_link(parent=None):
     """A small, unobtrusive '♥ Support this add-on' link for a dialog footer (opens the browser)."""
     lbl = QLabel('<a href="%s">♥ Support this add-on</a>' % SUPPORT_URL, parent)
     lbl.setOpenExternalLinks(True)
-    lbl.setToolTip("This add-on is free. If it helps you, you can support its development.")
+    lbl.setToolTip("This add-on is free. If it helps you, you can support its development.\nTarkib %s"
+                   % addon_version())
     lbl.setStyleSheet("font-size: 12px;")
     return lbl
 

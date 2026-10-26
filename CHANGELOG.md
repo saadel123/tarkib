@@ -3,6 +3,14 @@
 All notable changes to **Tarkib** are listed here, newest first.
 Versions follow [SemVer](https://semver.org/).
 
+## [1.3.1]
+
+- A part in brackets is read after a short stop: "Czech (relating to Czechia, its people, or its
+  language)" no longer sounds like one long sentence. A grammar marker like "(+Dat)" is no longer
+  read aloud.
+- The Settings window title no longer shows the version. To see it, hover over "Support this
+  add-on" at the bottom of the Tarkib window or Settings.
+
 ## [1.3.0]
 
 - **Spanish cards.** Pick Spanish in the Language row: the card gets a casual sentence with tú and a
@@ -164,6 +172,7 @@ On AnkiWeb: [83323714](https://ankiweb.net/shared/info/83323714) (Tools, Add-ons
   top toolbar.
 - Works with Anki 23.10 and newer. Pure Python, nothing to install.
 
+[1.3.1]: https://github.com/saadel123/tarkib/releases/tag/v1.3.1
 [1.3.0]: https://github.com/saadel123/tarkib/releases/tag/v1.3.0
 [1.2.0]: https://github.com/saadel123/tarkib/releases/tag/v1.2.0
 [1.1.0]: https://github.com/saadel123/tarkib/releases/tag/v1.1.0
