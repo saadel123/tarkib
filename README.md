@@ -7,8 +7,7 @@
 [![AnkiWeb: 83323714](https://img.shields.io/badge/AnkiWeb-83323714-3f4d99)](https://ankiweb.net/shared/info/83323714)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Anki](https://img.shields.io/badge/Anki-%E2%89%A523.10%20%28PyQt6%29-5866c4)](https://apps.ankiweb.net/)
-[![Support me on Ko-fi](https://img.shields.io/badge/%E2%99%A5-Support%20me%20on%20Ko--fi-ff5e5b)](https://ko-fi.com/tarkib)
-[![Free A1 German deck](https://img.shields.io/badge/German%20decks-Free%20A1-3f4d99)](https://ko-fi.com/s/ab96fd15d8)
+[![Free A1 German deck](https://img.shields.io/badge/German%20decks-Free%20A1-3f4d99)](https://ankiweb.net/shared/info/255858872)
 
 ![Tarkib demo: type one word in German, English or Spanish, click Add, and study the finished card with its photo, sentences, grammar and audio](assets/demo.gif)
 
@@ -66,13 +65,13 @@ In **Settings, Voice**, the speech speed can be slower, about 20 percent, at A1 
 
 In **Settings, Cards**, you can write a few wishes in any language: the topics, names, tone or length you want, for example "examples about cooking and travel, short sentences". While **Use my style** is ticked in the Tarkib window, Tarkib sends them with every card, in every language. The level and the card's rules stay as they are.
 
-## Ready-made German decks (A1 is free)
+## A free German A1 deck
 
-![Tarkib German decks, A1 to C1: word cards and typing cards](assets/decks.gif)
+Rather not make the cards yourself? I made a German A1 deck in the same card format. Every word has a picture, German audio, casual and formal sentences, and the grammar pattern with its case when the sentence has one, like `fahren mit (+Dat)`. Nouns come with their article, and the plural when there is one. Nearly every word also has a typing card checked letter by letter. The cards were made with Claude, Anthropic's AI, then reviewed and fixed by a person, card by card, over several rounds. The audio comes from a licensed voice service, and the pictures are licensed too.
 
-Rather not make the cards yourself? I made German decks, A1 to C1, in the same card format. Every word has a picture, German audio, casual and formal sentences, and the grammar pattern with its case when the sentence has one, like `fahren mit (+Dat)`. Nouns come with their article, and the plural when there is one. Nearly every word also has a typing card checked letter by letter. Meanings in English or Arabic. The cards were made with Claude, Anthropic's AI, then reviewed and fixed by a person, card by card, over several rounds. The audio comes from a licensed voice service, and the pictures are licensed too.
+**[Get the whole A1 level for free on AnkiWeb](https://ankiweb.net/shared/info/255858872)** (305 word cards plus 304 typing cards), with English meanings. The same deck with Arabic meanings is free there too: [German A1 for Arabic speakers](https://ankiweb.net/shared/info/1810062943). Both download with no account.
 
-**[Get the whole A1 level for free](https://ko-fi.com/s/ab96fd15d8)** (305 word cards plus 304 typing cards). The English edition is also on [AnkiWeb Shared Decks](https://ankiweb.net/shared/info/255858872). Other levels are in [my Ko-fi shop](https://ko-fi.com/tarkib/shop). You could build them yourself with Tarkib, but A2 to C1 is 1,814 word cards: on the free Groq plan, which allows a few dozen cards a day, that takes well over a month, and every card still needs checking. The paid levels are those cards already made and reviewed.
+Inside the add-on there is a quiet "Free A1 deck" link in the window footer. After your fifth card, a short note about the deck appears inside the window on up to three openings, and its x hides it for good. While no AI key is set, the setup message also says that the free A1 deck needs no key. The deck teaches German, so these pointers show only while the window is on German. A short thank-you appears three times, at 50, 200 and 500 cards, with a "Rate on AnkiWeb" button and a permanent "Don't show this again".
 
 ## Cost, keys and privacy
 
@@ -87,16 +86,6 @@ The cards are written by a language model, so they are occasionally wrong, mostl
 ## Contributing
 
 Contributions are welcome, **especially improving the cards for more languages and CEFR levels**. See **[CONTRIBUTING.md](CONTRIBUTING.md)** for the dev setup and where the prompt and level rules live (`pipeline/prompts.py`). Version history is in **[CHANGELOG.md](CHANGELOG.md)**, and what is planned next in **[ROADMAP.md](ROADMAP.md)**. The code was built with a lot of help from Claude, Anthropic's AI.
-
-## Support
-
-This add-on is free and stays free. If it saves you time, you can support its development:
-
-**[♥ Support me on Ko-fi](https://ko-fi.com/tarkib)**
-
-Buying one of the [ready-made decks](https://ko-fi.com/tarkib/shop) helps too.
-
-Inside the add-on there is a small "♥ Support this add-on" link and a quiet "Free A1 deck" link in the window footer, which becomes "A1 to C1 decks" once you have one of the decks. A short thank-you appears three times, at 50, 200 and 500 cards, with a permanent "Don't show this again". After your fifth card, a short note about the ready-made decks appears inside the window on up to three openings, and its x hides it for good. At the bottom of the Settings "Cards" tab, one line points to the ready-made decks. While no AI key is set, the setup message also says that the free A1 deck needs no key. The decks teach German, so these deck pointers show only while the window or Settings is on German.
 
 ## License
 

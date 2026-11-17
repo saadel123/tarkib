@@ -48,7 +48,7 @@ tarkib/                 (the repository root)
     dialog.py           the Add-card dialog (the Language row, the deck, the level, the banners)
     settings.py         tabbed Settings (Provider, Images, Languages, Voice, Cards)
     lang_rules.py       which language and deck the window starts with, where a switch moves it (pure)
-    support.py          the Support link, the footer decks link (Free A1, then A1 to C1), the thank-you, the decks text
+    support.py          the footer decks link (the free A1), the thank-you, the decks text, the version for bug reports
     promo_rules.py      when those may show (pure functions, tested offline)
   pipeline/             pure, Anki-free, stdlib-only: the brains
     languages.py        the learning languages: one registry, every per-language table is keyed by it
